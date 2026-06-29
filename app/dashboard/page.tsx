@@ -12,6 +12,7 @@ import { ActionGrid } from "@/components/actions/ActionGrid";
 import { FoodSelector } from "@/components/actions/FoodSelector";
 import { StudyCard } from "@/components/actions/StudyCard";
 import { Toast } from "@/components/common/Toast";
+import { OutcomeBurst } from "@/components/common/OutcomeBurst";
 import { BottomNav } from "@/components/common/BottomNav";
 import { SaveNotice } from "@/components/common/SaveNotice";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
@@ -118,6 +119,7 @@ export default function DashboardPage() {
 
       <YearlyReviewModal />
       <Toast />
+      <OutcomeBurst />
       <BottomNav />
     </main>
   );

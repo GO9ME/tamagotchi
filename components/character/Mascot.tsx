@@ -161,6 +161,52 @@ function buildMarks(f: Form, mood: MoodKey, gender?: Gender): FaceMarks {
   }
 }
 
+export const MASCOT_GRID = N;
+
+export interface MascotCell {
+  x: number;
+  y: number;
+  fill: string;
+}
+
+/** 마스코트 픽셀 셀(색 포함) 계산 — React(svg)·canvas(공유카드) 공용 순수 함수 */
+export function mascotCells(
+  status: CharacterStatus,
+  stage: LifeStage,
+  gender: Gender | undefined,
+  colors: { color: string; fill: string; blush: string },
+): MascotCell[] {
+  const f = FORMS[stageForm(stage)];
+  const grid = f.sil.map((r) => r.split("").map((c) => c === "o"));
+  const filled = (x: number, y: number) =>
+    x >= 0 && x < N && y >= 0 && y < N && grid[y][x];
+  const isOutline = (x: number, y: number) =>
+    grid[y][x] &&
+    (!filled(x - 1, y) || !filled(x + 1, y) || !filled(x, y - 1) || !filled(x, y + 1));
+
+  const marks = buildMarks(f, getMood(status), gender);
+  const block = new Set<string>();
+  marks.dark.forEach(([x, y]) => block.add(`${x},${y}`));
+  const blushSet = new Set<string>();
+  marks.blush.forEach(([x, y]) => blushSet.add(`${x},${y}`));
+
+  const cells: MascotCell[] = [];
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!grid[y][x]) continue;
+      const key = `${x},${y}`;
+      const isDark = isOutline(x, y) || block.has(key);
+      // 우선순위: 진한색 > 볼터치(내부·외곽선 아닌 칸만) > 흰색
+      cells.push({
+        x,
+        y,
+        fill: isDark ? colors.color : blushSet.has(key) ? colors.blush : colors.fill,
+      });
+    }
+  }
+  return cells;
+}
+
 export function Mascot({
   status,
   stage = "child",
@@ -179,33 +225,7 @@ export function Mascot({
   blush?: string;
 }) {
   const mood = getMood(status);
-  const f = FORMS[stageForm(stage)];
-  const grid = f.sil.map((r) => r.split("").map((c) => c === "o"));
-  const filled = (x: number, y: number) =>
-    x >= 0 && x < N && y >= 0 && y < N && grid[y][x];
-  const isOutline = (x: number, y: number) =>
-    grid[y][x] &&
-    (!filled(x - 1, y) || !filled(x + 1, y) || !filled(x, y - 1) || !filled(x, y + 1));
-
-  const marks = buildMarks(f, mood, gender);
-  const block = new Set<string>();
-  marks.dark.forEach(([x, y]) => block.add(`${x},${y}`));
-  const blushSet = new Set<string>();
-  marks.blush.forEach(([x, y]) => blushSet.add(`${x},${y}`));
-
-  const rects: React.ReactNode[] = [];
-  for (let y = 0; y < N; y++) {
-    for (let x = 0; x < N; x++) {
-      if (!grid[y][x]) continue;
-      const key = `${x},${y}`;
-      const isDark = isOutline(x, y) || block.has(key);
-      // 우선순위: 진한색 > 볼터치(내부·외곽선 아닌 칸만) > 흰색
-      const px = isDark ? color : blushSet.has(key) ? blush : fill;
-      rects.push(
-        <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={px} />,
-      );
-    }
-  }
+  const cells = mascotCells(status, stage, gender, { color, fill, blush });
 
   return (
     <svg
@@ -217,7 +237,9 @@ export function Mascot({
       role="img"
       aria-label={`마스코트 (${moodLabel(mood)})`}
     >
-      {rects}
+      {cells.map((c) => (
+        <rect key={`${c.x}-${c.y}`} x={c.x} y={c.y} width={1} height={1} fill={c.fill} />
+      ))}
     </svg>
   );
 }

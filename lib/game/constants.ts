@@ -178,13 +178,19 @@ export const STAGE_INDEX: Record<LifeStage, number> = LIFE_STAGES.reduce(
   {} as Record<LifeStage, number>,
 );
 
-/** 연간 권장 활동 횟수 (게임 1년 = 현실 1일 기준) */
+/**
+ * 연간 권장 활동 횟수 — GAME_YEAR_MS(9분/년)와 액션 쿨타임(실 ~12분)에 맞춰 자동 산출.
+ * 9분/년에 8회 공부는 물리적으로 불가능했던 문제를 정합화(한 해에 실제로 달성 가능한 수치).
+ * 시간 배율(env)이 바뀌면 함께 스케일된다.
+ */
+const _yearMin = GAME_YEAR_MS / 60000;
+const _per = (cycleMin: number) => Math.max(1, Math.round(_yearMin / cycleMin));
 export const YEARLY_TARGETS = {
-  study: 8,
-  selfDev: 6,
-  exercise: 6,
-  meals: 12,
-} as const;
+  study: _per(12), // 공부: 세션+쿨타임 ≈ 실 12분
+  selfDev: _per(12),
+  exercise: _per(12),
+  meals: _per(6), // 식사는 더 자주
+};
 
 /** 오프라인 다년 방치 시 페널티 적용 상한 연수 */
 export const MAX_NEGLECT_YEARS_APPLIED = 3;

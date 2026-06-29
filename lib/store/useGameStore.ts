@@ -28,7 +28,12 @@ import {
 } from "@/lib/game/constants";
 import { applyEffect, isActionReady, setCooldown } from "@/lib/game/engine";
 import { isActionUnlocked } from "@/lib/game/gating";
-import { rollOutcome, scaleStatsDelta, type ActionOutcome } from "@/lib/game/outcome";
+import {
+  rollOutcome,
+  scaleStatsDelta,
+  type ActionOutcome,
+  type OutcomeTier,
+} from "@/lib/game/outcome";
 import { runDueReviews } from "@/lib/game/review";
 import {
   employmentChance,
@@ -63,6 +68,8 @@ interface GameState {
   jobResult: JobOutcome | null;
   /** 연봉협상 결과 모달 (비영속) */
   negotiationResult: NegotiationResult | null;
+  /** 대성공/잭팟 연출 트리거 (비영속) */
+  outcomeFx: { tier: OutcomeTier; label: string; token: number } | null;
 
   setHydrated: () => void;
   createNew: (name: string, color: string, gender: Gender) => void;
@@ -129,6 +136,14 @@ export const useGameStore = create<GameState>()(
       const pushToast = (message: string) =>
         set((s) => ({ toast: { message, token: (s.toast?.token ?? 0) + 1 } }));
 
+      // 대성공/잭팟이면 화면 연출 트리거(토스트 외 보이는 도파민)
+      const fireFx = (o: ActionOutcome | null) => {
+        if (!o || (o.tier !== "jackpot" && o.tier !== "great")) return;
+        set((s) => ({
+          outcomeFx: { tier: o.tier, label: o.label, token: (s.outcomeFx?.token ?? 0) + 1 },
+        }));
+      };
+
       return {
         character: null,
         hydrated: false,
@@ -136,6 +151,7 @@ export const useGameStore = create<GameState>()(
         pendingReviews: [],
         jobResult: null,
         negotiationResult: null,
+        outcomeFx: null,
 
         setHydrated: () => set({ hydrated: true }),
 
@@ -270,6 +286,7 @@ export const useGameStore = create<GameState>()(
         const message =
           outcome && outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg;
         pushToast(message);
+        fireFx(outcome);
         return { ok: true, message };
       },
 
@@ -320,6 +337,7 @@ export const useGameStore = create<GameState>()(
         pushToast(
           outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg,
         );
+        fireFx(outcome);
         return result;
       },
 

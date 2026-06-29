@@ -30,6 +30,7 @@ import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { WorkPanel } from "@/components/work/WorkPanel";
 import { BottomNav } from "@/components/common/BottomNav";
 import { Toast } from "@/components/common/Toast";
+import { OutcomeBurst } from "@/components/common/OutcomeBurst";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 const PREP_ICON: Record<string, string> = {
@@ -108,6 +109,7 @@ export default function CareerPage() {
         <JobResultModal />
         <NegotiationModal />
         <Toast />
+        <OutcomeBurst />
         <BottomNav />
       </main>
     );
@@ -274,6 +276,7 @@ export default function CareerPage() {
       <YearlyReviewModal />
       <JobResultModal />
       <Toast />
+      <OutcomeBurst />
       <BottomNav />
     </main>
   );

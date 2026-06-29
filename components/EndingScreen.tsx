@@ -17,6 +17,7 @@ import {
   RANK_ORDER,
 } from "@/lib/game/ranking";
 import { getHall, saveHall } from "@/lib/storage/hall";
+import { shareEndingCard } from "@/lib/share/endingCard";
 import { useGameStore } from "@/lib/store/useGameStore";
 
 export function EndingScreen({ character }: { character: Character }) {
@@ -28,6 +29,26 @@ export function EndingScreen({ character }: { character: Character }) {
   const age = character.deathAge ?? character.ageYears;
   const scores = computeRankings(character);
   const [newBest, setNewBest] = useState<"first" | "best" | null>(null);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const [sharing, setSharing] = useState(false);
+
+  const handleShare = async () => {
+    setSharing(true);
+    const r = await shareEndingCard(character);
+    setSharing(false);
+    const msg =
+      r === "copied"
+        ? "결과 카드를 클립보드에 복사했어요!"
+        : r === "downloaded"
+          ? "결과 카드를 이미지로 저장했어요!"
+          : r === "failed"
+            ? "공유에 실패했어요. 다시 시도해 주세요."
+            : null;
+    if (msg) {
+      setShareMsg(msg);
+      setTimeout(() => setShareMsg(null), 2600);
+    }
+  };
 
   // 사망 회차를 명예의전당에 1회 적재(같은 id 중복 방지) + 역대 최고 비교
   useEffect(() => {
@@ -138,10 +159,25 @@ export function EndingScreen({ character }: { character: Character }) {
           </Link>
         </div>
 
+        {shareMsg && (
+          <p className="mt-4 text-center font-pixel text-[12px] font-bold text-ink/70">
+            {shareMsg}
+          </p>
+        )}
+
+        <button
+          type="button"
+          onClick={handleShare}
+          disabled={sharing}
+          className="toy-btn mt-6 w-full bg-mint text-ink disabled:opacity-60"
+        >
+          {sharing ? "카드 만드는 중…" : "📤 결과 카드 공유"}
+        </button>
+
         <button
           type="button"
           onClick={restart}
-          className="toy-btn mt-6 w-full bg-coral text-white"
+          className="toy-btn mt-3 w-full bg-coral text-white"
         >
           다시 태어나기
         </button>

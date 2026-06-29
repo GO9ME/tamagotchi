@@ -19,12 +19,12 @@ const HERO_STATUS: CharacterStatus = {
 };
 
 const FEATURES = [
-  { icon: "study", title: "공부 30분 집중", desc: "시작하고 30분 뒤 완료를 눌러야 보상! 방치하면 보상이 줄어요." },
-  { icon: "feed", title: "밥 안 주면 페널티", desc: "배고프면 공부·업무 효율이 뚝. 끼니를 챙겨주세요." },
-  { icon: "heart", title: "몸무게·건강 관리", desc: "과식하면 찌고 운동하면 빠져요. 건강에 직결됩니다." },
-  { icon: "selfDev", title: "자기개발", desc: "꾸준히 안 하면 나이 들 때 능력치가 떨어져요." },
+  { icon: "study", title: "30분 집중 공부", desc: "시작하고 제때 완료하면 보너스! 집중력이 높을수록 더 쑥쑥 자라요." },
+  { icon: "feed", title: "맛있는 밥 챙기기", desc: "끼니를 잘 챙겨주면 공부·업무 효율이 쑥 올라가요." },
+  { icon: "heart", title: "몸무게·건강 관리", desc: "골고루 먹고 운동하면 컨디션 최고! 탄탄하게 키워봐요." },
+  { icon: "selfDev", title: "꾸준한 자기개발", desc: "조금씩 쌓으면 나이가 들어도 능력치가 빛나요." },
   { icon: "star", title: "취업·직무", desc: "학생 → 취준생 → 직장인. 15개 직군 중 골라 커리어를 쌓아요." },
-  { icon: "bolt", title: "연봉협상·승진", desc: "평가 등급·성과로 연봉과 승진이 갈려요. 직접 연봉협상도!" },
+  { icon: "bolt", title: "학위·연봉협상·승진", desc: "석·박사로 취업률을 높이고, 직접 연봉협상까지 도전!" },
 ];
 
 export default function LandingPage() {
