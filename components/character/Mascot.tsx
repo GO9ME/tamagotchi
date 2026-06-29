@@ -1,4 +1,4 @@
-import type { CharacterStatus } from "@/types/character";
+import type { CharacterStatus, LifeStage } from "@/types/character";
 
 export type MoodKey =
   | "happy"
@@ -38,71 +38,149 @@ export function moodLabel(mood: MoodKey): string {
   }
 }
 
-// 16x16 본체 실루엣 (o = 픽셀). 눈/입은 아래 CARVE 로 파낸다.
-const BODY = [
-  "       oo       ",
-  "      o  o      ",
-  "      oooo      ",
-  "    oooooooo    ",
-  "   oooooooooo   ",
-  "  oooooooooooo  ",
-  "  oooooooooooo  ",
-  " oooooooooooooo ",
-  " oooooooooooooo ",
-  " oooooooooooooo ",
-  " oooooooooooooo ",
-  "  oooooooooooo  ",
-  "  oooooooooooo  ",
-  "   oooooooooo   ",
-  "    oooooooo    ",
-  "   oo  oo  oo   ",
-];
+// 성장 단계별 진화 형태 (실루엣 o=채움, 외곽선 자동 추출 + 흰 속칠)
+interface Form {
+  sil: string[];
+  eyeY: number;
+  mouthY: number;
+}
 
-// 표정별로 본체에서 비워낼 셀 [x, y]
-const CARVE: Record<MoodKey, [number, number][]> = {
-  neutral: [[5, 8], [10, 8], [7, 11], [8, 11]],
-  happy: [[5, 8], [10, 8], [6, 11], [9, 11], [7, 12], [8, 12]],
-  sad: [[5, 8], [10, 8], [7, 11], [8, 11], [6, 12], [9, 12]],
-  sleepy: [[4, 8], [5, 8], [6, 8], [9, 8], [10, 8], [11, 8], [7, 11]],
-  hungry: [[5, 8], [10, 8], [7, 11], [8, 11], [7, 12], [8, 12]],
-  sick: [[4, 7], [6, 7], [5, 8], [9, 7], [11, 7], [10, 8], [6, 11], [7, 12], [8, 11], [9, 12]],
-  stressed: [[5, 8], [10, 8], [4, 6], [5, 7], [11, 6], [10, 7], [6, 12], [7, 11], [8, 12], [9, 11]],
+const FORMS: Record<string, Form> = {
+  egg: {
+    eyeY: 7,
+    mouthY: 9,
+    sil: [
+      "................", "................", ".......oo.......", "......oooo......",
+      ".....oooooo.....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
+      "....oooooooo....", "....oooooooo....", ".....oooooo.....", ".....oooooo.....",
+      "......oooo......", ".......oo.......", "................", "................",
+    ],
+  },
+  chick: {
+    eyeY: 8,
+    mouthY: 11,
+    sil: [
+      "................", ".......oo.......", "......oooo......", ".....oooooo.....",
+      "....oooooooo....", "...oooooooooo...", "...oooooooooo...", "..oooooooooooo..",
+      "..oooooooooooo..", "..oooooooooooo..", "..oooooooooooo..", "...oooooooooo...",
+      "...oooooooooo...", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+    ],
+  },
+  round: {
+    eyeY: 7,
+    mouthY: 9,
+    sil: [
+      "................", "....oo....oo....", "...oooo..oooo...", "..oooooooooooo..",
+      "..oooooooooooo..", ".oooooooooooooo.", ".oooooooooooooo.", ".oooooooooooooo.",
+      ".oooooooooooooo.", ".oooooooooooooo.", "..oooooooooooo..", "..oooooooooooo..",
+      "...oooooooooo...", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+    ],
+  },
+  tall: {
+    eyeY: 7,
+    mouthY: 10,
+    sil: [
+      "................", "......oooo......", ".....oooooo.....", ".....oooooo.....",
+      "....oooooooo....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
+      "....oooooooo....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
+      "....oooooooo....", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+    ],
+  },
 };
 
-function buildGrid(mood: MoodKey): boolean[][] {
-  const g = BODY.map((row) => row.split("").map((ch) => ch === "o"));
-  for (const [x, y] of CARVE[mood]) {
-    if (g[y] && x >= 0 && x < 16) g[y][x] = false;
+export function stageForm(stage: LifeStage): string {
+  switch (stage) {
+    case "baby":
+      return "egg";
+    case "child":
+    case "elementary":
+      return "chick";
+    case "middle":
+    case "high":
+    case "university":
+    case "jobseeker":
+      return "round";
+    default:
+      return "tall"; // employee, senior, retirement
   }
-  return g;
+}
+
+const N = 16;
+
+function buildMarks(f: Form, mood: MoodKey): [number, number][] {
+  const eY = f.eyeY;
+  const mY = f.mouthY;
+  const eyes: Record<string, [number, number][]> = {
+    normal: [[6, eY], [9, eY]],
+    sleepy: [[5, eY], [6, eY], [9, eY], [10, eY]],
+    sick: [[5, eY - 1], [6, eY], [9, eY], [10, eY - 1]],
+  };
+  const mouth: Record<string, [number, number][]> = {
+    smile: [[6, mY], [9, mY], [7, mY + 1], [8, mY + 1]],
+    frown: [[6, mY + 1], [9, mY + 1], [7, mY], [8, mY]],
+    flat: [[7, mY], [8, mY]],
+    open: [[7, mY], [8, mY], [7, mY + 1], [8, mY + 1]],
+  };
+  switch (mood) {
+    case "happy":
+      return [...eyes.normal, ...mouth.smile];
+    case "sad":
+      return [...eyes.normal, ...mouth.frown];
+    case "sleepy":
+      return [...eyes.sleepy, [7, mY]];
+    case "hungry":
+      return [...eyes.normal, ...mouth.open];
+    case "sick":
+      return [...eyes.sick, ...mouth.frown];
+    case "stressed":
+      return [...eyes.normal, [5, eY - 1], [10, eY - 1], ...mouth.flat];
+    default:
+      return [...eyes.normal, ...mouth.flat];
+  }
 }
 
 export function Mascot({
   status,
+  stage = "child",
   size = 160,
-  color = "#3C4A2B",
+  color = "#3A2A22",
+  fill = "#FFFFFF",
 }: {
   status: CharacterStatus;
+  stage?: LifeStage;
   size?: number;
   color?: string;
+  fill?: string;
 }) {
   const mood = getMood(status);
-  const grid = buildGrid(mood);
+  const f = FORMS[stageForm(stage)];
+  const grid = f.sil.map((r) => r.split("").map((c) => c === "o"));
+  const filled = (x: number, y: number) =>
+    x >= 0 && x < N && y >= 0 && y < N && grid[y][x];
+  const isOutline = (x: number, y: number) =>
+    grid[y][x] &&
+    (!filled(x - 1, y) || !filled(x + 1, y) || !filled(x, y - 1) || !filled(x, y + 1));
+
+  const block = new Set<string>();
+  buildMarks(f, mood).forEach(([x, y]) => block.add(`${x},${y}`));
+
   const rects: React.ReactNode[] = [];
-  for (let y = 0; y < grid.length; y++) {
-    for (let x = 0; x < grid[y].length; x++) {
-      if (grid[y][x]) {
-        rects.push(<rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} />);
-      }
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      if (!grid[y][x]) continue;
+      const dark = isOutline(x, y) || block.has(`${x},${y}`);
+      rects.push(
+        <rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={dark ? color : fill} />,
+      );
     }
   }
+
   return (
     <svg
       width={size}
       height={size}
       viewBox="0 0 16 16"
       shapeRendering="crispEdges"
-      fill={color}
       className="pixelated"
       role="img"
       aria-label={`마스코트 (${moodLabel(mood)})`}

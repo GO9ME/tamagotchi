@@ -7,7 +7,11 @@ export function CharacterAvatar({ character }: { character: Character }) {
   const mood = getMood(character.status);
   return (
     <div className="flex flex-col items-center gap-3">
-      <TamaDevice colorKey={character.color} status={character.status} />
+      <TamaDevice
+        colorKey={character.color}
+        status={character.status}
+        stage={character.lifeStage}
+      />
       <div className="text-center">
         <div className="font-pixel text-lg font-bold">{character.name}</div>
         <div className="font-pixel text-xs text-ink/55">

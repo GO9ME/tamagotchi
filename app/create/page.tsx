@@ -49,6 +49,7 @@ export default function CreatePage() {
             <TamaDevice
               colorKey={existing.color}
               status={existing.status}
+              stage={existing.lifeStage}
               mascotSize={92}
               showStatus={false}
             />
@@ -92,7 +93,7 @@ export default function CreatePage() {
 
         {/* 미리보기 */}
         <div className="my-5 max-w-[220px] mx-auto">
-          <TamaDevice colorKey={color} status={PREVIEW_STATUS} mascotSize={112} showStatus={false} />
+          <TamaDevice colorKey={color} status={PREVIEW_STATUS} stage="baby" mascotSize={112} showStatus={false} />
         </div>
 
         <label className="block font-pixel text-sm font-bold text-ink/70">이름</label>

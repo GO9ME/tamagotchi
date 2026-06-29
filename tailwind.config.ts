@@ -17,8 +17,8 @@ const config: Config = {
         butter: "#FFE3A3",
         grape: "#C9B6F2",
         coral: "#FF9A8B",
-        lcd: "#CFE6B8", // 다마고치 LCD 화면
-        lcdink: "#3C4A2B", // LCD 픽셀(어두운 올리브)
+        lcd: "#E5EAD2", // 다마고치 LCD 화면 (연한 크림-그린)
+        lcdink: "#3A2E22", // 진한 갈색
       },
       fontFamily: {
         sans: [

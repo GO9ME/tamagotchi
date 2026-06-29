@@ -32,7 +32,7 @@ export default function LandingPage() {
       <section className="flex flex-col items-center text-center">
         <span className="pill mb-4 bg-white text-ink/70">한국형 인생·커리어 다마고치</span>
         <div className="mb-5 w-full max-w-[260px]">
-          <TamaDevice colorKey="blush" status={HERO_STATUS} mascotSize={132} />
+          <TamaDevice colorKey="blush" status={HERO_STATUS} stage="middle" mascotSize={132} />
         </div>
         <h1 className="font-pixel text-4xl font-bold sm:text-5xl">LifeGotchi</h1>
         <p className="mt-4 max-w-xl text-base text-ink/65 sm:text-lg">

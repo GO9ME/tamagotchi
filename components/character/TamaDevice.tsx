@@ -1,9 +1,9 @@
-import type { CharacterStatus } from "@/types/character";
+import type { CharacterStatus, LifeStage } from "@/types/character";
 import { getMascotColor } from "@/lib/game/constants";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { Mascot } from "./Mascot";
 
-const LCD_INK = "#3C4A2B";
+const LCD_INK = "#3A2E22"; // 진한 갈색 (외곽선/상태 아이콘)
 
 function Pip({ name, value }: { name: string; value: number }) {
   const lvl = Math.round((Math.max(0, Math.min(100, value)) / 100) * 4);
@@ -28,11 +28,13 @@ function Pip({ name, value }: { name: string; value: number }) {
 export function TamaDevice({
   colorKey,
   status,
+  stage = "child",
   mascotSize = 148,
   showStatus = true,
 }: {
   colorKey: string;
   status: CharacterStatus;
+  stage?: LifeStage;
   mascotSize?: number;
   showStatus?: boolean;
 }) {
@@ -66,7 +68,7 @@ export function TamaDevice({
             </div>
           )}
           <div className="flex h-full items-center justify-center pt-2">
-            <Mascot status={status} size={mascotSize} color={LCD_INK} />
+            <Mascot status={status} stage={stage} size={mascotSize} color={LCD_INK} />
           </div>
         </div>
 
