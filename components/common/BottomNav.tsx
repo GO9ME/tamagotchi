@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { href: "/dashboard", label: "홈" },
   { href: "/history", label: "성장기록" },
+  { href: "/ranking", label: "랭킹" },
   { href: "/", label: "정보" },
 ];
 

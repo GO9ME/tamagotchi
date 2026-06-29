@@ -13,6 +13,7 @@ import type {
   JobFamilyKey,
   JobOutcome,
   JobState,
+  NegotiationResult,
   YearlyReview,
 } from "@/types/character";
 import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
@@ -33,6 +34,7 @@ import {
   employmentReadiness,
   rollHire,
 } from "@/lib/game/employment";
+import { canNegotiate, negotiate } from "@/lib/game/negotiate";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
 import {
@@ -57,6 +59,8 @@ interface GameState {
   pendingReviews: YearlyReview[];
   /** 취업 지원 결과 모달 (비영속) */
   jobResult: JobOutcome | null;
+  /** 연봉협상 결과 모달 (비영속) */
+  negotiationResult: NegotiationResult | null;
 
   setHydrated: () => void;
   createNew: (name: string, color: string) => void;
@@ -73,6 +77,8 @@ interface GameState {
   ackAllReviews: () => void;
   applyForJob: (family: JobFamilyKey, company: CompanyTypeKey) => ActionResult;
   ackJobResult: () => void;
+  negotiateSalary: () => ActionResult;
+  ackNegotiation: () => void;
 }
 
 const now = () => Date.now();
@@ -124,6 +130,7 @@ export const useGameStore = create<GameState>()(
         toast: null,
         pendingReviews: [],
         jobResult: null,
+        negotiationResult: null,
 
         setHydrated: () => set({ hydrated: true }),
 
@@ -133,12 +140,19 @@ export const useGameStore = create<GameState>()(
           character: createCharacter(userId, name, color, now()),
           pendingReviews: [],
           jobResult: null,
+          negotiationResult: null,
           toast: null,
         });
       },
 
       reset: () =>
-        set({ character: null, toast: null, pendingReviews: [], jobResult: null }),
+        set({
+          character: null,
+          toast: null,
+          pendingReviews: [],
+          jobResult: null,
+          negotiationResult: null,
+        }),
 
       tick: () => {
         const c = get().character;
@@ -392,11 +406,57 @@ export const useGameStore = create<GameState>()(
       },
 
       ackJobResult: () => set({ jobResult: null }),
+
+      negotiateSalary: () => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        const gate = canNegotiate(c);
+        if (!gate.ok) {
+          return { ok: false, message: gate.reason ?? "지금은 협상할 수 없어요." };
+        }
+        const result = negotiate(c, Math.random(), Math.random());
+        const job = c.job!;
+        let next: Character;
+        if (result.outcome === "success") {
+          next = applyEffect(c, { status: { confidence: 6, mood: 5 } });
+          next = {
+            ...next,
+            job: {
+              ...job,
+              salaryManwon: result.salaryAfter,
+              lastNegotiatedAtAge: c.ageYears,
+              lastNegotiatePct: result.raisePct,
+            },
+          };
+          pushToast(`연봉협상 성공! +${result.raisePct}%`);
+        } else if (result.outcome === "backfire") {
+          next = applyEffect(c, {
+            status: { confidence: -6, stress: 10 },
+            stats: { careerPotential: -1 },
+          });
+          next = {
+            ...next,
+            job: { ...job, lastNegotiatedAtAge: c.ageYears },
+            negotiateBackfire: true,
+          };
+          pushToast("협상이 역효과를 냈어요…");
+        } else {
+          next = applyEffect(c, {
+            status: { confidence: -3, stress: 6, mood: -3 },
+          });
+          next = { ...next, job: { ...job, lastNegotiatedAtAge: c.ageYears } };
+          pushToast("협상 결렬… 내년에 다시.");
+        }
+        set({ character: next, negotiationResult: result });
+        return { ok: true, message: result.outcome };
+      },
+
+      ackNegotiation: () => set({ negotiationResult: null }),
       };
     },
     {
       name: "lifegotchi:character",
-      version: 7,
+      version: 8,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -426,6 +486,7 @@ export const useGameStore = create<GameState>()(
           jobApplications: c.jobApplications ?? 0,
           savings: c.savings ?? 0,
           happiness: c.happiness ?? 50,
+          negotiateBackfire: c.negotiateBackfire ?? false,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋
           bornAt: Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS,
           lastTickAt: Date.now(),

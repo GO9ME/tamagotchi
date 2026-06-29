@@ -12,6 +12,7 @@ import { PROMO_THRESHOLD } from "@/lib/game/constants";
 import { StatBar } from "@/components/common/StatBar";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { JobStatsPanel } from "./JobStatsPanel";
+import { NegotiateCard } from "./NegotiateCard";
 import { WorkActionGrid } from "./WorkActionGrid";
 
 export function WorkPanel({
@@ -105,6 +106,7 @@ export function WorkPanel({
         </div>
       </div>
 
+      <NegotiateCard character={character} />
       <JobStatsPanel character={character} />
       <WorkActionGrid character={character} now={now} />
     </div>

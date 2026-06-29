@@ -93,6 +93,19 @@ export interface JobState {
   lastEvalGrade?: ReviewGrade; // 최근 업무평가 등급
   lastRaisePct?: number; // 직전 인상률(%)
   promotedAtAge?: number;
+  lastNegotiatedAtAge?: number; // 마지막 연봉협상 게임나이(연 1회 게이트)
+  lastNegotiatePct?: number; // 직전 협상 인상률(%) — 자동인상과 구분 표시
+}
+
+/** 연봉협상 결과 (비영속 모달용) */
+export interface NegotiationResult {
+  outcome: "success" | "fail" | "backfire";
+  salaryBefore: number;
+  salaryAfter: number;
+  raisePct: number;
+  leverage: number; // 0~1
+  successP: number; // 0~1
+  atAge: number;
 }
 
 /** 직장인 연간 업무평가 기록 (YearlyReview.work 에 첨부) */
@@ -184,4 +197,5 @@ export interface Character {
   happiness: number; // 행복도(평생 평균, 0~100)
   deathAge?: number; // 사망 나이(설정되면 엔딩)
   deathCause?: string; // 사인
+  negotiateBackfire?: boolean; // 협상 역효과(괘씸죄) — 다음 연말 평가 1회 소비
 }

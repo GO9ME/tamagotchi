@@ -205,8 +205,9 @@ export function processWorkReview(
   const wPerf = workPerformance(c, rand, neutral);
   const grade = workGradeOf(evalScore);
 
-  // 1) 연봉 인상
-  const pct = RAISE_PCT[grade];
+  // 1) 연봉 인상 — 협상 역효과(괘씸죄) 플래그가 있으면 이번 1회만 -0.5%p
+  const backfire = c.negotiateBackfire === true;
+  const pct = RAISE_PCT[grade] - (backfire ? 0.5 : 0);
   const salaryBefore = job.salaryManwon;
   let salaryAfter = applyRaise(salaryBefore, pct);
 
@@ -239,6 +240,7 @@ export function processWorkReview(
 
   let character = applyEffect(c, workEvalEffect(grade));
   character = { ...character, job: newJob };
+  if (backfire) character = { ...character, negotiateBackfire: false }; // 1회 소비 후 클리어
 
   const work: WorkReview = {
     evalScore,

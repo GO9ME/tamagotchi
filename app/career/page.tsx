@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
+import { NegotiationModal } from "@/components/negotiate/NegotiationModal";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { WorkPanel } from "@/components/work/WorkPanel";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -104,6 +105,7 @@ export default function CareerPage() {
         <WorkPanel character={character} now={now} />
         <YearlyReviewModal />
         <JobResultModal />
+        <NegotiationModal />
         <Toast />
         <BottomNav />
       </main>
