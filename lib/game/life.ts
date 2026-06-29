@@ -3,15 +3,16 @@ import { clamp } from "./clamp";
 import { LIVING_COST, MAX_AGE } from "./constants";
 import { JOB_FAMILIES } from "./jobs";
 
-/** 나이별 기본 위험 확률(%) */
+/** 나이별 기본 위험 확률(%) — 60세 한계로 압축(약 9시간 한 판) */
 export function ageRiskPct(age: number): number {
   if (age >= MAX_AGE) return 100;
-  if (age < 40) return 0.4;
-  if (age < 55) return 1.2;
-  if (age < 65) return 3;
-  if (age < 75) return 7;
-  if (age < 85) return 16;
-  return 32;
+  if (age < 30) return 0.5;
+  if (age < 40) return 1.5;
+  if (age < 45) return 4;
+  if (age < 50) return 8;
+  if (age < 55) return 16;
+  if (age < 58) return 30;
+  return 50;
 }
 
 /** 연간 사고·질병·사망 위험 확률(%) = 나이 + 직업 위험도 + 스트레스 − 건강관리 */
@@ -52,12 +53,12 @@ export function rollLifeRisk(
   const inc = INCIDENTS[Math.min(INCIDENTS.length - 1, Math.floor(rPick * INCIDENTS.length))];
   // 치명 확률: 건강 낮을수록·고령일수록 ↑
   const fatalChance = clamp(
-    0.18 + (50 - c.status.health) * 0.006 + Math.max(0, age - 60) * 0.01,
+    0.18 + (50 - c.status.health) * 0.006 + Math.max(0, age - 45) * 0.012,
     0.1,
     0.85,
   );
   if (rFatal < fatalChance) {
-    return { kind: "death", cause: age >= 80 ? "노환" : inc.cause };
+    return { kind: "death", cause: age >= 52 ? "지병" : inc.cause };
   }
   return { kind: "incident", cause: inc.cause, healthHit: inc.hit };
 }

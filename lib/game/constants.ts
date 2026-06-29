@@ -19,8 +19,8 @@ export const GAME_YEAR_MS: number = (() => {
 /** 연간 생활비(만원) — 저축 = 연봉 - 생활비 */
 export const LIVING_COST = 2000;
 
-/** 자연사 한계 나이(이 나이엔 사망 확률 100%) */
-export const MAX_AGE = 95;
+/** 자연사 한계 나이(이 나이엔 사망 확률 100%). 60세 = 9분/년 × 60 = 약 9시간 한 판 */
+export const MAX_AGE = 60;
 
 /** 액션 쿨타임 배율(빠른 회전). 1.0=원본(시간단위), 0.2≈5분의1 */
 export const COOLDOWN_SCALE = 0.2;

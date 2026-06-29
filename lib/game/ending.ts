@@ -70,7 +70,7 @@ export function lifeEnding(c: Character): LifeEnding {
   const unhappy = h < 40;
 
   // 1) 요절 (사고/병으로 일찍)
-  if (age < 55 && FATAL_INCIDENTS.includes(cause)) {
+  if (age < 45 && FATAL_INCIDENTS.includes(cause)) {
     return {
       title: "굵고 짧게 산 인생",
       subtitle: `${age}세, ${cause}로 갑작스레 세상을 떠났어요.`,
@@ -108,9 +108,9 @@ export function lifeEnding(c: Character): LifeEnding {
   if (unhappy) {
     return { title: "지치고 쓸쓸했던 삶", subtitle: "쉼 없이 달렸지만 마음은 허전했어요." };
   }
-  // 10) 장수
-  if (age >= 85) {
-    return { title: "장수한 인생", subtitle: `${age}세까지, 길고 평온한 삶이었어요.` };
+  // 10) 천수 (한계까지)
+  if (age >= 58) {
+    return { title: "천수를 누린 인생", subtitle: `${age}세까지 무탈하게 살았어요.` };
   }
   // 11) 무직
   if (!c.job) {
