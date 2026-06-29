@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
+import { WorkPanel } from "@/components/work/WorkPanel";
 import { BottomNav } from "@/components/common/BottomNav";
 import { Toast } from "@/components/common/Toast";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
@@ -82,25 +83,18 @@ export default function CareerPage() {
     </Link>
   );
 
-  // 이미 취업
+  // 이미 취업 — 직장 생활
   if (character.job) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        <header className="mb-4">{back}</header>
-        <div className="card flex flex-col items-center gap-2 p-8 text-center">
-          <PixelIcon name="briefcase" size={40} />
-          <h1 className="font-pixel text-lg font-bold">이미 취업했어요!</h1>
-          <p className="font-pixel text-sm text-ink/60">
-            {character.job.title} · {COMPANY_TYPES[character.job.company].label}
-          </p>
-          <p className="font-pixel text-sm text-ink/60">
-            연봉 {character.job.salaryManwon.toLocaleString()}만원
-          </p>
-          <p className="mt-2 font-sans text-[12px] text-ink/45">
-            업무평가·연봉협상·승진은 다음 업데이트(Phase 4~5)에서 열려요.
-          </p>
-        </div>
+        <header className="mb-4 flex items-center justify-between">
+          {back}
+          <h1 className="font-pixel text-base font-bold">직장</h1>
+          <span className="w-16" />
+        </header>
+        <WorkPanel character={character} now={now} />
         <JobResultModal />
+        <Toast />
         <BottomNav />
       </main>
     );

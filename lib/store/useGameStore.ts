@@ -15,7 +15,7 @@ import type {
   JobState,
   YearlyReview,
 } from "@/types/character";
-import { getAction, PREP_KEYS } from "@/lib/game/actions";
+import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
 import { createCharacter } from "@/lib/game/character";
 import {
   FOODS,
@@ -176,6 +176,9 @@ export const useGameStore = create<GameState>()(
         if (!isActionUnlocked(key, c.lifeStage)) {
           return { ok: false, message: "아직 이 단계에서는 할 수 없어요." };
         }
+        if (WORK_KEYS.has(key) && !c.job) {
+          return { ok: false, message: "취업 후에 할 수 있어요." };
+        }
         const t = now();
         if (!isActionReady(c, key, t)) {
           return { ok: false, message: "아직 쿨타임이에요." };
@@ -190,7 +193,12 @@ export const useGameStore = create<GameState>()(
         if (key === "exercise") {
           counters.exercise += 1;
           lastExerciseAt = t;
-        } else if (key === "selfDev" || key === "read" || PREP_KEYS.has(key)) {
+        } else if (
+          key === "selfDev" ||
+          key === "read" ||
+          key === "workSelfDev" ||
+          PREP_KEYS.has(key)
+        ) {
           counters.selfDev += 1;
         }
 
@@ -339,7 +347,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 3,
+      version: 4,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -360,6 +368,7 @@ export const useGameStore = create<GameState>()(
             portfolioScore: c.stats?.portfolioScore ?? 0,
             interviewScore: c.stats?.interviewScore ?? 0,
             certificateScore: c.stats?.certificateScore ?? 0,
+            performance: c.stats?.performance ?? 0,
           },
           reviews: c.reviews ?? [],
           lastReviewedAge: c.ageYears ?? 0,

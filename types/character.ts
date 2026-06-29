@@ -41,6 +41,7 @@ export interface CharacterStats {
   portfolioScore: number; // 취업 준비: 포트폴리오
   interviewScore: number; // 취업 준비: 면접
   certificateScore: number; // 취업 준비: 자격증
+  performance: number; // 업무 성과(직장인) 누적
 }
 
 // --- 취업(Phase 3) ---
@@ -66,7 +67,17 @@ export type CompanyTypeKey =
   | "public"
   | "freelance";
 
-export type JobGrade = "intern" | "newbie" | "staff";
+export type JobGrade =
+  | "intern"
+  | "newbie"
+  | "staff"
+  | "junior" // 주임
+  | "assistant" // 대리
+  | "manager" // 과장
+  | "deputy" // 차장
+  | "director" // 부장
+  | "executive" // 임원
+  | "ceo"; // 대표
 
 export interface JobState {
   family: JobFamilyKey;
@@ -76,6 +87,24 @@ export interface JobState {
   salaryManwon: number; // 만원 단위
   hiredAt: number; // epoch ms
   hiredAtAge: number;
+  lastEvalGrade?: ReviewGrade; // 최근 업무평가 등급
+  lastRaisePct?: number; // 직전 인상률(%)
+  promotedAtAge?: number;
+}
+
+/** 직장인 연간 업무평가 기록 (YearlyReview.work 에 첨부) */
+export interface WorkReview {
+  evalScore: number;
+  grade: ReviewGrade;
+  workPerformance: number;
+  raisePct: number;
+  salaryBefore: number;
+  salaryAfter: number;
+  promoted: boolean;
+  gradeFrom?: JobGrade;
+  gradeTo?: JobGrade;
+  promoHeld: boolean;
+  holdReasons?: string[];
 }
 
 export interface JobOutcome {
@@ -99,6 +128,7 @@ export interface YearlyReview {
   score: number;
   grade: ReviewGrade;
   exam?: { score: number; tier: string };
+  work?: WorkReview; // 직장인 업무평가(있으면)
   selfDevPenaltyApplied: boolean;
   salaryBonusForfeited?: boolean; // Phase3 연봉협상에서 소비
   neglectedYears?: number;

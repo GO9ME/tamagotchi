@@ -46,6 +46,7 @@ export function createCharacter(
       portfolioScore: 0,
       interviewScore: 0,
       certificateScore: 0,
+      performance: 0,
     },
     bornAt: now,
     createdAt: now,

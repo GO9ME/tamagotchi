@@ -1,0 +1,222 @@
+import type { ActionEffect } from "@/types/action";
+import type {
+  Character,
+  JobGrade,
+  ReviewGrade,
+  WorkReview,
+  YearCounters,
+} from "@/types/character";
+import { clamp, round2 } from "./clamp";
+import { PROMO_THRESHOLD, RAISE_PCT, YEARLY_TARGETS } from "./constants";
+import { applyEffect } from "./engine";
+import { JOB_FAMILIES, jobTitle, nextGrade, startingSalary } from "./jobs";
+
+const ci = (s: number) => Math.min(Math.max(s, 0), 100);
+
+/** 직무 핵심 스탯 평균 (job 없으면 0) */
+export function jobCoreStatAvg(c: Character): number {
+  if (!c.job) return 0;
+  const cs = JOB_FAMILIES[c.job.family].coreStats;
+  if (cs.length === 0) return 0;
+  return round2(cs.reduce((a, k) => a + ci(c.stats[k]), 0) / cs.length);
+}
+
+/** 직무 역량 = 핵심 스탯 평균 + 누적 성과(performance) 블렌드 */
+export function competency(c: Character): number {
+  return round2((jobCoreStatAvg(c) + ci(c.stats.performance)) / 2);
+}
+
+export function reputationScore(c: Character): number {
+  return round2((ci(c.stats.careerPotential) + ci(c.stats.communication)) / 2);
+}
+
+export function leadershipScore(c: Character): number {
+  return round2(
+    (ci(c.stats.careerPotential) +
+      ci(c.stats.communication) +
+      ci(c.stats.discipline)) /
+      3,
+  );
+}
+
+/** 업무 실패 요인 배수 (PRD 12.3) — 가장 불리한 단일 배수 + 추가 곱 */
+export function failMult(c: Character): number {
+  const s = c.status;
+  let m = 1;
+  if (s.hunger < 30 && s.energy < 30) m = 0.75;
+  else if (s.hunger < 30) m = 0.8;
+  else if (s.energy < 30) m = 0.75;
+  if (s.stress > 80) m *= 0.8;
+  if (s.burnout > 80) m *= 0.85;
+  return m;
+}
+
+/** 업무 성과 (PRD 12.2) — rand 0~1 주입 */
+export function workPerformance(c: Character, rand: number): number {
+  const base =
+    competency(c) * 0.4 +
+    c.status.focus * 0.2 +
+    ci(c.stats.discipline) * 0.15 +
+    c.status.health * 0.1 +
+    c.status.mood * 0.05 +
+    rand * 100 * 0.1;
+  return clamp(Math.round(base * failMult(c)), 0, 100);
+}
+
+/** 업무평가 종합 점수 (PRD 13, 0~100) */
+export function evaluationScore(
+  c: Character,
+  counters: YearCounters,
+  rand: number,
+): number {
+  const perf = workPerformance(c, rand);
+  const comp = competency(c);
+  const att = clamp(100 - c.status.stress * 0.5, 0, 100);
+  const collab = ci(c.stats.communication);
+  const growth = ci(c.stats.careerPotential);
+  const rel = clamp(100 - c.status.burnout * 0.6, 0, 100);
+  const hmgmt = c.status.health;
+  const sdev = Math.min(counters.selfDev / YEARLY_TARGETS.selfDev, 1) * 100;
+  const raw =
+    perf * 0.3 +
+    comp * 0.2 +
+    att * 0.15 +
+    collab * 0.1 +
+    growth * 0.1 +
+    rel * 0.05 +
+    hmgmt * 0.05 +
+    sdev * 0.05;
+  return clamp(Math.round(raw), 0, 100);
+}
+
+/** 업무평가 등급 (PRD 13 컷 — review.ts gradeOf 와 다름, 혼용 금지) */
+export function workGradeOf(score: number): ReviewGrade {
+  return score >= 90
+    ? "S"
+    : score >= 80
+      ? "A"
+      : score >= 70
+        ? "B"
+        : score >= 60
+          ? "C"
+          : "D";
+}
+
+export function workEvalEffect(grade: ReviewGrade): ActionEffect {
+  switch (grade) {
+    case "S":
+      return { stats: { careerPotential: 3 }, status: { confidence: 5, mood: 4 } };
+    case "A":
+      return { stats: { careerPotential: 2 }, status: { confidence: 3 } };
+    case "B":
+      return { stats: { careerPotential: 1 } };
+    case "C":
+      return { status: { mood: -3, stress: 4 } };
+    case "D":
+      return { status: { confidence: -4, mood: -5, stress: 5, burnout: 5 } };
+  }
+}
+
+/** 만원 100단위 인상 적용 */
+export function applyRaise(salary: number, pct: number): number {
+  return Math.round((salary * (1 + pct / 100)) / 100) * 100;
+}
+
+/** 승진 점수 (PRD 15) */
+export function promotionScore(
+  c: Character,
+  recentEvalScore: number,
+  counters: YearCounters,
+): number {
+  const sdev = Math.min(counters.selfDev / YEARLY_TARGETS.selfDev, 1) * 100;
+  const raw =
+    recentEvalScore * 0.35 +
+    jobCoreStatAvg(c) * 0.25 +
+    leadershipScore(c) * 0.15 +
+    reputationScore(c) * 0.1 +
+    sdev * 0.1 +
+    c.status.health * 0.05;
+  return clamp(Math.round(raw), 0, 100);
+}
+
+/** 승진 보류 사유 (있으면 보류) — PRD 15 */
+export function promotionHold(
+  c: Character,
+  thisGrade: ReviewGrade,
+  counters: YearCounters,
+): string[] {
+  const reasons: string[] = [];
+  if (thisGrade === "C" || thisGrade === "D") reasons.push("평가 부진");
+  if (c.status.burnout > 85) reasons.push("번아웃");
+  if (counters.selfDev === 0) reasons.push("자기개발 부족");
+  if (c.status.health < 30) reasons.push("건강 악화");
+  return reasons;
+}
+
+/**
+ * 연간 업무평가 처리: 평가 → 연봉 인상 → 승진 심사 → job 갱신 + 효과 적용.
+ * 직장인(job 보유) 전용. job 없으면 no-op.
+ */
+export function processWorkReview(
+  c: Character,
+  reviewAge: number,
+  rand: number,
+): { character: Character; work: WorkReview | null } {
+  const job = c.job;
+  if (!job) return { character: c, work: null };
+
+  const counters = c.yearCounters;
+  const evalScore = evaluationScore(c, counters, rand);
+  const wPerf = workPerformance(c, rand);
+  const grade = workGradeOf(evalScore);
+
+  // 1) 연봉 인상
+  const pct = RAISE_PCT[grade];
+  const salaryBefore = job.salaryManwon;
+  let salaryAfter = applyRaise(salaryBefore, pct);
+
+  // 2) 승진 심사
+  const reasons = promotionHold(c, grade, counters);
+  const pScore = promotionScore(c, evalScore, counters);
+  const next = nextGrade(job.grade);
+  const promoted =
+    next != null && reasons.length === 0 && pScore >= PROMO_THRESHOLD[job.grade];
+
+  const oldGrade = job.grade;
+  let newGrade = oldGrade;
+  if (promoted && next) {
+    newGrade = next;
+    // 새 직급 기본연봉 하한 보장(역전 방지)
+    salaryAfter = Math.max(salaryAfter, startingSalary(newGrade, job.company));
+  }
+
+  const newJob = {
+    ...job,
+    grade: newGrade,
+    title: jobTitle(job.family, newGrade),
+    salaryManwon: salaryAfter,
+    lastEvalGrade: grade,
+    lastRaisePct: pct,
+    promotedAtAge: promoted ? reviewAge : job.promotedAtAge,
+  };
+
+  let character = applyEffect(c, workEvalEffect(grade));
+  character = { ...character, job: newJob };
+
+  const work: WorkReview = {
+    evalScore,
+    grade,
+    workPerformance: wPerf,
+    raisePct: pct,
+    salaryBefore,
+    salaryAfter,
+    promoted,
+    gradeFrom: promoted ? oldGrade : undefined,
+    gradeTo: promoted ? newGrade : undefined,
+    promoHeld:
+      next != null && reasons.length > 0 && pScore >= PROMO_THRESHOLD[oldGrade],
+    holdReasons: reasons.length > 0 ? reasons : undefined,
+  };
+
+  return { character, work };
+}

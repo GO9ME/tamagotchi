@@ -44,16 +44,49 @@ export const COMPANY_TYPES: Record<CompanyTypeKey, CompanyType> = {
   freelance: { label: "프리랜서", icon: "folder", salaryMult: 0.85, chanceMod: 12, desc: "자유 · 수입 변동" },
 };
 
+// 승진 사다리 (단일 출처)
+export const GRADE_ORDER: JobGrade[] = [
+  "intern",
+  "newbie",
+  "staff",
+  "junior",
+  "assistant",
+  "manager",
+  "deputy",
+  "director",
+  "executive",
+  "ceo",
+];
+
+export function nextGrade(g: JobGrade): JobGrade | null {
+  const i = GRADE_ORDER.indexOf(g);
+  return i >= 0 && i < GRADE_ORDER.length - 1 ? GRADE_ORDER[i + 1] : null;
+}
+
 export const BASE_SALARY: Record<JobGrade, number> = {
   intern: 2400,
   newbie: 3000,
   staff: 3600,
+  junior: 4200,
+  assistant: 5000,
+  manager: 6200,
+  deputy: 7500,
+  director: 9000,
+  executive: 12000,
+  ceo: 20000,
 };
 
 export const GRADE_LABEL: Record<JobGrade, string> = {
   intern: "인턴",
   newbie: "신입",
   staff: "사원",
+  junior: "주임",
+  assistant: "대리",
+  manager: "과장",
+  deputy: "차장",
+  director: "부장",
+  executive: "임원",
+  ceo: "대표",
 };
 
 export function gradeForScore(score: number): JobGrade {

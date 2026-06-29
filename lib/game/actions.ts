@@ -1,9 +1,24 @@
-import type { ActionDef } from "@/types/action";
+import type { ActionDef, StatsDelta } from "@/types/action";
 import type { Character } from "@/types/character";
+import { round2 } from "./clamp";
+import { JOB_FAMILIES } from "./jobs";
 import { weightEfficiencyMultiplier } from "./weight";
 
 const MIN = 60 * 1000;
 const HOUR = 60 * MIN;
+
+/** 직무 핵심 스탯에 total 만큼 균등 분배 (직무별 편차 제거) */
+function coreStatBoost(c: Character, total: number): StatsDelta {
+  const out: Record<string, number> = {};
+  if (!c.job) return out;
+  const cs = JOB_FAMILIES[c.job.family].coreStats;
+  if (cs.length === 0) return out;
+  const per = round2(total / cs.length);
+  cs.forEach((k) => {
+    out[k] = (out[k] ?? 0) + per;
+  });
+  return out as StatsDelta;
+}
 
 /**
  * 액션 정의 목록.
@@ -225,10 +240,134 @@ export const ACTIONS: ActionDef[] = [
       message: "자격증 공부로 스펙을 쌓았어요.",
     }),
   },
+
+  // --- 업무 (employee 단계, 직장 화면 전용) ---
+  {
+    key: "focusWork",
+    label: "집중 업무",
+    emoji: "💻",
+    desc: "직무 핵심 역량과 성과를 키워요.",
+    kind: "instant",
+    cooldownMs: 2 * HOUR,
+    category: "study",
+    minStage: "employee",
+    effect: (c: Character) => ({
+      status: { energy: -8, focus: 4, stress: 2 },
+      stats: { performance: 2, ...coreStatBoost(c, 1.2) },
+      exp: 12,
+      message: "집중해서 업무를 처리했어요.",
+    }),
+  },
+  {
+    key: "writeDoc",
+    label: "문서 작성",
+    emoji: "📑",
+    desc: "보고서·문서 능력을 키워요.",
+    kind: "instant",
+    cooldownMs: 2 * HOUR,
+    category: "study",
+    minStage: "employee",
+    effect: () => ({
+      status: { energy: -5, focus: 2 },
+      stats: { performance: 1.5, communication: 0.5, discipline: 0.4 },
+      exp: 10,
+      message: "문서를 깔끔하게 정리했어요.",
+    }),
+  },
+  {
+    key: "meeting",
+    label: "회의 참여",
+    emoji: "🗣️",
+    desc: "소통과 협업 능력을 키워요.",
+    kind: "instant",
+    cooldownMs: 90 * MIN,
+    category: "selfdev",
+    minStage: "employee",
+    effect: () => ({
+      status: { energy: -6, mood: 2, stress: 1 },
+      stats: { communication: 1, careerPotential: 0.3 },
+      exp: 8,
+      message: "회의에서 의견을 나눴어요.",
+    }),
+  },
+  {
+    key: "handleIssue",
+    label: "이슈 대응",
+    emoji: "🚨",
+    desc: "문제를 해결하지만 스트레스가 쌓여요.",
+    kind: "instant",
+    cooldownMs: 3 * HOUR,
+    category: "study",
+    minStage: "employee",
+    effect: () => ({
+      status: { stress: 8, energy: -7, focus: 1 },
+      stats: { performance: 2.5, intelligence: 0.5, careerPotential: 0.3 },
+      exp: 12,
+      message: "급한 이슈를 처리했어요. 휴!",
+    }),
+  },
+  {
+    key: "workSelfDev",
+    label: "자기개발",
+    emoji: "🚀",
+    desc: "커리어 잠재력을 키워 승진에 대비해요.",
+    kind: "instant",
+    cooldownMs: 1 * HOUR,
+    category: "selfdev",
+    minStage: "employee",
+    effect: () => ({
+      status: { energy: -5, stress: 2 },
+      stats: { careerPotential: 2, discipline: 1 },
+      exp: 10,
+      message: "자기개발에 투자했어요.",
+    }),
+  },
+  {
+    key: "workRest",
+    label: "휴식",
+    emoji: "☕",
+    desc: "번아웃과 스트레스를 풀어요.",
+    kind: "instant",
+    cooldownMs: 2 * HOUR,
+    category: "rest",
+    minStage: "employee",
+    effect: () => ({
+      status: { energy: 18, stress: -12, burnout: -10, mood: 4 },
+      exp: 2,
+      message: "잠시 쉬며 한숨 돌렸어요.",
+    }),
+  },
+  {
+    key: "overtime",
+    label: "야근",
+    emoji: "🌙",
+    desc: "성과는 오르지만 번아웃이 쌓여요.",
+    kind: "instant",
+    cooldownMs: 4 * HOUR,
+    category: "study",
+    minStage: "employee",
+    effect: () => ({
+      status: { energy: -15, stress: 10, burnout: 12, health: -4, focus: -3 },
+      stats: { performance: 3.5, careerPotential: 0.5 },
+      exp: 14,
+      message: "야근으로 성과를 냈지만 지쳤어요.",
+    }),
+  },
 ];
 
 /** 취업 준비 액션 (대시보드 ActionGrid 에서 제외, 커리어 화면 전용) */
 export const PREP_KEYS = new Set(["resume", "portfolio", "interviewPrep", "certStudy"]);
+
+/** 업무 액션 (대시보드 ActionGrid 에서 제외, 직장 화면 전용) */
+export const WORK_KEYS = new Set([
+  "focusWork",
+  "writeDoc",
+  "meeting",
+  "handleIssue",
+  "workSelfDev",
+  "overtime",
+  "workRest",
+]);
 
 export const ACTION_MAP: Record<string, ActionDef> = Object.fromEntries(
   ACTIONS.map((a) => [a.key, a]),

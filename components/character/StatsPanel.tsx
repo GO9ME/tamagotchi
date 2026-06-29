@@ -11,6 +11,7 @@ const STAT_META: { key: keyof Character["stats"]; label: string }[] = [
   { key: "communication", label: "소통" },
   { key: "careerPotential", label: "커리어" },
   { key: "employability", label: "취업력" },
+  { key: "performance", label: "업무성과" },
 ];
 
 export function StatsPanel({ character }: { character: Character }) {

@@ -3,6 +3,7 @@
 import type { YearlyReview } from "@/types/character";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { stageLabel } from "@/lib/game/growth";
+import { GRADE_LABEL } from "@/lib/game/jobs";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { gradeMeta } from "./gradeMeta";
 
@@ -87,6 +88,36 @@ function NormalBody({ review }: { review: YearlyReview }) {
           <span className="font-pixel text-sm font-bold">
             {review.exam.tier} · {review.exam.score}점
           </span>
+        </div>
+      )}
+
+      {review.work && (
+        <div className="mt-3 space-y-2">
+          <div className="flex items-center justify-between rounded-xl border-2 border-ink/15 bg-mint/20 px-4 py-2.5">
+            <span className="flex items-center gap-1.5 font-pixel text-sm font-bold text-ink/75">
+              <PixelIcon name="briefcase" size={15} /> 업무 성과
+            </span>
+            <span className="font-pixel text-sm font-bold">{review.work.workPerformance}점</span>
+          </div>
+          <div className="flex items-center justify-between rounded-xl border-2 border-ink/15 bg-butter/30 px-4 py-2.5">
+            <span className="font-pixel text-sm font-bold text-ink/75">연봉</span>
+            <span className="font-pixel text-sm font-bold tabular-nums">
+              {review.work.salaryBefore.toLocaleString()} → {review.work.salaryAfter.toLocaleString()}만
+              {review.work.raisePct !== 0
+                ? ` (${review.work.raisePct > 0 ? "+" : ""}${review.work.raisePct}%)`
+                : ""}
+            </span>
+          </div>
+          {review.work.promoted && review.work.gradeTo && review.work.gradeFrom && (
+            <div className="rounded-xl border-2 border-ink/15 bg-grape/25 px-4 py-2.5 text-center font-pixel text-sm font-bold text-ink">
+              승진! {GRADE_LABEL[review.work.gradeFrom]} → {GRADE_LABEL[review.work.gradeTo]}
+            </div>
+          )}
+          {review.work.promoHeld && review.work.holdReasons && (
+            <p className="rounded-xl bg-coral/15 px-4 py-2 text-[11px] text-coral">
+              승진 보류: {review.work.holdReasons.join(", ")}
+            </p>
+          )}
         </div>
       )}
 

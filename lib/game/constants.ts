@@ -1,5 +1,5 @@
 import type { FoodDef } from "@/types/action";
-import type { LifeStage } from "@/types/character";
+import type { JobGrade, LifeStage } from "@/types/character";
 
 // ---------------------------------------------------------------------------
 // 시간 / 나이
@@ -182,6 +182,29 @@ export const EDU_STAGES: LifeStage[] = [
   "university",
   "jobseeker",
 ];
+
+/** 평가 등급별 연봉 인상률(%) — PRD 14.4 */
+export const RAISE_PCT: Record<"S" | "A" | "B" | "C" | "D", number> = {
+  S: 8,
+  A: 5,
+  B: 3,
+  C: 0,
+  D: -3,
+};
+
+/** 현재 직급에서 다음 직급으로 승진하는 데 필요한 promotionScore 임계 — 고연차일수록 ↑ */
+export const PROMO_THRESHOLD: Record<JobGrade, number> = {
+  intern: 55,
+  newbie: 60,
+  staff: 65,
+  junior: 68,
+  assistant: 72,
+  manager: 76,
+  deputy: 80,
+  director: 86,
+  executive: 93,
+  ceo: 999, // 최상위, 승진 없음
+};
 
 // ---------------------------------------------------------------------------
 // 마스코트 색상 팔레트 (커스텀 캐릭터)

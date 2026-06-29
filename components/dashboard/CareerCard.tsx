@@ -1,19 +1,25 @@
 import Link from "next/link";
 
 import type { Character } from "@/types/character";
-import { COMPANY_TYPES, JOB_FAMILIES } from "@/lib/game/jobs";
+import { COMPANY_TYPES, GRADE_LABEL, JOB_FAMILIES } from "@/lib/game/jobs";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 export function CareerCard({ character }: { character: Character }) {
-  // 취업 완료 — 재직 요약
+  // 취업 완료 — 재직 요약 (직장 화면 진입)
   if (character.job) {
     const fam = JOB_FAMILIES[character.job.family];
     const comp = COMPANY_TYPES[character.job.company];
+    const lastGrade = [...(character.reviews ?? [])]
+      .reverse()
+      .find((r) => r.work)?.work?.grade;
     return (
-      <div className="card p-4">
+      <Link
+        href="/career"
+        className="card block p-4 transition-transform hover:-translate-y-0.5"
+      >
         <div className="mb-2 flex items-center justify-between">
           <h3 className="font-pixel text-sm font-bold text-ink/80">직장</h3>
-          <span className="pill bg-mint text-ink">재직 중</span>
+          <span className="pill bg-mint text-ink">{GRADE_LABEL[character.job.grade]}</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-ink">
@@ -22,11 +28,16 @@ export function CareerCard({ character }: { character: Character }) {
           <div className="flex-1">
             <div className="font-pixel text-sm font-bold">{character.job.title}</div>
             <div className="font-pixel text-[11px] text-ink/55">
-              {comp.label} · 연봉 {character.job.salaryManwon.toLocaleString()}만원
+              {comp.label} · {character.job.salaryManwon.toLocaleString()}만원
+              {lastGrade ? ` · 평가 ${lastGrade}` : ""}
             </div>
           </div>
+          <span className="font-pixel text-xs text-coral">→</span>
         </div>
-      </div>
+        {character.status.burnout > 80 && (
+          <p className="mt-2 font-pixel text-[11px] text-coral">번아웃 주의 — 휴식 필요</p>
+        )}
+      </Link>
     );
   }
 

@@ -4,6 +4,7 @@ import type {
   CharacterStatus,
   LifeStage,
   ReviewGrade,
+  WorkReview,
   YearCounters,
   YearlyReview,
 } from "@/types/character";
@@ -17,6 +18,7 @@ import { applyEffect } from "./engine";
 import { isActionUnlocked } from "./gating";
 import { cappedStageForAge } from "./growth";
 import { computeExamScore, examEffect, examTier } from "./exam";
+import { processWorkReview } from "./work";
 import { weightVerdict } from "./weight";
 
 const ZERO_COUNTERS: YearCounters = {
@@ -194,25 +196,42 @@ export function runDueReviews(
   // 미취업이면 jobseeker 로 캡(직장인 전용 페널티가 취준생에게 발동하지 않도록 게이트와 일치).
   const reviewAge = last + 1;
   const reviewStage = cappedStageForAge(reviewAge, ch.job != null);
+  const isWorkReview =
+    (reviewStage === "employee" || reviewStage === "senior") &&
+    !!ch.job &&
+    reviewAge > ch.job.hiredAtAge;
 
-  const score = scoreYear(ch.yearCounters, ch.status, reviewAge, {
-    neutralStatus: multiYear,
-  });
-  const grade = gradeOf(score);
-  let effect = reviewEffect(grade);
-  effect = mergeEffect(
-    effect,
-    selfDevPenaltyEffect(ch.yearCounters.selfDev, reviewStage),
-  );
-
+  let score: number;
+  let grade: ReviewGrade;
   let exam: { score: number; tier: string } | undefined;
-  if (EDU_STAGES.includes(reviewStage)) {
-    const es = computeExamScore(ch, Math.random());
-    const tier = examTier(es);
-    exam = { score: es, tier };
-    effect = mergeEffect(effect, examEffect(tier, reviewStage));
+  let work: WorkReview | undefined;
+
+  if (isWorkReview) {
+    // 직장인: 업무평가가 메인 등급. 공부 안 한다고 페널티 주지 않고 selfDev 페널티만 유지.
+    const res = processWorkReview(ch, reviewAge, Math.random());
+    ch = res.character;
+    work = res.work ?? undefined;
+    score = work?.evalScore ?? 0;
+    grade = work?.grade ?? "C";
+    ch = applyEffect(ch, selfDevPenaltyEffect(ch.yearCounters.selfDev, reviewStage));
+  } else {
+    score = scoreYear(ch.yearCounters, ch.status, reviewAge, {
+      neutralStatus: multiYear,
+    });
+    grade = gradeOf(score);
+    let effect = reviewEffect(grade);
+    effect = mergeEffect(
+      effect,
+      selfDevPenaltyEffect(ch.yearCounters.selfDev, reviewStage),
+    );
+    if (EDU_STAGES.includes(reviewStage)) {
+      const es = computeExamScore(ch, Math.random());
+      const tier = examTier(es);
+      exam = { score: es, tier };
+      effect = mergeEffect(effect, examEffect(tier, reviewStage));
+    }
+    ch = applyEffect(ch, effect);
   }
-  ch = applyEffect(ch, effect);
 
   reviews.push({
     id: `${c.id}:${reviewAge}`,
@@ -223,6 +242,7 @@ export function runDueReviews(
     score,
     grade,
     exam,
+    work,
     selfDevPenaltyApplied: true,
     salaryBonusForfeited:
       isAdultStage(reviewStage) && c.yearCounters.selfDev === 0
