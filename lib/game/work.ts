@@ -221,7 +221,10 @@ export function processWorkReview(
   let newGrade = oldGrade;
   if (promoted && next) {
     newGrade = next;
-    salaryAfter = Math.max(salaryAfter, startingSalary(newGrade, job.company));
+    salaryAfter = Math.max(
+      salaryAfter,
+      startingSalary(newGrade, job.company, job.family),
+    );
   }
 
   const newJob = {

@@ -35,14 +35,31 @@ export function employmentScore(c: Character): number {
   return clamp(Math.round(raw), 0, 100);
 }
 
-/** 선택한 직업군의 핵심 스탯 적합도 보너스 (-5 ~ +5) */
-export function familyFitBonus(c: Character, family: JobFamilyKey | null): number {
-  if (!family) return 0;
+/** 선택한 직업군의 핵심 스탯 평균 */
+export function familyCoreAvg(c: Character, family: JobFamilyKey): number {
   const cs = JOB_FAMILIES[family].coreStats;
   if (cs.length === 0) return 0;
-  const avg =
-    cs.reduce((a, k) => a + ci(c.stats[k]), 0) / cs.length;
-  return Math.round((avg - 50) * 0.1);
+  return cs.reduce((a, k) => a + ci(c.stats[k]), 0) / cs.length;
+}
+
+/**
+ * 직업군 적합도 보너스. 핵심 스탯 평균이 그 직무 기준선(statBar)보다
+ * 높을수록 큰 보너스, 낮으면 큰 페널티(능력치에 강하게 연동).
+ */
+export function familyFitBonus(c: Character, family: JobFamilyKey | null): number {
+  if (!family) return 0;
+  const diff = familyCoreAvg(c, family) - JOB_FAMILIES[family].statBar;
+  return clamp(Math.round(diff * 0.8), -40, 22);
+}
+
+export type FamilyFit = "good" | "ok" | "hard";
+
+/** 직업군 적합도 라벨 (UI 가이드) */
+export function familyFitLabel(c: Character, family: JobFamilyKey): FamilyFit {
+  const diff = familyCoreAvg(c, family) - JOB_FAMILIES[family].statBar;
+  if (diff >= 5) return "good";
+  if (diff >= -12) return "ok";
+  return "hard";
 }
 
 /** 직업군 적합도까지 반영한 종합 준비도 (0~100) */

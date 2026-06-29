@@ -12,7 +12,11 @@ import {
   gradeForScore,
   startingSalary,
 } from "@/lib/game/jobs";
-import { employmentChance, employmentReadiness } from "@/lib/game/employment";
+import {
+  employmentChance,
+  employmentReadiness,
+  familyFitLabel,
+} from "@/lib/game/employment";
 import { ENDING_AGE } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -168,21 +172,34 @@ export default function CareerPage() {
           {FAMILY_KEYS.map((key) => {
             const f = JOB_FAMILIES[key];
             const active = family === key;
+            const fit = familyFitLabel(character, key);
+            const fitMeta =
+              fit === "good"
+                ? { label: "적합", cls: "text-mint" }
+                : fit === "ok"
+                  ? { label: "보통", cls: "text-ink/45" }
+                  : { label: "도전", cls: "text-coral" };
             return (
               <button
                 key={key}
                 type="button"
                 onClick={() => setFamily(key)}
                 className={cn(
-                  "flex items-center gap-2 rounded-xl border-[3px] px-3 py-2.5 text-left transition-transform",
+                  "flex flex-col gap-1 rounded-xl border-[3px] px-3 py-2 text-left transition-transform",
                   active
                     ? "border-ink bg-grape/30 -translate-y-0.5"
                     : "border-ink/15 bg-white hover:border-ink/40",
                 )}
               >
-                <PixelIcon name={f.icon} size={18} />
-                <span className="font-pixel text-[12px] font-bold leading-tight">
-                  {f.label}
+                <span className="flex items-center gap-1.5">
+                  <PixelIcon name={f.icon} size={16} />
+                  <span className="font-pixel text-[12px] font-bold leading-tight">
+                    {f.label}
+                  </span>
+                </span>
+                <span className="flex items-center justify-between font-pixel text-[10px]">
+                  <span className={fitMeta.cls}>{fitMeta.label}</span>
+                  {f.salaryMult >= 1.2 && <span className="text-ink/40">고연봉</span>}
                 </span>
               </button>
             );
@@ -198,7 +215,7 @@ export default function CareerPage() {
             const c = COMPANY_TYPES[key];
             const active = company === key;
             const chance = employmentChance(character, family, key);
-            const salary = startingSalary(grade, key);
+            const salary = startingSalary(grade, key, family ?? undefined);
             return (
               <button
                 key={key}

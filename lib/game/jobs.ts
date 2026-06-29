@@ -9,22 +9,30 @@ export interface JobFamily {
   label: string;
   icon: string; // PixelIcon 이름
   coreStats: (keyof CharacterStats)[];
+  statBar: number; // 합격 기준선(핵심 스탯 평균이 이보다 높을수록 유리)
+  salaryMult: number; // 직무 연봉 배율
   desc: string;
 }
 
 export const JOB_FAMILIES: Record<JobFamilyKey, JobFamily> = {
-  management: { label: "경영/전략", icon: "star", coreStats: ["careerPotential", "intelligence", "communication"], desc: "기획·전략·리더십" },
-  finance: { label: "회계/재무", icon: "coin", coreStats: ["intelligence", "discipline", "memory"], desc: "회계·재무·정확성" },
-  hr: { label: "인사/총무", icon: "heart", coreStats: ["communication", "discipline"], desc: "인사·운영·공감" },
-  sales: { label: "영업/영업관리", icon: "bolt", coreStats: ["communication", "careerPotential"], desc: "영업·협상·멘탈" },
-  marketing: { label: "마케팅/콘텐츠", icon: "chart", coreStats: ["creativity", "communication"], desc: "마케팅·창의·트렌드" },
-  dev: { label: "개발/IT", icon: "code", coreStats: ["intelligence", "discipline", "creativity"], desc: "코딩·설계·협업" },
-  data: { label: "데이터/AI", icon: "chart", coreStats: ["intelligence", "memory", "discipline"], desc: "통계·모델링·인사이트" },
-  pm: { label: "기획/PM", icon: "star", coreStats: ["careerPotential", "communication", "creativity"], desc: "기획·문서·실행" },
-  design: { label: "디자인", icon: "palette", coreStats: ["creativity", "intelligence"], desc: "감각·UX·디테일" },
-  cs: { label: "고객지원/CS", icon: "speech", coreStats: ["communication"], desc: "응대·공감·문제해결" },
-  production: { label: "생산/품질/구매", icon: "exercise", coreStats: ["discipline", "fitness"], desc: "공정·품질·운영" },
-  legal: { label: "법무/컴플라이언스", icon: "resume", coreStats: ["intelligence", "discipline", "memory"], desc: "법무·규정·정확성" },
+  // 전문직·고난이도 (스탯 높아야 붙고, 연봉 높음)
+  medical: { label: "전문직/의료", icon: "heart", coreStats: ["intelligence", "discipline", "memory"], statBar: 75, salaryMult: 1.5, desc: "고난이도·고연봉 전문직" },
+  management: { label: "경영/전략", icon: "star", coreStats: ["careerPotential", "intelligence", "communication"], statBar: 62, salaryMult: 1.25, desc: "기획·전략·리더십" },
+  finance: { label: "회계/재무", icon: "coin", coreStats: ["intelligence", "discipline", "memory"], statBar: 60, salaryMult: 1.2, desc: "회계·재무·정확성" },
+  data: { label: "데이터/AI", icon: "chart", coreStats: ["intelligence", "memory", "discipline"], statBar: 60, salaryMult: 1.25, desc: "통계·모델링·인사이트" },
+  research: { label: "연구직", icon: "code", coreStats: ["intelligence", "memory", "creativity"], statBar: 65, salaryMult: 1.2, desc: "연구·실험·논문" },
+  legal: { label: "법무/컴플라이언스", icon: "resume", coreStats: ["intelligence", "discipline", "memory"], statBar: 60, salaryMult: 1.15, desc: "법무·규정·정확성" },
+  dev: { label: "개발/IT", icon: "code", coreStats: ["intelligence", "discipline", "creativity"], statBar: 55, salaryMult: 1.25, desc: "코딩·설계·협업" },
+  // 중간 난이도
+  pm: { label: "기획/PM", icon: "star", coreStats: ["careerPotential", "communication", "creativity"], statBar: 50, salaryMult: 1.1, desc: "기획·문서·실행" },
+  civil: { label: "공무원", icon: "briefcase", coreStats: ["discipline", "intelligence"], statBar: 50, salaryMult: 0.95, desc: "안정·정년보장·꾸준함" },
+  marketing: { label: "마케팅/콘텐츠", icon: "chart", coreStats: ["creativity", "communication"], statBar: 45, salaryMult: 1.05, desc: "마케팅·창의·트렌드" },
+  design: { label: "디자인", icon: "palette", coreStats: ["creativity", "intelligence"], statBar: 45, salaryMult: 1.05, desc: "감각·UX·디테일" },
+  hr: { label: "인사/총무", icon: "heart", coreStats: ["communication", "discipline"], statBar: 42, salaryMult: 1.0, desc: "인사·운영·공감" },
+  // 진입 쉬움 (낮은 스탯도 도전 가능, 연봉 낮음)
+  production: { label: "생산/품질/구매", icon: "exercise", coreStats: ["discipline", "fitness"], statBar: 35, salaryMult: 0.95, desc: "공정·품질·운영" },
+  sales: { label: "영업/영업관리", icon: "bolt", coreStats: ["communication", "careerPotential"], statBar: 35, salaryMult: 1.0, desc: "영업·협상·멘탈" },
+  cs: { label: "고객지원/CS", icon: "speech", coreStats: ["communication"], statBar: 28, salaryMult: 0.9, desc: "응대·공감·문제해결" },
 };
 
 export interface CompanyType {
@@ -93,9 +101,18 @@ export function gradeForScore(score: number): JobGrade {
   return score >= 75 ? "staff" : score >= 55 ? "newbie" : "intern";
 }
 
-/** 초봉(만원) = 직급 기본 × 회사 배율, 100만원 단위 반올림 */
-export function startingSalary(grade: JobGrade, company: CompanyTypeKey): number {
-  return Math.round((BASE_SALARY[grade] * COMPANY_TYPES[company].salaryMult) / 100) * 100;
+/** 초봉(만원) = 직급 기본 × 회사 배율 × 직무 배율, 100만원 단위 반올림 */
+export function startingSalary(
+  grade: JobGrade,
+  company: CompanyTypeKey,
+  family?: JobFamilyKey,
+): number {
+  const famMult = family ? JOB_FAMILIES[family].salaryMult : 1;
+  return (
+    Math.round(
+      (BASE_SALARY[grade] * COMPANY_TYPES[company].salaryMult * famMult) / 100,
+    ) * 100
+  );
 }
 
 export function jobTitle(family: JobFamilyKey, grade: JobGrade): string {

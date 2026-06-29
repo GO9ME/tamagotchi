@@ -340,7 +340,7 @@ export const useGameStore = create<GameState>()(
 
         if (hired) {
           const grade = gradeForScore(employmentReadiness(c, family));
-          const salary = startingSalary(grade, company);
+          const salary = startingSalary(grade, company, family);
           const job: JobState = {
             family,
             company,

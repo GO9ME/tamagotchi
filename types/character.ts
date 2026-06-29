@@ -57,7 +57,10 @@ export type JobFamilyKey =
   | "design"
   | "cs"
   | "production"
-  | "legal";
+  | "legal"
+  | "medical" // 전문직(의료)
+  | "research" // 연구직
+  | "civil"; // 공무원
 
 export type CompanyTypeKey =
   | "large"
