@@ -1,0 +1,11 @@
+# 모든 텍스트 파일을 저장소에서는 LF 로 정규화
+* text=auto eol=lf
+
+# 바이너리로 취급
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
