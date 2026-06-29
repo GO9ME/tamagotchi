@@ -7,11 +7,23 @@ import type { JobGrade, LifeStage } from "@/types/character";
 
 const HOUR = 60 * 60 * 1000;
 
-/** 게임 1년이 현실 몇 ms 인지. 기본 = 현실 1일. env 로 조절 가능(테스트용). */
+/**
+ * 게임 1년이 현실 몇 ms 인지. 기본 = 9분 → 정년(60세)까지 약 9시간 한 판(출근 월급루팡용).
+ * env(NEXT_PUBLIC_GAME_YEAR_MS) 로 조절 가능(빠른 테스트/느린 플레이).
+ */
 export const GAME_YEAR_MS: number = (() => {
   const fromEnv = Number(process.env.NEXT_PUBLIC_GAME_YEAR_MS);
-  return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 24 * HOUR;
+  return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 9 * 60 * 1000;
 })();
+
+/** 한 판(출생→엔딩) 종료 나이 = 정년퇴직 */
+export const ENDING_AGE = 60;
+
+/** 액션 쿨타임 배율(빠른 회전). 1.0=원본(시간단위), 0.2≈5분의1 */
+export const COOLDOWN_SCALE = 0.2;
+
+/** 상태 감소 배율(짧은 한 판에서도 케어가 의미있도록) */
+export const DECAY_SCALE = 3;
 
 export const WEIGHT_MIN = 6;
 export const WEIGHT_MAX = 120;

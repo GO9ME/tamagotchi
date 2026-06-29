@@ -16,7 +16,9 @@ import { BottomNav } from "@/components/common/BottomNav";
 import { SaveNotice } from "@/components/common/SaveNotice";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { CareerCard } from "@/components/dashboard/CareerCard";
+import { EndingScreen } from "@/components/EndingScreen";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
+import { ENDING_AGE } from "@/lib/game/constants";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -57,6 +59,11 @@ export default function DashboardPage() {
         </div>
       </main>
     );
+  }
+
+  // 정년 도달 → 인생 결산 엔딩
+  if (character.ageYears >= ENDING_AGE) {
+    return <EndingScreen character={character} />;
   }
 
   const next = nextStageInfo(character.ageYears);

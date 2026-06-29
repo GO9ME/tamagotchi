@@ -2,6 +2,7 @@ import type { Character } from "@/types/character";
 import { clamp, clampStatus, round2 } from "./clamp";
 import {
   DECAY_PER_HOUR,
+  DECAY_SCALE,
   NO_EXERCISE_THRESHOLD_MS,
   WEIGHT_GAIN_NO_EXERCISE_PER_HOUR,
 } from "./constants";
@@ -24,25 +25,27 @@ export function applyDecay(c: Character, now: number): Character {
 
   if (hours > 0) {
     const s = next.status;
-    s.hunger += DECAY_PER_HOUR.hunger * hours;
-    s.energy += DECAY_PER_HOUR.energy * hours;
-    s.mood += DECAY_PER_HOUR.mood * hours;
-    s.focus += DECAY_PER_HOUR.focus * hours;
-    s.cleanliness += DECAY_PER_HOUR.cleanliness * hours;
-    s.sleepQuality += DECAY_PER_HOUR.sleepQuality * hours;
-    s.stress += DECAY_PER_HOUR.stress * hours;
+    // 짧은 한 판(9분/년)에서도 케어가 의미있도록 감소를 배율 적용
+    const dh = hours * DECAY_SCALE;
+    s.hunger += DECAY_PER_HOUR.hunger * dh;
+    s.energy += DECAY_PER_HOUR.energy * dh;
+    s.mood += DECAY_PER_HOUR.mood * dh;
+    s.focus += DECAY_PER_HOUR.focus * dh;
+    s.cleanliness += DECAY_PER_HOUR.cleanliness * dh;
+    s.sleepQuality += DECAY_PER_HOUR.sleepQuality * dh;
+    s.stress += DECAY_PER_HOUR.stress * dh;
 
     // 배고픔이 바닥이면 건강/기분이 추가로 나빠진다.
     if (s.hunger < 10) {
-      s.health -= 2 * hours;
-      s.mood -= 2 * hours;
+      s.health -= 2 * dh;
+      s.mood -= 2 * dh;
     }
 
     // 스트레스가 높으면 번아웃이 천천히 쌓인다.
     if (s.stress > 70) {
-      s.burnout += 1.2 * hours;
+      s.burnout += 1.2 * dh;
     } else {
-      s.burnout -= 0.4 * hours;
+      s.burnout -= 0.4 * dh;
     }
 
     // 장기 미운동 시 체중 증가

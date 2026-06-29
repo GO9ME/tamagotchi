@@ -18,7 +18,9 @@ import type {
 import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
 import { createCharacter } from "@/lib/game/character";
 import {
+  COOLDOWN_SCALE,
   FOODS,
+  GAME_YEAR_MS,
   OVEREAT_EXTRA_WEIGHT,
   OVEREAT_HUNGER_THRESHOLD,
 } from "@/lib/game/constants";
@@ -75,6 +77,27 @@ interface GameState {
 
 const now = () => Date.now();
 const HOUR = 60 * 60 * 1000;
+/** 쿨타임 배율 적용 */
+const cd = (ms: number) => Math.round(ms * COOLDOWN_SCALE);
+
+/** 모달로 띄울 만한 마일스톤 리뷰인지 (단계전환/승진/시험/S·D/방치) */
+function isMilestone(
+  review: YearlyReview,
+  allReviews: YearlyReview[],
+): boolean {
+  if (
+    review.kind === "neglected" ||
+    review.exam ||
+    review.work?.promoted ||
+    review.grade === "S" ||
+    review.grade === "D"
+  ) {
+    return true;
+  }
+  const i = allReviews.findIndex((r) => r.id === review.id);
+  const prevStage = i > 0 ? allReviews[i - 1].stage : review.stage;
+  return review.stage !== prevStage;
+}
 
 // 서버(SSR)에서는 localStorage 가 없으므로 안전한 no-op 스토리지를 사용
 const noopStorage: StateStorage = {
@@ -123,7 +146,10 @@ export const useGameStore = create<GameState>()(
         if (reviews.length > 0) {
           set((s) => {
             const existing = new Set(s.pendingReviews.map((r) => r.id));
-            const fresh = reviews.filter((r) => !existing.has(r.id));
+            // 마일스톤만 모달로 (평범한 해는 성장기록에만 — 9분/년이라 매년 팝업하면 피곤)
+            const fresh = reviews.filter(
+              (r) => !existing.has(r.id) && isMilestone(r, character.reviews),
+            );
             return { character, pendingReviews: [...s.pendingReviews, ...fresh] };
           });
         } else {
@@ -155,7 +181,7 @@ export const useGameStore = create<GameState>()(
         const isMeal = food.key !== "coffee";
         next = {
           ...next,
-          cooldowns: setCooldown(next, "feed", t, getAction("feed")!.cooldownMs),
+          cooldowns: setCooldown(next, "feed", t, cd(getAction("feed")!.cooldownMs)),
           yearCounters: {
             ...next.yearCounters,
             meals: next.yearCounters.meals + (isMeal ? 1 : 0),
@@ -214,7 +240,7 @@ export const useGameStore = create<GameState>()(
           ...next,
           lastExerciseAt,
           yearCounters: counters,
-          cooldowns: setCooldown(next, key, t, def.cooldownMs),
+          cooldowns: setCooldown(next, key, t, cd(def.cooldownMs)),
         };
 
         set({ character: next });
@@ -239,7 +265,7 @@ export const useGameStore = create<GameState>()(
         if (!isActionReady(c, "study", t)) {
           return { ok: false, message: "아직 공부 쿨타임이에요." };
         }
-        const session = buildStudySession(t, def.sessionMs ?? 30 * 60 * 1000);
+        const session = buildStudySession(t, cd(def.sessionMs ?? 30 * 60 * 1000));
         set({ character: { ...c, activeSession: session } });
         return { ok: true, message: "공부를 시작했어요. 30분 집중!" };
       },
@@ -333,7 +359,7 @@ export const useGameStore = create<GameState>()(
             ...next,
             job,
             jobApplications: c.jobApplications + 1,
-            cooldowns: setCooldown(next, "jobApply", t, HOUR),
+            cooldowns: setCooldown(next, "jobApply", t, cd(HOUR)),
           };
           set({
             character: next,
@@ -365,7 +391,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 4,
+      version: 5,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -393,6 +419,9 @@ export const useGameStore = create<GameState>()(
           lastReviewedAge: c.lastReviewedAge ?? c.ageYears ?? 0,
           job: c.job ?? null,
           jobApplications: c.jobApplications ?? 0,
+          // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋
+          bornAt: Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS,
+          lastTickAt: Date.now(),
         };
         return { character: merged } as unknown as GameState;
       },

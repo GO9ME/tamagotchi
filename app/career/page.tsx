@@ -13,6 +13,7 @@ import {
   startingSalary,
 } from "@/lib/game/jobs";
 import { employmentChance, employmentReadiness } from "@/lib/game/employment";
+import { ENDING_AGE } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
 import { cn } from "@/lib/utils";
@@ -50,6 +51,9 @@ export default function CareerPage() {
 
   useEffect(() => {
     if (hydrated && !character) router.replace("/create");
+    else if (hydrated && character && character.ageYears >= ENDING_AGE) {
+      router.replace("/dashboard"); // 엔딩은 대시보드에서
+    }
   }, [hydrated, character, router]);
 
   // 나이/단계 갱신: 직접 접근/새로고침 시에도 stale 단계 가드 방지 (대시보드와 동일)
