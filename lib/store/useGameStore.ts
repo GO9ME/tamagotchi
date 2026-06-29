@@ -7,7 +7,7 @@ import {
   type StateStorage,
 } from "zustand/middleware";
 
-import type { Character } from "@/types/character";
+import type { Character, YearlyReview } from "@/types/character";
 import { getAction } from "@/lib/game/actions";
 import { createCharacter } from "@/lib/game/character";
 import {
@@ -16,6 +16,8 @@ import {
   OVEREAT_HUNGER_THRESHOLD,
 } from "@/lib/game/constants";
 import { applyEffect, isActionReady, setCooldown } from "@/lib/game/engine";
+import { isActionUnlocked } from "@/lib/game/gating";
+import { runDueReviews } from "@/lib/game/review";
 import { applyDecay } from "@/lib/game/status";
 import {
   StudyResult,
@@ -35,9 +37,11 @@ interface GameState {
   hydrated: boolean;
   /** UI 토스트용: 마지막 메시지와 토큰(애니메이션 트리거) */
   toast: { message: string; token: number } | null;
+  /** 아직 확인하지 않은 연간 리뷰 모달 큐 (비영속) */
+  pendingReviews: YearlyReview[];
 
   setHydrated: () => void;
-  createNew: (name: string, avatar: string) => void;
+  createNew: (name: string, color: string) => void;
   reset: () => void;
 
   tick: () => void;
@@ -47,6 +51,8 @@ interface GameState {
   completeStudy: () => StudyResult | null;
   cancelStudy: () => void;
   addHiddenMs: (ms: number) => void;
+  ackReview: () => void;
+  ackAllReviews: () => void;
 }
 
 const now = () => Date.now();
@@ -72,20 +78,35 @@ export const useGameStore = create<GameState>()(
         character: null,
         hydrated: false,
         toast: null,
+        pendingReviews: [],
 
         setHydrated: () => set({ hydrated: true }),
 
-      createNew: (name, avatar) => {
+      createNew: (name, color) => {
         const userId = getOrCreateUserId();
-        set({ character: createCharacter(userId, name, avatar, now()) });
+        set({
+          character: createCharacter(userId, name, color, now()),
+          pendingReviews: [],
+          toast: null,
+        });
       },
 
-      reset: () => set({ character: null, toast: null }),
+      reset: () => set({ character: null, toast: null, pendingReviews: [] }),
 
       tick: () => {
         const c = get().character;
         if (!c) return;
-        set({ character: applyDecay(c, now()) });
+        const decayed = applyDecay(c, now());
+        const { character, reviews } = runDueReviews(decayed, now());
+        if (reviews.length > 0) {
+          set((s) => {
+            const existing = new Set(s.pendingReviews.map((r) => r.id));
+            const fresh = reviews.filter((r) => !existing.has(r.id));
+            return { character, pendingReviews: [...s.pendingReviews, ...fresh] };
+          });
+        } else {
+          set({ character });
+        }
       },
 
       feed: (foodKey) => {
@@ -131,6 +152,9 @@ export const useGameStore = create<GameState>()(
         if (!def || def.kind !== "instant" || !def.effect) {
           return { ok: false, message: "지원하지 않는 액션이에요." };
         }
+        if (!isActionUnlocked(key, c.lifeStage)) {
+          return { ok: false, message: "아직 이 단계에서는 할 수 없어요." };
+        }
         const t = now();
         if (!isActionReady(c, key, t)) {
           return { ok: false, message: "아직 쿨타임이에요." };
@@ -167,6 +191,9 @@ export const useGameStore = create<GameState>()(
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
         if (c.activeSession) {
           return { ok: false, message: "이미 공부 중이에요." };
+        }
+        if (!isActionUnlocked("study", c.lifeStage)) {
+          return { ok: false, message: "아직 공부할 단계가 아니에요." };
         }
         const def = getAction("study")!;
         const t = now();
@@ -219,15 +246,36 @@ export const useGameStore = create<GameState>()(
           },
         });
       },
+
+      ackReview: () =>
+        set((s) => ({ pendingReviews: s.pendingReviews.slice(1) })),
+
+      ackAllReviews: () => set({ pendingReviews: [] }),
       };
     },
     {
       name: "lifegotchi:character",
+      version: 2,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
       skipHydration: true,
       partialize: (s) => ({ character: s.character }),
+      // Phase 1 세이브(academic/reviews/color 없음) 호환 + 복귀 즉시 다년 리뷰 폭탄 방지
+      migrate: (persisted) => {
+        const stored = (persisted ?? {}) as { character?: Character | null };
+        const c = stored.character;
+        if (!c) return { character: null } as unknown as GameState;
+        const merged: Character = {
+          ...c,
+          color: c.color || "blush",
+          avatar: c.avatar || "🐣",
+          stats: { ...c.stats, academic: c.stats?.academic ?? 5 },
+          reviews: c.reviews ?? [],
+          lastReviewedAge: c.ageYears ?? 0,
+        };
+        return { character: merged } as unknown as GameState;
+      },
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();
       },

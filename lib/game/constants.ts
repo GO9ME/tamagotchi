@@ -149,3 +149,60 @@ export const FOODS: FoodDef[] = [
 /** 과식 기준: 이미 배부른 상태(>=85)에서 또 먹으면 과식 페널티 */
 export const OVEREAT_HUNGER_THRESHOLD = 85;
 export const OVEREAT_EXTRA_WEIGHT = 0.5;
+
+// ---------------------------------------------------------------------------
+// Phase 2: 단계 인덱스 / 연간 리뷰 / 시험
+// ---------------------------------------------------------------------------
+
+/** LifeStage -> LIFE_STAGES 내 순서 인덱스 */
+export const STAGE_INDEX: Record<LifeStage, number> = LIFE_STAGES.reduce(
+  (acc, s, i) => {
+    acc[s.stage] = i;
+    return acc;
+  },
+  {} as Record<LifeStage, number>,
+);
+
+/** 연간 권장 활동 횟수 (게임 1년 = 현실 1일 기준) */
+export const YEARLY_TARGETS = {
+  study: 8,
+  selfDev: 6,
+  exercise: 6,
+  meals: 12,
+} as const;
+
+/** 오프라인 다년 방치 시 페널티 적용 상한 연수 */
+export const MAX_NEGLECT_YEARS_APPLIED = 3;
+
+/** 시험이 발생하는 학업 단계 */
+export const EDU_STAGES: LifeStage[] = [
+  "elementary",
+  "middle",
+  "high",
+  "university",
+  "jobseeker",
+];
+
+// ---------------------------------------------------------------------------
+// 마스코트 색상 팔레트 (커스텀 캐릭터)
+// ---------------------------------------------------------------------------
+
+export interface MascotColor {
+  key: string;
+  label: string;
+  body: string; // 본체 색
+  shade: string; // 배/그림자 등 진한 색
+}
+
+export const MASCOT_COLORS: MascotColor[] = [
+  { key: "blush", label: "복숭아", body: "#FFB7C5", shade: "#FF94A9" },
+  { key: "mint", label: "민트", body: "#A8E6CF", shade: "#7FD9B6" },
+  { key: "sky", label: "하늘", body: "#AEDFF7", shade: "#86CBEF" },
+  { key: "butter", label: "버터", body: "#FFE08A", shade: "#FFC94D" },
+  { key: "grape", label: "포도", body: "#C9B6F2", shade: "#AE96E8" },
+  { key: "coral", label: "코랄", body: "#FFB199", shade: "#FF8C6B" },
+];
+
+export function getMascotColor(key: string): MascotColor {
+  return MASCOT_COLORS.find((c) => c.key === key) ?? MASCOT_COLORS[0];
+}

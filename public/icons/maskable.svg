@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#FFE3EC"/>
+  <!-- 마스코트를 안전영역(중앙 ~64%) 안에 배치 -->
+  <g transform="translate(256 264) scale(0.62) translate(-256 -256)">
+    <path d="M256 120 q-26 -42 8 -50 q-10 34 26 42" stroke="#FF94A9" stroke-width="18" fill="none" stroke-linecap="round"/>
+    <ellipse cx="256" cy="290" rx="160" ry="152" fill="#FFB7C5"/>
+    <ellipse cx="256" cy="330" rx="98" ry="90" fill="#ffffff" opacity="0.6"/>
+    <circle cx="204" cy="266" r="21" fill="#3B2F2A"/>
+    <circle cx="308" cy="266" r="21" fill="#3B2F2A"/>
+    <path d="M218 322 q38 40 76 0" stroke="#3B2F2A" stroke-width="19" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

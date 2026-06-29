@@ -4,7 +4,7 @@
 
 :root {
   --bg: #fff8f0;
-  --ink: #3b2f2a;
+  --ink: #2e2722;
 }
 
 html,
@@ -15,27 +15,60 @@ body {
 
 body {
   color: var(--ink);
-  background:
-    radial-gradient(1200px 600px at 50% -10%, #ffe9f0 0%, rgba(255, 233, 240, 0) 60%),
-    radial-gradient(900px 500px at 90% 10%, #e6f7ff 0%, rgba(230, 247, 255, 0) 55%),
-    var(--bg);
-  background-attachment: fixed;
+  background-color: var(--bg);
+  /* 잔잔한 도트 패턴 (레트로) */
+  background-image: radial-gradient(rgba(46, 39, 34, 0.05) 1px, transparent 1px);
+  background-size: 9px 9px;
   -webkit-font-smoothing: antialiased;
 }
 
 @layer components {
+  /* 픽셀풍 하드보더 카드 */
   .card {
-    @apply rounded-xl2 bg-white/80 backdrop-blur-sm shadow-soft border border-white/70;
+    @apply rounded-2xl border-[3px] border-ink bg-white;
+    box-shadow: 4px 4px 0 0 rgba(46, 39, 34, 0.16);
   }
 
+  /* 픽셀풍 버튼: 하드 그림자 + 눌림 효과 */
   .toy-btn {
-    @apply rounded-2xl px-4 py-3 font-semibold transition-all active:translate-y-0.5
-           disabled:opacity-50 disabled:cursor-not-allowed select-none;
+    @apply min-h-[44px] rounded-xl border-[3px] border-ink px-4 py-3 font-pixel font-bold
+           transition-transform disabled:cursor-not-allowed select-none;
+    box-shadow: 3px 3px 0 0 rgba(46, 39, 34, 0.22);
+  }
+  .toy-btn:not(:disabled):active {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 0 rgba(46, 39, 34, 0.22);
   }
 
+  /* 픽셀풍 칩/뱃지 */
   .pill {
-    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+    @apply inline-flex items-center gap-1 rounded-md border-2 border-ink/80 px-2 py-0.5
+           font-pixel text-xs font-bold;
   }
+
+  /* LCD 화면 */
+  .lcd {
+    @apply rounded-xl border-[3px] border-ink;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        rgba(60, 74, 43, 0.06) 0,
+        rgba(60, 74, 43, 0.06) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+    background-color: theme("colors.lcd");
+  }
+
+  .h-pix {
+    @apply font-pixel;
+  }
+}
+
+/* 픽셀 이미지/스프라이트는 또렷하게 */
+.pixelated {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 /* Tidy scrollbars */

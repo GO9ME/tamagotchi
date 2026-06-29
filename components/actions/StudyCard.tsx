@@ -10,7 +10,13 @@ import {
   isStudyReady,
 } from "@/lib/game/study";
 import { isActionReady } from "@/lib/game/engine";
+import {
+  isActionUnlocked,
+  studyContentForStage,
+  unlockStageLabel,
+} from "@/lib/game/gating";
 import { formatDuration } from "@/lib/utils";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 export function StudyCard({
   character,
@@ -50,6 +56,27 @@ export function StudyCard({
 
   const eff = learningEfficiency(character);
   const reasons = efficiencyReasons(character);
+  const content = studyContentForStage(character.lifeStage);
+
+  // --- 단계 미해금 (아기·유아) ---
+  if (!isActionUnlocked("study", character.lifeStage)) {
+    return (
+      <div className="card flex items-center gap-3 p-5">
+        <span className="text-ink/40">
+          <PixelIcon name="study" size={28} />
+        </span>
+        <div className="flex-1">
+          <h3 className="font-pixel text-sm font-bold text-ink/70">공부하기</h3>
+          <p className="font-sans text-[11px] text-ink/50">
+            {unlockStageLabel("study")} 할 수 있어요. 지금은 밥·잠·놀이로 쑥쑥!
+          </p>
+        </div>
+        <span className="text-ink/45">
+          <PixelIcon name="lock" size={18} />
+        </span>
+      </div>
+    );
+  }
 
   // --- 세션 없음: 시작 가능 / 쿨타임 ---
   if (!session) {
@@ -57,14 +84,14 @@ export function StudyCard({
     const remaining = Math.max(0, (character.cooldowns["study"] ?? 0) - now);
     return (
       <div className="card relative overflow-hidden p-5">
-        <Header eff={eff} reasons={reasons} />
+        <Header eff={eff} reasons={reasons} content={content} />
         <button
           type="button"
           disabled={!ready}
           onClick={() => startStudy()}
-          className="toy-btn mt-3 w-full bg-sky text-ink shadow-soft hover:-translate-y-0.5 disabled:bg-black/10"
+          className="toy-btn mt-3 w-full bg-sky text-ink disabled:bg-black/10 disabled:text-ink/40"
         >
-          {ready ? "📖 공부 시작 (30분 집중)" : `쿨타임 ${formatDuration(remaining)}`}
+          {ready ? "공부 시작 · 30분 집중" : `쿨타임 ${formatDuration(remaining)}`}
         </button>
         <p className="mt-2 text-center text-[11px] text-ink/50">
           시작 후 30분이 지나면 완료 버튼이 열려요. 10분 안에 완료하면 100% 보상!
@@ -83,7 +110,7 @@ export function StudyCard({
     const remaining = session.availableCompleteAt - now;
     return (
       <div className="card relative overflow-hidden p-5">
-        <Header eff={eff} reasons={reasons} />
+        <Header eff={eff} reasons={reasons} content={content} />
         <div className="mt-3 flex items-center justify-between text-sm font-bold">
           <span className="text-ink/70">집중 중…</span>
           <span className="tabular-nums">{formatDuration(remaining)} 남음</span>
@@ -114,13 +141,13 @@ export function StudyCard({
   const perfectLeft = STUDY_PERFECT_WINDOW_MS - sinceReady;
   return (
     <div className="card relative overflow-hidden p-5 ring-2 ring-mint">
-      <Header eff={eff} reasons={reasons} />
+      <Header eff={eff} reasons={reasons} content={content} />
       <button
         type="button"
         onClick={() => completeStudy()}
-        className="toy-btn mt-3 w-full animate-pop bg-mint text-ink shadow-soft hover:-translate-y-0.5"
+        className="toy-btn mt-3 flex w-full items-center justify-center gap-2 bg-mint text-ink"
       >
-        ✅ 공부 완료하기!
+        <PixelIcon name="check" size={18} /> 공부 완료하기!
       </button>
       <p className="mt-2 text-center text-[11px] font-semibold text-ink/60">
         {inPerfect
@@ -131,12 +158,22 @@ export function StudyCard({
   );
 }
 
-function Header({ eff, reasons }: { eff: number; reasons: string[] }) {
+function Header({
+  eff,
+  reasons,
+  content,
+}: {
+  eff: number;
+  reasons: string[];
+  content: string;
+}) {
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h3 className="text-sm font-extrabold text-ink/80">📖 공부하기</h3>
-        <p className="text-[11px] text-ink/55">지능 · 성실성 · 집중력 성장</p>
+        <h3 className="flex items-center gap-1.5 font-pixel text-sm font-bold text-ink/80">
+          <PixelIcon name="study" size={16} /> 공부하기
+        </h3>
+        <p className="font-sans text-[11px] text-ink/55">{content}</p>
       </div>
       <div className="text-right">
         <span className="pill bg-grape/30 text-ink">효율 {Math.round(eff * 100)}%</span>

@@ -18,7 +18,7 @@ export function Toast() {
   if (!toast || !visible) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-[60] flex justify-center px-4">
+    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-[60] flex justify-center px-4 lg:bottom-6">
       <div className="animate-pop rounded-full bg-ink/90 px-5 py-2.5 text-sm font-semibold text-cream shadow-toy">
         {toast.message}
       </div>

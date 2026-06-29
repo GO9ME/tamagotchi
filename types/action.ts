@@ -1,4 +1,9 @@
-import type { Character, CharacterStats, CharacterStatus } from "./character";
+import type {
+  Character,
+  CharacterStats,
+  CharacterStatus,
+  LifeStage,
+} from "./character";
 
 /** 상태/스탯 변화량 (부분 적용) */
 export type StatusDelta = Partial<CharacterStatus>;
@@ -21,6 +26,7 @@ export interface ActionDef {
   kind: ActionKind;
   cooldownMs: number;
   sessionMs?: number; // session 액션의 집중 시간 (예: 30분)
+  minStage?: LifeStage; // 이 단계부터 해금 (없으면 항상 가능)
   /** 상태에 영향을 받지 않는 기본 효과 계산 (instant 액션) */
   effect?: (c: Character) => ActionEffect;
   category: "care" | "study" | "fitness" | "selfdev" | "fun" | "rest";

@@ -10,23 +10,36 @@ const config: Config = {
     extend: {
       colors: {
         cream: "#FFF8F0",
-        ink: "#3B2F2A",
+        ink: "#2E2722",
         blush: "#FFB7C5",
         mint: "#A8E6CF",
         sky: "#AEDFF7",
         butter: "#FFE3A3",
         grape: "#C9B6F2",
         coral: "#FF9A8B",
+        lcd: "#CFE6B8", // 다마고치 LCD 화면
+        lcdink: "#3C4A2B", // LCD 픽셀(어두운 올리브)
       },
       fontFamily: {
-        rounded: [
-          "var(--font-rounded)",
-          "ui-rounded",
-          "Apple SD Gothic Neo",
+        sans: [
+          "Pretendard Variable",
           "Pretendard",
-          "Segoe UI",
+          "-apple-system",
+          "BlinkMacSystemFont",
           "system-ui",
+          "Roboto",
+          "Helvetica Neue",
+          "Segoe UI",
+          "Apple SD Gothic Neo",
+          "Noto Sans KR",
+          "Malgun Gothic",
           "sans-serif",
+        ],
+        pixel: [
+          "Galmuri11",
+          "Galmuri14",
+          "DungGeunMo",
+          "monospace",
         ],
       },
       boxShadow: {

@@ -12,6 +12,10 @@ import { ActionGrid } from "@/components/actions/ActionGrid";
 import { FoodSelector } from "@/components/actions/FoodSelector";
 import { StudyCard } from "@/components/actions/StudyCard";
 import { Toast } from "@/components/common/Toast";
+import { BottomNav } from "@/components/common/BottomNav";
+import { SaveNotice } from "@/components/common/SaveNotice";
+import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -46,8 +50,10 @@ export default function DashboardPage() {
 
   if (!hydrated || !character) {
     return (
-      <main className="flex min-h-screen items-center justify-center">
-        <div className="animate-bob text-5xl">🐣</div>
+      <main className="flex min-h-screen items-center justify-center text-ink/60">
+        <div className="animate-bob">
+          <PixelIcon name="heart" size={44} />
+        </div>
       </main>
     );
   }
@@ -55,18 +61,30 @@ export default function DashboardPage() {
   const next = nextStageInfo(character.ageYears);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 pb-24">
+    <main className="mx-auto max-w-5xl px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
       {/* 상단 바 */}
-      <header className="mb-5 flex items-center justify-between">
-        <Link href="/" className="text-sm font-bold text-ink/50">
+      <header className="mb-4 flex items-center justify-between gap-2">
+        <Link href="/" className="font-pixel text-sm font-bold text-ink/55">
           ← LifeGotchi
         </Link>
-        {next && (
-          <span className="pill bg-white/70 text-ink/60">
-            다음 단계: {next.label}까지 {next.inYears}살
-          </span>
-        )}
+        <div className="flex items-center gap-2">
+          {next && (
+            <span className="pill bg-white text-ink/60">
+              다음: {next.label}까지 {next.inYears}살
+            </span>
+          )}
+          <Link
+            href="/history"
+            className="pill hidden bg-white text-ink/60 hover:bg-cream lg:inline-flex"
+          >
+            성장기록
+          </Link>
+        </div>
       </header>
+
+      <div className="mb-4">
+        <SaveNotice />
+      </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
         {/* 왼쪽: 캐릭터 + 컨디션 */}
@@ -82,7 +100,7 @@ export default function DashboardPage() {
         <div className="flex flex-col gap-4 lg:col-span-3">
           <StudyCard character={character} now={now} />
           <div className="card p-4">
-            <h3 className="mb-3 text-sm font-extrabold text-ink/80">식사</h3>
+            <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">식사</h3>
             <FoodSelector character={character} now={now} />
           </div>
           <ActionGrid character={character} now={now} />
@@ -90,7 +108,9 @@ export default function DashboardPage() {
         </div>
       </div>
 
+      <YearlyReviewModal />
       <Toast />
+      <BottomNav />
     </main>
   );
 }

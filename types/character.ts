@@ -37,6 +37,25 @@ export interface CharacterStats {
   communication: number;
   careerPotential: number;
   employability: number;
+  academic: number; // 학업 누적 (시험/진학·취업 준비)
+}
+
+export type ReviewGrade = "S" | "A" | "B" | "C" | "D";
+
+/** 나이 1살 증가 시 생성되는 연간 리뷰 기록 */
+export interface YearlyReview {
+  id: string;
+  age: number;
+  stage: LifeStage;
+  kind: "normal" | "neglected"; // neglected = 오프라인 다년 방치 요약
+  counters: YearCounters;
+  score: number;
+  grade: ReviewGrade;
+  exam?: { score: number; tier: string };
+  selfDevPenaltyApplied: boolean;
+  salaryBonusForfeited?: boolean; // Phase3 연봉협상에서 소비
+  neglectedYears?: number;
+  createdAt: number;
 }
 
 /** 진행 중인 세션형 액션 (예: 공부하기 30분) */
@@ -60,7 +79,8 @@ export interface Character {
   id: string;
   userId: string; // 익명 guest_xxxx
   name: string;
-  avatar: string; // 이모지
+  color: string; // 마스코트 색상 팔레트 키 (blush/mint/sky/butter/grape/coral ...)
+  avatar: string; // (레거시) 이모지 — 마스코트 도입 후 미사용, 호환성 위해 유지
   ageYears: number; // 파생값(표시용). bornAt 으로부터 계산
   lifeStage: LifeStage;
   level: number;
@@ -74,5 +94,6 @@ export interface Character {
   cooldowns: Record<string, number>; // actionType -> 다시 가능한 시각(epoch ms)
   activeSession: ActiveSession | null;
   yearCounters: YearCounters;
-  lastReviewedAge: number; // Phase 2 연간 리뷰 추적용
+  lastReviewedAge: number; // 연간 리뷰 추적용 (마지막으로 리뷰한 나이)
+  reviews: YearlyReview[]; // 연간 리뷰 기록 (성장 기록 화면)
 }

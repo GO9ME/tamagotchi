@@ -1,21 +1,40 @@
+import type { CharacterStatus } from "@/types/character";
 import { StartCta } from "@/components/common/StartCta";
+import { TamaDevice } from "@/components/character/TamaDevice";
+import { PixelIcon } from "@/components/pixel/PixelIcon";
+
+const HERO_STATUS: CharacterStatus = {
+  hunger: 82,
+  energy: 86,
+  mood: 88,
+  health: 92,
+  stress: 8,
+  focus: 62,
+  sleepQuality: 86,
+  cleanliness: 84,
+  confidence: 55,
+  burnout: 0,
+  weight: 10,
+};
 
 const FEATURES = [
-  { emoji: "📖", title: "공부 30분 집중", desc: "시작하고 30분 뒤 완료를 눌러야 보상! 방치하면 보상이 줄어요." },
-  { emoji: "🍙", title: "밥 안 주면 페널티", desc: "배고프면 공부·업무 효율이 뚝. 끼니를 챙겨주세요." },
-  { emoji: "⚖️", title: "몸무게 관리", desc: "과식하면 찌고 운동하면 빠져요. 건강에 직결됩니다." },
-  { emoji: "🚀", title: "자기개발", desc: "꾸준히 안 하면 나이 들 때 능력치가 떨어져요." },
-  { emoji: "💼", title: "취업·직무", desc: "학생 → 취준생 → 직장인. 직무를 골라 커리어를 쌓아요. (예정)" },
-  { emoji: "💰", title: "연봉협상·승진", desc: "평가 등급·성과로 연봉과 승진이 갈려요. (예정)" },
+  { icon: "study", title: "공부 30분 집중", desc: "시작하고 30분 뒤 완료를 눌러야 보상! 방치하면 보상이 줄어요." },
+  { icon: "feed", title: "밥 안 주면 페널티", desc: "배고프면 공부·업무 효율이 뚝. 끼니를 챙겨주세요." },
+  { icon: "heart", title: "몸무게·건강 관리", desc: "과식하면 찌고 운동하면 빠져요. 건강에 직결됩니다." },
+  { icon: "selfDev", title: "자기개발", desc: "꾸준히 안 하면 나이 들 때 능력치가 떨어져요." },
+  { icon: "star", title: "취업·직무", desc: "학생 → 취준생 → 직장인. 직무를 골라 커리어를 쌓아요. (예정)" },
+  { icon: "bolt", title: "연봉협상·승진", desc: "평가 등급·성과로 연봉과 승진이 갈려요. (예정)" },
 ];
 
 export default function LandingPage() {
   return (
     <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center px-5 py-12">
       <section className="flex flex-col items-center text-center">
-        <span className="pill mb-4 bg-white/70 text-ink/70">한국형 인생·커리어 다마고치</span>
-        <div className="mb-3 text-7xl">🐣</div>
-        <h1 className="text-4xl font-extrabold sm:text-5xl">LifeGotchi</h1>
+        <span className="pill mb-4 bg-white text-ink/70">한국형 인생·커리어 다마고치</span>
+        <div className="mb-5 w-full max-w-[260px]">
+          <TamaDevice colorKey="blush" status={HERO_STATUS} mascotSize={132} />
+        </div>
+        <h1 className="font-pixel text-4xl font-bold sm:text-5xl">LifeGotchi</h1>
         <p className="mt-4 max-w-xl text-base text-ink/65 sm:text-lg">
           아기부터 키워서 공부·건강관리·자기개발을 거쳐 취업, 업무평가, 연봉협상, 승진까지.
           페이지를 켜두고 <b>주기적으로 직접 눌러줘야</b> 성장하는 인생 육성 웹앱이에요.
@@ -23,7 +42,7 @@ export default function LandingPage() {
         <div className="mt-8">
           <StartCta />
         </div>
-        <p className="mt-3 text-xs text-ink/45">
+        <p className="mt-3 font-pixel text-xs text-ink/45">
           회원가입 없이 바로 시작 · 개인정보를 받지 않아요
         </p>
       </section>
@@ -31,14 +50,16 @@ export default function LandingPage() {
       <section className="mt-14 grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {FEATURES.map((f) => (
           <div key={f.title} className="card p-5">
-            <div className="text-3xl">{f.emoji}</div>
-            <h3 className="mt-2 text-base font-extrabold">{f.title}</h3>
+            <span className="text-ink">
+              <PixelIcon name={f.icon} size={28} />
+            </span>
+            <h3 className="mt-2 font-pixel text-base font-bold">{f.title}</h3>
             <p className="mt-1 text-sm text-ink/60">{f.desc}</p>
           </div>
         ))}
       </section>
 
-      <footer className="mt-16 text-center text-xs text-ink/40">
+      <footer className="mt-16 font-pixel text-center text-xs text-ink/40">
         Phase 1 MVP · 데이터는 이 브라우저에만 저장됩니다.
       </footer>
     </main>

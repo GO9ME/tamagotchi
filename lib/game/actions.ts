@@ -44,6 +44,7 @@ export const ACTIONS: ActionDef[] = [
     cooldownMs: 30 * MIN,
     sessionMs: 30 * MIN,
     category: "study",
+    minStage: "elementary",
   },
   {
     key: "exercise",
@@ -53,6 +54,7 @@ export const ACTIONS: ActionDef[] = [
     kind: "instant",
     cooldownMs: 1 * HOUR,
     category: "fitness",
+    minStage: "elementary",
     effect: (c: Character) => {
       const m = weightEfficiencyMultiplier(c);
       return {
@@ -77,6 +79,7 @@ export const ACTIONS: ActionDef[] = [
     kind: "instant",
     cooldownMs: 1 * HOUR,
     category: "selfdev",
+    minStage: "high",
     effect: () => ({
       status: { energy: -5, stress: 3, focus: 2 },
       stats: { careerPotential: 2, discipline: 1 },
@@ -92,9 +95,10 @@ export const ACTIONS: ActionDef[] = [
     kind: "instant",
     cooldownMs: 1 * HOUR,
     category: "selfdev",
+    minStage: "child",
     effect: () => ({
       status: { focus: 3, mood: 2 },
-      stats: { intelligence: 1, creativity: 1 },
+      stats: { intelligence: 1, creativity: 1, memory: 0.5 },
       exp: 6,
       message: "책을 읽으며 생각이 깊어졌어요.",
     }),

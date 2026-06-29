@@ -2,6 +2,7 @@
 
 import type { Character } from "@/types/character";
 import { ACTIONS } from "@/lib/game/actions";
+import { isActionUnlocked, unlockStageLabel } from "@/lib/game/gating";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { CooldownButton } from "./CooldownButton";
 
@@ -28,20 +29,25 @@ export function ActionGrid({
 
   return (
     <div className="card p-4">
-      <h3 className="mb-3 text-sm font-extrabold text-ink/80">돌봄 · 활동</h3>
+      <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">돌봄 · 활동</h3>
       <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-        {instant.map((a) => (
-          <CooldownButton
-            key={a.key}
-            emoji={a.emoji}
-            label={a.label}
-            desc={a.desc}
-            now={now}
-            readyAt={character.cooldowns[a.key] ?? 0}
-            accent={ACCENT[a.category] ?? "bg-white"}
-            onClick={() => doAction(a.key)}
-          />
-        ))}
+        {instant.map((a) => {
+          const locked = !isActionUnlocked(a.key, character.lifeStage);
+          return (
+            <CooldownButton
+              key={a.key}
+              icon={a.key}
+              label={a.label}
+              desc={a.desc}
+              now={now}
+              readyAt={character.cooldowns[a.key] ?? 0}
+              accent={ACCENT[a.category] ?? "bg-white"}
+              locked={locked}
+              lockLabel={unlockStageLabel(a.key)}
+              onClick={() => doAction(a.key)}
+            />
+          );
+        })}
       </div>
     </div>
   );

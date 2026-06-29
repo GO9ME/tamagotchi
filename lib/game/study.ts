@@ -15,6 +15,7 @@ export const STUDY_HIDDEN_FAIL_MS = 5 * MIN;
 const STUDY_BASE = {
   intelligence: 2,
   discipline: 1.5,
+  memory: 1, // 시험(examScore)에 반영
   focusStatus: 3, // status.focus 회복
   exp: 12,
 };
@@ -76,6 +77,7 @@ export function computeStudyResult(
     stats: {
       intelligence: round2(STUDY_BASE.intelligence * factor),
       discipline: round2(STUDY_BASE.discipline * factor),
+      memory: round2(STUDY_BASE.memory * factor),
     },
     status: {
       focus: round2(STUDY_BASE.focusStatus * factor),

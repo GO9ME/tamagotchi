@@ -24,12 +24,12 @@ export function WeightCard({ character }: { character: Character }) {
   return (
     <div className="card p-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="text-sm font-extrabold text-ink/80">몸무게</h3>
+        <h3 className="font-pixel text-sm font-bold text-ink/80">몸무게</h3>
         <span className={cn("pill", verdictColor)}>{weightVerdictLabel(v)}</span>
       </div>
       <div className="mb-2 flex items-end gap-2">
-        <span className="text-3xl font-extrabold tabular-nums">{w.toFixed(1)}</span>
-        <span className="mb-1 text-sm text-ink/60">kg</span>
+        <span className="font-pixel text-3xl font-bold tabular-nums">{w.toFixed(1)}</span>
+        <span className="mb-1 font-pixel text-sm text-ink/60">kg</span>
       </div>
       <div className="relative h-3 w-full rounded-full bg-black/10">
         {/* 적정 범위 표시 */}
