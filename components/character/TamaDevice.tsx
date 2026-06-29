@@ -1,4 +1,4 @@
-import type { CharacterStatus, LifeStage } from "@/types/character";
+import type { CharacterStatus, Gender, LifeStage } from "@/types/character";
 import { getMascotColor } from "@/lib/game/constants";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { Mascot } from "./Mascot";
@@ -29,12 +29,14 @@ export function TamaDevice({
   colorKey,
   status,
   stage = "child",
+  gender,
   mascotSize = 148,
   showStatus = true,
 }: {
   colorKey: string;
   status: CharacterStatus;
   stage?: LifeStage;
+  gender?: Gender;
   mascotSize?: number;
   showStatus?: boolean;
 }) {
@@ -68,7 +70,7 @@ export function TamaDevice({
             </div>
           )}
           <div className="flex h-full items-center justify-center pt-2">
-            <Mascot status={status} stage={stage} size={mascotSize} color={LCD_INK} />
+            <Mascot status={status} stage={stage} gender={gender} size={mascotSize} color={LCD_INK} />
           </div>
         </div>
 

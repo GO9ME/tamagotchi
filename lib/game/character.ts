@@ -1,4 +1,5 @@
-import type { Character } from "@/types/character";
+import type { Character, Gender } from "@/types/character";
+import { rollHeightPotential } from "./body";
 import { expForLevel } from "./constants";
 import { ageFromBornAt, stageForAge } from "./growth";
 
@@ -7,6 +8,7 @@ export function createCharacter(
   userId: string,
   name: string,
   color: string,
+  gender: Gender,
   now: number,
 ): Character {
   const age = ageFromBornAt(now, now); // = 0
@@ -15,6 +17,8 @@ export function createCharacter(
     userId,
     name: name.trim() || "아기",
     color: color || "blush",
+    gender,
+    heightPotential: rollHeightPotential(gender, Math.random(), Math.random()),
     avatar: "🐣",
     ageYears: age,
     lifeStage: stageForAge(age),

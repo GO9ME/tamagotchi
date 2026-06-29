@@ -44,6 +44,9 @@ export interface CharacterStats {
   performance: number; // 업무 성과(직장인) 누적
 }
 
+/** 캐릭터 성별 (게임 내 가상 속성 — 신장 분포·외형에만 영향) */
+export type Gender = "male" | "female";
+
 // --- 취업(Phase 3) ---
 export type JobFamilyKey =
   | "management"
@@ -60,7 +63,8 @@ export type JobFamilyKey =
   | "legal"
   | "medical" // 전문직(의료)
   | "research" // 연구직
-  | "civil"; // 공무원
+  | "civil" // 공무원
+  | "athlete"; // 스포츠/운동선수 (키 어드밴티지)
 
 export type CompanyTypeKey =
   | "large"
@@ -175,6 +179,8 @@ export interface Character {
   userId: string; // 익명 guest_xxxx
   name: string;
   color: string; // 마스코트 색상 팔레트 키 (blush/mint/sky/butter/grape/coral ...)
+  gender: Gender; // 가상 성별 — 신장 분포·외형에만 영향
+  heightPotential: number; // 성인 목표 키(cm). 출생 시 성별 기반 결정, 현재 키는 나이로 파생
   avatar: string; // (레거시) 이모지 — 마스코트 도입 후 미사용, 호환성 위해 유지
   ageYears: number; // 파생값(표시용). bornAt 으로부터 계산
   lifeStage: LifeStage;

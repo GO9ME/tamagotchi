@@ -4,6 +4,7 @@ import type {
   JobFamilyKey,
 } from "@/types/character";
 import { clamp } from "./clamp";
+import { currentHeight } from "./body";
 import { COMPANY_TYPES, JOB_FAMILIES, RARITY_META } from "./jobs";
 
 // 0~100 정규화 (누적 스탯이 100 넘으면 만점 고착 방지 — exam.ts ci 패턴)
@@ -76,7 +77,18 @@ export function rarityHiringMod(family: JobFamilyKey | null): number {
   return -5 * RARITY_META[JOB_FAMILIES[family].rarity].order; // 일반 0 ~ 전설 -20
 }
 
-/** 회사 유형 난이도 + 직업군 적합도 + 직군 등급 보정 후 합격 확률(%) */
+/**
+ * 신장 적합 보정 — heightBar 가 있는 직군(예: 운동선수)에서만.
+ * 키가 기준보다 클수록 합격 유리(+), 작을수록 큰 페널티(−). 그 외 직군은 0.
+ */
+export function heightFitMod(c: Character, family: JobFamilyKey | null): number {
+  if (!family) return 0;
+  const bar = JOB_FAMILIES[family].heightBar;
+  if (bar == null) return 0;
+  return clamp(Math.round((currentHeight(c) - bar) * 1.0), -30, 18);
+}
+
+/** 회사 유형 난이도 + 직업군 적합도 + 직군 등급 + 신장 보정 후 합격 확률(%) */
 export function employmentChance(
   c: Character,
   family: JobFamilyKey | null,
@@ -85,6 +97,7 @@ export function employmentChance(
   return clamp(
     employmentReadiness(c, family) +
       rarityHiringMod(family) +
+      heightFitMod(c, family) +
       COMPANY_TYPES[company].chanceMod,
     5,
     95,

@@ -5,11 +5,18 @@ import {
   weightVerdict,
   weightVerdictLabel,
 } from "@/lib/game/weight";
+import {
+  currentHeight,
+  heightBuild,
+  heightBuildLabel,
+} from "@/lib/game/body";
 
 export function WeightCard({ character }: { character: Character }) {
   const w = character.status.weight;
   const [lo, hi] = healthyRangeForAge(character.ageYears);
   const v = weightVerdict(w, character.ageYears);
+  const h = currentHeight(character);
+  const build = heightBuild(character.heightPotential, character.gender);
 
   // 게이지 표현: 적정 범위를 살짝 넘는 구간까지 표시
   const min = Math.max(0, lo - 10);
@@ -23,8 +30,21 @@ export function WeightCard({ character }: { character: Character }) {
 
   return (
     <div className="card p-4">
+      <h3 className="mb-2 font-pixel text-sm font-bold text-ink/80">신체</h3>
+
+      {/* 키 */}
+      <div className="mb-3 flex items-center justify-between rounded-xl bg-black/[0.03] px-3 py-2">
+        <span className="font-pixel text-[11px] text-ink/60">키</span>
+        <span className="flex items-baseline gap-1.5">
+          <span className="font-pixel text-xl font-bold tabular-nums">{h}</span>
+          <span className="font-pixel text-[11px] text-ink/55">cm</span>
+          <span className="pill ml-1 bg-grape/20 text-ink/65">{heightBuildLabel(build)}</span>
+        </span>
+      </div>
+
+      {/* 몸무게 */}
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-pixel text-sm font-bold text-ink/80">몸무게</h3>
+        <h4 className="font-pixel text-[11px] font-bold text-ink/60">몸무게</h4>
         <span className={cn("pill", verdictColor)}>{weightVerdictLabel(v)}</span>
       </div>
       <div className="mb-2 flex items-end gap-2">

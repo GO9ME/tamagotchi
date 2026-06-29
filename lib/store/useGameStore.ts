@@ -10,6 +10,7 @@ import {
 import type {
   Character,
   CompanyTypeKey,
+  Gender,
   JobFamilyKey,
   JobOutcome,
   JobState,
@@ -63,7 +64,7 @@ interface GameState {
   negotiationResult: NegotiationResult | null;
 
   setHydrated: () => void;
-  createNew: (name: string, color: string) => void;
+  createNew: (name: string, color: string, gender: Gender) => void;
   reset: () => void;
 
   tick: () => void;
@@ -134,10 +135,10 @@ export const useGameStore = create<GameState>()(
 
         setHydrated: () => set({ hydrated: true }),
 
-      createNew: (name, color) => {
+      createNew: (name, color, gender) => {
         const userId = getOrCreateUserId();
         set({
-          character: createCharacter(userId, name, color, now()),
+          character: createCharacter(userId, name, color, gender, now()),
           pendingReviews: [],
           jobResult: null,
           negotiationResult: null,
@@ -456,7 +457,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 8,
+      version: 9,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -467,9 +468,13 @@ export const useGameStore = create<GameState>()(
         const stored = (persisted ?? {}) as { character?: Character | null };
         const c = stored.character;
         if (!c) return { character: null } as unknown as GameState;
+        const gender: Gender = c.gender === "female" ? "female" : "male";
         const merged: Character = {
           ...c,
           color: c.color || "blush",
+          gender,
+          // 구버전 세이브: 성별 평균 키로 보정(결정적)
+          heightPotential: c.heightPotential ?? (gender === "female" ? 162 : 175),
           avatar: c.avatar || "🐣",
           stats: {
             ...c.stats,

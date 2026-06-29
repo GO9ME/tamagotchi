@@ -63,6 +63,7 @@ export function EndingScreen({ character }: { character: Character }) {
             colorKey={character.color}
             status={character.status}
             stage="retirement"
+            gender={character.gender}
             mascotSize={104}
             showStatus={false}
           />

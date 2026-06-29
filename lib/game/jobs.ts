@@ -15,6 +15,7 @@ export interface JobFamily {
   salaryMult: number; // 직무 연봉 배율
   rarity: JobRarity; // 직군 등급(높을수록 합격 확률 페널티 ↑ + 연봉·엔딩 가중) — employment.rarityHiringMod 참조
   riskLevel: number; // 직업 위험도(연간 사고/질병 확률 기여)
+  heightBar?: number; // 선호 신장(cm) — 있으면 키가 클수록 합격 유리(employment.heightFitMod)
   desc: string;
 }
 
@@ -37,6 +38,8 @@ export const JOB_FAMILIES: Record<JobFamilyKey, JobFamily> = {
   production: { label: "생산/품질/구매", icon: "exercise", coreStats: ["discipline", "fitness"], statBar: 35, salaryMult: 0.95, rarity: "common", riskLevel: 0.05, desc: "공정·품질·현장(위험)" },
   sales: { label: "영업/영업관리", icon: "bolt", coreStats: ["communication", "careerPotential"], statBar: 35, salaryMult: 1.0, rarity: "common", riskLevel: 0.03, desc: "영업·협상·외근" },
   cs: { label: "고객지원/CS", icon: "speech", coreStats: ["communication"], statBar: 28, salaryMult: 0.9, rarity: "common", riskLevel: 0.016, desc: "응대·공감·감정노동" },
+  // 피지컬 스포츠 — 키가 클수록 유리(농구·배구 등). 부상 위험 ↑
+  athlete: { label: "스포츠/운동선수", icon: "exercise", coreStats: ["fitness", "discipline"], statBar: 48, salaryMult: 1.2, rarity: "rare", riskLevel: 0.03, heightBar: 183, desc: "농구·배구 등 피지컬 스포츠 (키가 클수록 유리)" },
 };
 
 export const RARITY_META: Record<

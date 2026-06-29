@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
 
-import type { CharacterStatus } from "@/types/character";
+import type { CharacterStatus, Gender } from "@/types/character";
 import { TamaDevice } from "@/components/character/TamaDevice";
 import { MASCOT_COLORS } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
@@ -34,9 +34,10 @@ export default function CreatePage() {
 
   const [name, setName] = useState("");
   const [color, setColor] = useState(MASCOT_COLORS[0].key);
+  const [gender, setGender] = useState<Gender>("male");
 
   const handleStart = () => {
-    createNew(name, color);
+    createNew(name, color, gender);
     router.push("/dashboard");
   };
 
@@ -50,6 +51,7 @@ export default function CreatePage() {
               colorKey={existing.color}
               status={existing.status}
               stage={existing.lifeStage}
+              gender={existing.gender}
               mascotSize={92}
               showStatus={false}
             />
@@ -93,7 +95,7 @@ export default function CreatePage() {
 
         {/* 미리보기 */}
         <div className="my-5 max-w-[220px] mx-auto">
-          <TamaDevice colorKey={color} status={PREVIEW_STATUS} stage="baby" mascotSize={112} showStatus={false} />
+          <TamaDevice colorKey={color} status={PREVIEW_STATUS} stage="baby" gender={gender} mascotSize={112} showStatus={false} />
         </div>
 
         <label className="block font-pixel text-sm font-bold text-ink/70">이름</label>
@@ -106,6 +108,32 @@ export default function CreatePage() {
         />
         <p className="mt-1 text-[11px] text-ink/40">
           실명·개인정보가 담긴 이름은 피해 주세요. 랭킹엔 닉네임만 표시돼요.
+        </p>
+
+        <div className="mt-5 font-pixel text-sm font-bold text-ink/70">성별</div>
+        <div className="mt-2 grid grid-cols-2 gap-2.5">
+          {([
+            { key: "male", label: "♂ 남자", cls: "bg-sky/40" },
+            { key: "female", label: "♀ 여자", cls: "bg-blush/50" },
+          ] as const).map((g) => (
+            <button
+              key={g.key}
+              type="button"
+              onClick={() => setGender(g.key)}
+              aria-pressed={gender === g.key}
+              className={cn(
+                "rounded-2xl border-[3px] py-3 font-pixel text-sm font-bold transition-transform",
+                gender === g.key
+                  ? "border-ink -translate-y-0.5 " + g.cls
+                  : "border-ink/15 bg-white text-ink/55 hover:border-ink/40",
+              )}
+            >
+              {g.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-[11px] text-ink/40">
+          성별은 키 성장(체격)과 외형에만 영향을 줘요. 키가 크면 운동선수 같은 직업에 유리해요.
         </p>
 
         <div className="mt-5 font-pixel text-sm font-bold text-ink/70">색 고르기</div>
