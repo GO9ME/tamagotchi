@@ -14,7 +14,12 @@ export function JobResultModal() {
 
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/40 p-0 sm:items-center sm:p-4">
-      <div className="w-full max-w-md animate-pop rounded-t-2xl border-[3px] border-ink bg-white p-6 shadow-[6px_6px_0_0_rgba(46,39,34,0.25)] sm:rounded-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={result.success ? "취업 합격 결과" : "취업 불합격 결과"}
+        className="w-full max-w-md animate-pop rounded-t-2xl border-[3px] border-ink bg-white p-6 shadow-[6px_6px_0_0_rgba(46,39,34,0.25)] sm:rounded-2xl"
+      >
         <div className="flex flex-col items-center text-center">
           <div
             className={`flex h-16 w-16 items-center justify-center rounded-2xl border-[3px] border-ink ${

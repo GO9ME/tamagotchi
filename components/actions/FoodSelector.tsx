@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
 import type { StatusDelta } from "@/types/action";
@@ -29,6 +29,16 @@ export function FoodSelector({
 }) {
   const [open, setOpen] = useState(false);
   const feed = useGameStore((s) => s.feed);
+
+  // 모달 열림 동안 Esc 로 닫기 (키보드 접근성)
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
 
   const readyAt = character.cooldowns["feed"] ?? 0;
   const remaining = Math.max(0, readyAt - now);
@@ -65,7 +75,13 @@ export function FoodSelector({
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/35 p-3 sm:items-center"
           onClick={() => setOpen(false)}
         >
-          <div className="card w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="card w-full max-w-md p-5"
+            role="dialog"
+            aria-modal="true"
+            aria-label="음식 선택"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-4 flex items-center justify-between">
               <h3 className="font-pixel text-lg font-bold">무엇을 먹일까?</h3>
               <button

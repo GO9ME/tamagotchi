@@ -2,6 +2,7 @@ import type { CharacterStatus } from "@/types/character";
 import { StartCta } from "@/components/common/StartCta";
 import { TamaDevice } from "@/components/character/TamaDevice";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
+import { BottomNav } from "@/components/common/BottomNav";
 
 const HERO_STATUS: CharacterStatus = {
   hunger: 82,
@@ -22,13 +23,13 @@ const FEATURES = [
   { icon: "feed", title: "밥 안 주면 페널티", desc: "배고프면 공부·업무 효율이 뚝. 끼니를 챙겨주세요." },
   { icon: "heart", title: "몸무게·건강 관리", desc: "과식하면 찌고 운동하면 빠져요. 건강에 직결됩니다." },
   { icon: "selfDev", title: "자기개발", desc: "꾸준히 안 하면 나이 들 때 능력치가 떨어져요." },
-  { icon: "star", title: "취업·직무", desc: "학생 → 취준생 → 직장인. 직무를 골라 커리어를 쌓아요. (예정)" },
-  { icon: "bolt", title: "연봉협상·승진", desc: "평가 등급·성과로 연봉과 승진이 갈려요. (예정)" },
+  { icon: "star", title: "취업·직무", desc: "학생 → 취준생 → 직장인. 15개 직군 중 골라 커리어를 쌓아요." },
+  { icon: "bolt", title: "연봉협상·승진", desc: "평가 등급·성과로 연봉과 승진이 갈려요. 직접 연봉협상도!" },
 ];
 
 export default function LandingPage() {
   return (
-    <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center px-5 py-12">
+    <main className="mx-auto flex min-h-screen max-w-4xl flex-col items-center px-5 py-12 pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-12">
       <section className="flex flex-col items-center text-center">
         <span className="pill mb-4 bg-white text-ink/70">한국형 인생·커리어 다마고치</span>
         <div className="mb-5 w-full max-w-[260px]">
@@ -59,9 +60,11 @@ export default function LandingPage() {
         ))}
       </section>
 
-      <footer className="mt-16 font-pixel text-center text-xs text-ink/40">
-        Phase 1 MVP · 데이터는 이 브라우저에만 저장됩니다.
+      <footer className="mt-16 font-pixel text-center text-xs text-ink/50">
+        데이터는 이 브라우저에만 저장됩니다 · 개인정보를 받지 않아요
       </footer>
+
+      <BottomNav />
     </main>
   );
 }

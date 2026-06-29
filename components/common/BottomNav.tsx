@@ -21,14 +21,19 @@ export function BottomNav() {
     >
       <div className="mx-auto flex max-w-md items-stretch justify-around">
         {TABS.map((t) => {
-          const active = path === t.href;
+          // 홈 탭은 /career(직장·취업) 하위 화면에서도 활성 표시
+          const active =
+            t.href === "/dashboard"
+              ? path === "/dashboard" || path.startsWith("/career")
+              : path === t.href;
           return (
             <Link
               key={t.href}
               href={t.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
                 "flex flex-1 flex-col items-center gap-1 py-3 font-pixel text-xs font-bold transition-colors",
-                active ? "text-coral" : "text-ink/45",
+                active ? "text-coral" : "text-ink/70",
               )}
             >
               <span
