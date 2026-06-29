@@ -1,7 +1,6 @@
 import type { ActionEffect } from "@/types/action";
 import type {
   Character,
-  JobGrade,
   ReviewGrade,
   WorkReview,
   YearCounters,
@@ -12,6 +11,36 @@ import { applyEffect } from "./engine";
 import { JOB_FAMILIES, jobTitle, nextGrade, startingSalary } from "./jobs";
 
 const ci = (s: number) => Math.min(Math.max(s, 0), 100);
+
+interface ScoreStatus {
+  hunger: number;
+  energy: number;
+  focus: number;
+  health: number;
+  mood: number;
+  stress: number;
+  burnout: number;
+}
+
+/**
+ * 채점에 쓸 컨디션. 다년 오프라인 점프(neutral)면 누적 감쇠된 status 대신 중립값 사용
+ * (비직장인 scoreYear 의 neutralStatus 와 대칭 — 직장인만 불이익 받는 비대칭 방지).
+ */
+function effStatus(c: Character, neutral: boolean): ScoreStatus {
+  if (neutral) {
+    return { hunger: 50, energy: 50, focus: 50, health: 50, mood: 50, stress: 50, burnout: 30 };
+  }
+  const s = c.status;
+  return {
+    hunger: s.hunger,
+    energy: s.energy,
+    focus: s.focus,
+    health: s.health,
+    mood: s.mood,
+    stress: s.stress,
+    burnout: s.burnout,
+  };
+}
 
 /** 직무 핵심 스탯 평균 (job 없으면 0) */
 export function jobCoreStatAvg(c: Character): number {
@@ -39,28 +68,28 @@ export function leadershipScore(c: Character): number {
   );
 }
 
-/** 업무 실패 요인 배수 (PRD 12.3) — 가장 불리한 단일 배수 + 추가 곱 */
-export function failMult(c: Character): number {
-  const s = c.status;
+/** 업무 실패 요인 배수 (PRD 12.3) — 악조건이 겹치면 곱으로 누적 */
+export function failMult(c: Character, neutral = false): number {
+  const s = effStatus(c, neutral);
   let m = 1;
-  if (s.hunger < 30 && s.energy < 30) m = 0.75;
-  else if (s.hunger < 30) m = 0.8;
-  else if (s.energy < 30) m = 0.75;
+  if (s.hunger < 30) m *= 0.8;
+  if (s.energy < 30) m *= 0.75;
   if (s.stress > 80) m *= 0.8;
   if (s.burnout > 80) m *= 0.85;
   return m;
 }
 
 /** 업무 성과 (PRD 12.2) — rand 0~1 주입 */
-export function workPerformance(c: Character, rand: number): number {
+export function workPerformance(c: Character, rand: number, neutral = false): number {
+  const s = effStatus(c, neutral);
   const base =
     competency(c) * 0.4 +
-    c.status.focus * 0.2 +
+    s.focus * 0.2 +
     ci(c.stats.discipline) * 0.15 +
-    c.status.health * 0.1 +
-    c.status.mood * 0.05 +
+    s.health * 0.1 +
+    s.mood * 0.05 +
     rand * 100 * 0.1;
-  return clamp(Math.round(base * failMult(c)), 0, 100);
+  return clamp(Math.round(base * failMult(c, neutral)), 0, 100);
 }
 
 /** 업무평가 종합 점수 (PRD 13, 0~100) */
@@ -68,14 +97,16 @@ export function evaluationScore(
   c: Character,
   counters: YearCounters,
   rand: number,
+  neutral = false,
 ): number {
-  const perf = workPerformance(c, rand);
+  const s = effStatus(c, neutral);
+  const perf = workPerformance(c, rand, neutral);
   const comp = competency(c);
-  const att = clamp(100 - c.status.stress * 0.5, 0, 100);
+  const att = clamp(100 - s.stress * 0.5, 0, 100);
   const collab = ci(c.stats.communication);
   const growth = ci(c.stats.careerPotential);
-  const rel = clamp(100 - c.status.burnout * 0.6, 0, 100);
-  const hmgmt = c.status.health;
+  const rel = clamp(100 - s.burnout * 0.6, 0, 100);
+  const hmgmt = s.health;
   const sdev = Math.min(counters.selfDev / YEARLY_TARGETS.selfDev, 1) * 100;
   const raw =
     perf * 0.3 +
@@ -127,6 +158,7 @@ export function promotionScore(
   c: Character,
   recentEvalScore: number,
   counters: YearCounters,
+  neutral = false,
 ): number {
   const sdev = Math.min(counters.selfDev / YEARLY_TARGETS.selfDev, 1) * 100;
   const raw =
@@ -135,7 +167,7 @@ export function promotionScore(
     leadershipScore(c) * 0.15 +
     reputationScore(c) * 0.1 +
     sdev * 0.1 +
-    c.status.health * 0.05;
+    effStatus(c, neutral).health * 0.05;
   return clamp(Math.round(raw), 0, 100);
 }
 
@@ -144,30 +176,33 @@ export function promotionHold(
   c: Character,
   thisGrade: ReviewGrade,
   counters: YearCounters,
+  neutral = false,
 ): string[] {
+  const s = effStatus(c, neutral);
   const reasons: string[] = [];
   if (thisGrade === "C" || thisGrade === "D") reasons.push("평가 부진");
-  if (c.status.burnout > 85) reasons.push("번아웃");
+  if (s.burnout > 85) reasons.push("번아웃");
   if (counters.selfDev === 0) reasons.push("자기개발 부족");
-  if (c.status.health < 30) reasons.push("건강 악화");
+  if (s.health < 30) reasons.push("건강 악화");
   return reasons;
 }
 
 /**
  * 연간 업무평가 처리: 평가 → 연봉 인상 → 승진 심사 → job 갱신 + 효과 적용.
- * 직장인(job 보유) 전용. job 없으면 no-op.
+ * 직장인(job 보유) 전용. neutral = 다년 오프라인 점프 보호.
  */
 export function processWorkReview(
   c: Character,
   reviewAge: number,
   rand: number,
+  neutral = false,
 ): { character: Character; work: WorkReview | null } {
   const job = c.job;
   if (!job) return { character: c, work: null };
 
   const counters = c.yearCounters;
-  const evalScore = evaluationScore(c, counters, rand);
-  const wPerf = workPerformance(c, rand);
+  const evalScore = evaluationScore(c, counters, rand, neutral);
+  const wPerf = workPerformance(c, rand, neutral);
   const grade = workGradeOf(evalScore);
 
   // 1) 연봉 인상
@@ -176,8 +211,8 @@ export function processWorkReview(
   let salaryAfter = applyRaise(salaryBefore, pct);
 
   // 2) 승진 심사
-  const reasons = promotionHold(c, grade, counters);
-  const pScore = promotionScore(c, evalScore, counters);
+  const reasons = promotionHold(c, grade, counters, neutral);
+  const pScore = promotionScore(c, evalScore, counters, neutral);
   const next = nextGrade(job.grade);
   const promoted =
     next != null && reasons.length === 0 && pScore >= PROMO_THRESHOLD[job.grade];
@@ -186,7 +221,6 @@ export function processWorkReview(
   let newGrade = oldGrade;
   if (promoted && next) {
     newGrade = next;
-    // 새 직급 기본연봉 하한 보장(역전 방지)
     salaryAfter = Math.max(salaryAfter, startingSalary(newGrade, job.company));
   }
 

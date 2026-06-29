@@ -197,7 +197,9 @@ export function runDueReviews(
   const reviewAge = last + 1;
   const reviewStage = cappedStageForAge(reviewAge, ch.job != null);
   const isWorkReview =
-    (reviewStage === "employee" || reviewStage === "senior") &&
+    (reviewStage === "employee" ||
+      reviewStage === "senior" ||
+      reviewStage === "retirement") &&
     !!ch.job &&
     reviewAge > ch.job.hiredAtAge;
 
@@ -208,7 +210,8 @@ export function runDueReviews(
 
   if (isWorkReview) {
     // 직장인: 업무평가가 메인 등급. 공부 안 한다고 페널티 주지 않고 selfDev 페널티만 유지.
-    const res = processWorkReview(ch, reviewAge, Math.random());
+    // 다년 오프라인 점프면 감쇠된 status 대신 중립값으로 채점(비직장인 경로와 대칭).
+    const res = processWorkReview(ch, reviewAge, Math.random(), multiYear);
     ch = res.character;
     work = res.work ?? undefined;
     score = work?.evalScore ?? 0;

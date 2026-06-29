@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
+import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { WorkPanel } from "@/components/work/WorkPanel";
 import { BottomNav } from "@/components/common/BottomNav";
 import { Toast } from "@/components/common/Toast";
@@ -93,6 +94,7 @@ export default function CareerPage() {
           <span className="w-16" />
         </header>
         <WorkPanel character={character} now={now} />
+        <YearlyReviewModal />
         <JobResultModal />
         <Toast />
         <BottomNav />
@@ -233,6 +235,7 @@ export default function CareerPage() {
             : "이 회사에 지원하기"}
       </button>
 
+      <YearlyReviewModal />
       <JobResultModal />
       <Toast />
       <BottomNav />

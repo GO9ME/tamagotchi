@@ -24,6 +24,7 @@ import {
 } from "@/lib/game/constants";
 import { applyEffect, isActionReady, setCooldown } from "@/lib/game/engine";
 import { isActionUnlocked } from "@/lib/game/gating";
+import { rollOutcome, scaleStatsDelta, type ActionOutcome } from "@/lib/game/outcome";
 import { runDueReviews } from "@/lib/game/review";
 import {
   employmentChance,
@@ -184,7 +185,14 @@ export const useGameStore = create<GameState>()(
           return { ok: false, message: "아직 쿨타임이에요." };
         }
 
-        const effect = def.effect(c);
+        // 능력치 활동이면 확률로 상승폭 변동(대성공/부진, 컨디션 연동)
+        const baseEffect = def.effect(c);
+        let outcome: ActionOutcome | null = null;
+        let effect = baseEffect;
+        if (baseEffect.stats && Object.keys(baseEffect.stats).length > 0) {
+          outcome = rollOutcome(c, Math.random());
+          effect = { ...baseEffect, stats: scaleStatsDelta(baseEffect.stats, outcome.mult) };
+        }
         let next = applyEffect(c, effect);
 
         // 액션별 부가 처리
@@ -210,7 +218,9 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ character: next });
-        const message = effect.message ?? `${def.label} 완료!`;
+        const baseMsg = baseEffect.message ?? `${def.label} 완료!`;
+        const message =
+          outcome && outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg;
         pushToast(message);
         return { ok: true, message };
       },
@@ -241,7 +251,12 @@ export const useGameStore = create<GameState>()(
         if (!isStudyReady(c.activeSession, t)) return null;
 
         const result = computeStudyResult(c, c.activeSession, t);
-        let next = applyEffect(c, result.effect);
+        const outcome = rollOutcome(c, Math.random(), true); // 완만(공부는 이미 시간/효율 배수)
+        const scaledEffect = {
+          ...result.effect,
+          stats: scaleStatsDelta(result.effect.stats, outcome.mult),
+        };
+        let next = applyEffect(c, scaledEffect);
         next = {
           ...next,
           activeSession: null,
@@ -251,7 +266,10 @@ export const useGameStore = create<GameState>()(
           },
         };
         set({ character: next });
-        pushToast(result.effect.message ?? "공부 완료!");
+        const baseMsg = result.effect.message ?? "공부 완료!";
+        pushToast(
+          outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg,
+        );
         return result;
       },
 
@@ -371,7 +389,8 @@ export const useGameStore = create<GameState>()(
             performance: c.stats?.performance ?? 0,
           },
           reviews: c.reviews ?? [],
-          lastReviewedAge: c.ageYears ?? 0,
+          // 기존 값 보존(없는 구버전 세이브만 ageYears 로 폴백 → 리뷰 폭탄 방지)
+          lastReviewedAge: c.lastReviewedAge ?? c.ageYears ?? 0,
           job: c.job ?? null,
           jobApplications: c.jobApplications ?? 0,
         };
