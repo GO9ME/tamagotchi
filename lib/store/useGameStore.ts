@@ -466,6 +466,7 @@ export const useGameStore = create<GameState>()(
       enrollGrad: () => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
         const adm = gradAdmission(c);
         if (!adm.ok || !adm.target) {
           return { ok: false, message: adm.reason ?? "지금은 진학할 수 없어요." };
@@ -484,7 +485,7 @@ export const useGameStore = create<GameState>()(
 
       dropGrad: () => {
         const c = get().character;
-        if (!c || !c.gradEnroll) {
+        if (!c || c.deathAge != null || !c.gradEnroll) {
           return { ok: false, message: "대학원 재학 중이 아니에요." };
         }
         set({ character: { ...c, gradEnroll: null } });
