@@ -38,6 +38,53 @@ export interface CharacterStats {
   careerPotential: number;
   employability: number;
   academic: number; // 학업 누적 (시험/진학·취업 준비)
+  portfolioScore: number; // 취업 준비: 포트폴리오
+  interviewScore: number; // 취업 준비: 면접
+  certificateScore: number; // 취업 준비: 자격증
+}
+
+// --- 취업(Phase 3) ---
+export type JobFamilyKey =
+  | "management"
+  | "finance"
+  | "hr"
+  | "sales"
+  | "marketing"
+  | "dev"
+  | "data"
+  | "pm"
+  | "design"
+  | "cs"
+  | "production"
+  | "legal";
+
+export type CompanyTypeKey =
+  | "large"
+  | "midsize"
+  | "small"
+  | "startup"
+  | "public"
+  | "freelance";
+
+export type JobGrade = "intern" | "newbie" | "staff";
+
+export interface JobState {
+  family: JobFamilyKey;
+  company: CompanyTypeKey;
+  grade: JobGrade;
+  title: string;
+  salaryManwon: number; // 만원 단위
+  hiredAt: number; // epoch ms
+  hiredAtAge: number;
+}
+
+export interface JobOutcome {
+  success: boolean;
+  family: JobFamilyKey;
+  company: CompanyTypeKey;
+  chance: number;
+  roll: number;
+  job?: JobState;
 }
 
 export type ReviewGrade = "S" | "A" | "B" | "C" | "D";
@@ -96,4 +143,6 @@ export interface Character {
   yearCounters: YearCounters;
   lastReviewedAge: number; // 연간 리뷰 추적용 (마지막으로 리뷰한 나이)
   reviews: YearlyReview[]; // 연간 리뷰 기록 (성장 기록 화면)
+  job: JobState | null; // 취업 전 null
+  jobApplications: number; // 누적 지원 횟수
 }

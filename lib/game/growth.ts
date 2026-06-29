@@ -1,5 +1,5 @@
 import type { LifeStage } from "@/types/character";
-import { GAME_YEAR_MS, LIFE_STAGES, StageInfo } from "./constants";
+import { GAME_YEAR_MS, LIFE_STAGES, STAGE_INDEX, StageInfo } from "./constants";
 
 /** bornAt 기준으로 현재 게임 나이(정수) 계산 */
 export function ageFromBornAt(bornAt: number, now: number): number {
@@ -17,6 +17,18 @@ export function stageInfoForAge(age: number): StageInfo {
 
 export function stageForAge(age: number): LifeStage {
   return stageInfoForAge(age).stage;
+}
+
+/**
+ * 취업 게이트: 나이로 단계를 산정하되, 직장인(employee) 이상 단계는
+ * 실제 취업(job 보유) 했을 때만 진입. 미취업이면 jobseeker 로 캡.
+ */
+export function cappedStageForAge(age: number, hasJob: boolean): LifeStage {
+  const natural = stageForAge(age);
+  if (!hasJob && STAGE_INDEX[natural] >= STAGE_INDEX["employee"]) {
+    return "jobseeker";
+  }
+  return natural;
 }
 
 export function stageLabel(stage: LifeStage): string {

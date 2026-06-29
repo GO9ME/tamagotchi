@@ -1,7 +1,7 @@
 "use client";
 
 import type { Character } from "@/types/character";
-import { ACTIONS } from "@/lib/game/actions";
+import { ACTIONS, PREP_KEYS } from "@/lib/game/actions";
 import { isActionUnlocked, unlockStageLabel } from "@/lib/game/gating";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { CooldownButton } from "./CooldownButton";
@@ -24,8 +24,10 @@ export function ActionGrid({
 }) {
   const doAction = useGameStore((s) => s.doAction);
 
-  // feed/study 는 전용 UI 에서 처리하므로 즉시형(instant) 액션만 노출
-  const instant = ACTIONS.filter((a) => a.kind === "instant");
+  // feed/study/취업준비(prep) 는 전용 UI 에서 처리하므로 일반 즉시형 액션만 노출
+  const instant = ACTIONS.filter(
+    (a) => a.kind === "instant" && !PREP_KEYS.has(a.key),
+  );
 
   return (
     <div className="card p-4">

@@ -15,6 +15,7 @@ import { Toast } from "@/components/common/Toast";
 import { BottomNav } from "@/components/common/BottomNav";
 import { SaveNotice } from "@/components/common/SaveNotice";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
+import { CareerCard } from "@/components/dashboard/CareerCard";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
@@ -99,6 +100,7 @@ export default function DashboardPage() {
         {/* 오른쪽: 액션 + 스탯 */}
         <div className="flex flex-col gap-4 lg:col-span-3">
           <StudyCard character={character} now={now} />
+          <CareerCard character={character} />
           <div className="card p-4">
             <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">식사</h3>
             <FoodSelector character={character} now={now} />

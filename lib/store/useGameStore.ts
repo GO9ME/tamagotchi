@@ -7,8 +7,15 @@ import {
   type StateStorage,
 } from "zustand/middleware";
 
-import type { Character, YearlyReview } from "@/types/character";
-import { getAction } from "@/lib/game/actions";
+import type {
+  Character,
+  CompanyTypeKey,
+  JobFamilyKey,
+  JobOutcome,
+  JobState,
+  YearlyReview,
+} from "@/types/character";
+import { getAction, PREP_KEYS } from "@/lib/game/actions";
 import { createCharacter } from "@/lib/game/character";
 import {
   FOODS,
@@ -18,6 +25,12 @@ import {
 import { applyEffect, isActionReady, setCooldown } from "@/lib/game/engine";
 import { isActionUnlocked } from "@/lib/game/gating";
 import { runDueReviews } from "@/lib/game/review";
+import {
+  employmentChance,
+  employmentScore,
+  rollHire,
+} from "@/lib/game/employment";
+import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
 import {
   StudyResult,
@@ -39,6 +52,8 @@ interface GameState {
   toast: { message: string; token: number } | null;
   /** 아직 확인하지 않은 연간 리뷰 모달 큐 (비영속) */
   pendingReviews: YearlyReview[];
+  /** 취업 지원 결과 모달 (비영속) */
+  jobResult: JobOutcome | null;
 
   setHydrated: () => void;
   createNew: (name: string, color: string) => void;
@@ -53,9 +68,12 @@ interface GameState {
   addHiddenMs: (ms: number) => void;
   ackReview: () => void;
   ackAllReviews: () => void;
+  applyForJob: (family: JobFamilyKey, company: CompanyTypeKey) => ActionResult;
+  ackJobResult: () => void;
 }
 
 const now = () => Date.now();
+const HOUR = 60 * 60 * 1000;
 
 // 서버(SSR)에서는 localStorage 가 없으므로 안전한 no-op 스토리지를 사용
 const noopStorage: StateStorage = {
@@ -79,6 +97,7 @@ export const useGameStore = create<GameState>()(
         hydrated: false,
         toast: null,
         pendingReviews: [],
+        jobResult: null,
 
         setHydrated: () => set({ hydrated: true }),
 
@@ -87,11 +106,13 @@ export const useGameStore = create<GameState>()(
         set({
           character: createCharacter(userId, name, color, now()),
           pendingReviews: [],
+          jobResult: null,
           toast: null,
         });
       },
 
-      reset: () => set({ character: null, toast: null, pendingReviews: [] }),
+      reset: () =>
+        set({ character: null, toast: null, pendingReviews: [], jobResult: null }),
 
       tick: () => {
         const c = get().character;
@@ -169,7 +190,7 @@ export const useGameStore = create<GameState>()(
         if (key === "exercise") {
           counters.exercise += 1;
           lastExerciseAt = t;
-        } else if (key === "selfDev" || key === "read") {
+        } else if (key === "selfDev" || key === "read" || PREP_KEYS.has(key)) {
           counters.selfDev += 1;
         }
 
@@ -251,17 +272,80 @@ export const useGameStore = create<GameState>()(
         set((s) => ({ pendingReviews: s.pendingReviews.slice(1) })),
 
       ackAllReviews: () => set({ pendingReviews: [] }),
+
+      applyForJob: (family, company) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.lifeStage !== "jobseeker" || c.job) {
+          return { ok: false, message: "지금은 취업 지원 단계가 아니에요." };
+        }
+        const t = now();
+        if (!isActionReady(c, "jobApply", t)) {
+          return { ok: false, message: "아직 지원 쿨타임이에요." };
+        }
+        const chance = employmentChance(c, company);
+        const { hired, roll } = rollHire(chance, Math.random());
+
+        if (hired) {
+          const grade = gradeForScore(employmentScore(c));
+          const salary = startingSalary(grade, company);
+          const job: JobState = {
+            family,
+            company,
+            grade,
+            title: jobTitle(family, grade),
+            salaryManwon: salary,
+            hiredAt: t,
+            hiredAtAge: c.ageYears,
+          };
+          let next = applyEffect(c, {
+            status: { confidence: 8, mood: 10, stress: -5 },
+            stats: { careerPotential: 3, employability: 2 },
+            exp: 80,
+          });
+          next = {
+            ...next,
+            job,
+            jobApplications: c.jobApplications + 1,
+            cooldowns: setCooldown(next, "jobApply", t, HOUR),
+          };
+          set({
+            character: next,
+            jobResult: { success: true, family, company, chance, roll, job },
+          });
+          pushToast("합격! 출근을 준비해요.");
+          return { ok: true, message: "합격!" };
+        }
+
+        let next = applyEffect(c, {
+          status: { stress: 10, confidence: -5, mood: -6 },
+          stats: { careerPotential: 1 },
+        });
+        next = {
+          ...next,
+          jobApplications: c.jobApplications + 1,
+          cooldowns: setCooldown(next, "jobApply", t, HOUR),
+        };
+        set({
+          character: next,
+          jobResult: { success: false, family, company, chance, roll },
+        });
+        pushToast("아쉽게 불합격… 다시 도전해요.");
+        return { ok: true, message: "불합격" };
+      },
+
+      ackJobResult: () => set({ jobResult: null }),
       };
     },
     {
       name: "lifegotchi:character",
-      version: 2,
+      version: 3,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
       skipHydration: true,
       partialize: (s) => ({ character: s.character }),
-      // Phase 1 세이브(academic/reviews/color 없음) 호환 + 복귀 즉시 다년 리뷰 폭탄 방지
+      // 구버전 세이브 호환(필드 누락 보정). 항상 ?? 로 보정하므로 idempotent.
       migrate: (persisted) => {
         const stored = (persisted ?? {}) as { character?: Character | null };
         const c = stored.character;
@@ -270,9 +354,17 @@ export const useGameStore = create<GameState>()(
           ...c,
           color: c.color || "blush",
           avatar: c.avatar || "🐣",
-          stats: { ...c.stats, academic: c.stats?.academic ?? 5 },
+          stats: {
+            ...c.stats,
+            academic: c.stats?.academic ?? 5,
+            portfolioScore: c.stats?.portfolioScore ?? 0,
+            interviewScore: c.stats?.interviewScore ?? 0,
+            certificateScore: c.stats?.certificateScore ?? 0,
+          },
           reviews: c.reviews ?? [],
           lastReviewedAge: c.ageYears ?? 0,
+          job: c.job ?? null,
+          jobApplications: c.jobApplications ?? 0,
         };
         return { character: merged } as unknown as GameState;
       },

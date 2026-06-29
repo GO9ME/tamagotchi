@@ -5,7 +5,7 @@ import {
   NO_EXERCISE_THRESHOLD_MS,
   WEIGHT_GAIN_NO_EXERCISE_PER_HOUR,
 } from "./constants";
-import { ageFromBornAt, stageForAge } from "./growth";
+import { ageFromBornAt, cappedStageForAge } from "./growth";
 import { weightTickPenalty } from "./weight";
 
 /**
@@ -61,9 +61,10 @@ export function applyDecay(c: Character, now: number): Character {
   }
 
   // 나이/단계 갱신 (시간 경과와 무관하게 항상 최신화)
+  // employee 이상은 취업(job 보유) 했을 때만 진입 — 미취업이면 jobseeker 로 캡
   const age = ageFromBornAt(c.bornAt, now);
   next.ageYears = age;
-  next.lifeStage = stageForAge(age);
+  next.lifeStage = cappedStageForAge(age, c.job != null);
 
   return next;
 }

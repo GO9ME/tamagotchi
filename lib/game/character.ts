@@ -43,6 +43,9 @@ export function createCharacter(
       careerPotential: 5,
       employability: 5,
       academic: 5,
+      portfolioScore: 0,
+      interviewScore: 0,
+      certificateScore: 0,
     },
     bornAt: now,
     createdAt: now,
@@ -53,6 +56,8 @@ export function createCharacter(
     yearCounters: { study: 0, exercise: 0, selfDev: 0, meals: 0 },
     lastReviewedAge: 0,
     reviews: [],
+    job: null,
+    jobApplications: 0,
   };
 }
 

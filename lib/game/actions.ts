@@ -159,7 +159,76 @@ export const ACTIONS: ActionDef[] = [
       message: "푹 잤어요. 컨디션 최상!",
     }),
   },
+
+  // --- 취업 준비 (jobseeker 단계, 커리어 화면 전용) ---
+  {
+    key: "resume",
+    label: "이력서 수정",
+    emoji: "📄",
+    desc: "이력서를 다듬어 완성도를 높여요.",
+    kind: "instant",
+    cooldownMs: 2 * HOUR,
+    category: "selfdev",
+    minStage: "jobseeker",
+    effect: () => ({
+      status: { confidence: 2, stress: 1 },
+      stats: { portfolioScore: 6, communication: 0.3 },
+      exp: 8,
+      message: "이력서를 다듬었어요.",
+    }),
+  },
+  {
+    key: "portfolio",
+    label: "포트폴리오",
+    emoji: "🗂️",
+    desc: "포트폴리오를 한 단계 끌어올려요.",
+    kind: "instant",
+    cooldownMs: 3 * HOUR,
+    category: "selfdev",
+    minStage: "jobseeker",
+    effect: () => ({
+      status: { energy: -8, stress: 3, focus: -3 },
+      stats: { portfolioScore: 8, creativity: 0.8, careerPotential: 0.5 },
+      exp: 12,
+      message: "포트폴리오를 끌어올렸어요.",
+    }),
+  },
+  {
+    key: "interviewPrep",
+    label: "면접 연습",
+    emoji: "💬",
+    desc: "면접 연습으로 자신감을 키워요.",
+    kind: "instant",
+    cooldownMs: 2 * HOUR,
+    category: "selfdev",
+    minStage: "jobseeker",
+    effect: () => ({
+      status: { confidence: 3, stress: 2, energy: -5 },
+      stats: { interviewScore: 8, communication: 0.8 },
+      exp: 10,
+      message: "면접 연습으로 자신감이 붙었어요.",
+    }),
+  },
+  {
+    key: "certStudy",
+    label: "자격증 공부",
+    emoji: "🎖️",
+    desc: "자격증 공부로 스펙을 쌓아요.",
+    kind: "instant",
+    cooldownMs: 3 * HOUR,
+    category: "selfdev",
+    minStage: "jobseeker",
+    effect: () => ({
+      status: { focus: 3, stress: 2, energy: -6 },
+      stats: { certificateScore: 9, academic: 0.6, intelligence: 0.4, employability: 0.5 },
+      exp: 11,
+      message: "자격증 공부로 스펙을 쌓았어요.",
+    }),
+  },
 ];
+
+/** 취업 준비 액션 (대시보드 ActionGrid 에서 제외, 커리어 화면 전용) */
+export const PREP_KEYS = new Set(["resume", "portfolio", "interviewPrep", "certStudy"]);
 
 export const ACTION_MAP: Record<string, ActionDef> = Object.fromEntries(
   ACTIONS.map((a) => [a.key, a]),
