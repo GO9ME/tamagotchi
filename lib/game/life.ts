@@ -15,14 +15,19 @@ export function ageRiskPct(age: number): number {
   return 50;
 }
 
-/** 연간 사고·질병·사망 위험 확률(%) = 나이 + 직업 위험도 + 스트레스 − 건강관리 */
-export function riskPct(c: Character, age: number): number {
+/**
+ * 연간 사고·질병·사망 위험 확률(%) = 나이 + 직업 위험도 + 스트레스 − 건강관리.
+ * neutral=true 면 오프라인 누적 감쇠로 부풀려진 컨디션 대신 중립값으로 평가(채점과 대칭).
+ */
+export function riskPct(c: Character, age: number, neutral = false): number {
   if (age >= MAX_AGE) return 100;
   const base = ageRiskPct(age);
   const job = c.job ? JOB_FAMILIES[c.job.family].riskLevel * 100 : 1.5;
-  const stressAdd = c.status.stress > 80 ? 2 : 0;
-  const careReduction =
-    (c.status.health - 50) * 0.06 + (50 - c.status.burnout) * 0.03;
+  const health = neutral ? 50 : c.status.health;
+  const burnout = neutral ? 30 : c.status.burnout;
+  const stress = neutral ? 50 : c.status.stress;
+  const stressAdd = stress > 80 ? 2 : 0;
+  const careReduction = (health - 50) * 0.06 + (50 - burnout) * 0.03;
   return clamp(base + job + stressAdd - careReduction, 0.2, 100);
 }
 
@@ -38,6 +43,9 @@ const INCIDENTS = [
   { cause: "부상", hit: 20 },
 ];
 
+/** 회복 가능한 사고/병 사인 단일 출처 — ending.ts 요절 판정이 이걸 참조 */
+export const INCIDENT_CAUSES: string[] = INCIDENTS.map((i) => i.cause);
+
 /** rand 3개 주입(결정성). 위험 발동 시 대부분 회복 가능한 사건, 드물게 사망. */
 export function rollLifeRisk(
   c: Character,
@@ -45,15 +53,17 @@ export function rollLifeRisk(
   rTrigger: number,
   rFatal: number,
   rPick: number,
+  neutral = false,
 ): RiskEvent {
   if (age >= MAX_AGE) return { kind: "death", cause: "노환" };
-  const p = riskPct(c, age);
+  const p = riskPct(c, age, neutral);
   if (rTrigger * 100 >= p) return { kind: "none" };
 
   const inc = INCIDENTS[Math.min(INCIDENTS.length - 1, Math.floor(rPick * INCIDENTS.length))];
   // 치명 확률: 건강 낮을수록·고령일수록 ↑
+  const health = neutral ? 50 : c.status.health;
   const fatalChance = clamp(
-    0.18 + (50 - c.status.health) * 0.006 + Math.max(0, age - 45) * 0.012,
+    0.18 + (50 - health) * 0.006 + Math.max(0, age - 45) * 0.012,
     0.1,
     0.85,
   );

@@ -3,6 +3,7 @@ import { clamp, clampStatus, round2 } from "./clamp";
 import {
   DECAY_PER_HOUR,
   DECAY_SCALE,
+  MAX_AGE,
   NO_EXERCISE_THRESHOLD_MS,
   WEIGHT_GAIN_NO_EXERCISE_PER_HOUR,
 } from "./constants";
@@ -65,7 +66,8 @@ export function applyDecay(c: Character, now: number): Character {
 
   // 나이/단계 갱신 (시간 경과와 무관하게 항상 최신화)
   // employee 이상은 취업(job 보유) 했을 때만 진입 — 미취업이면 jobseeker 로 캡
-  const age = ageFromBornAt(c.bornAt, now);
+  // 자연사 한계(60세)를 넘는 오프라인 점프에서도 나이는 60에 캡 → 수명·엔딩 표기 일관성
+  const age = Math.min(ageFromBornAt(c.bornAt, now), MAX_AGE);
   next.ageYears = age;
   next.lifeStage = cappedStageForAge(age, c.job != null);
 

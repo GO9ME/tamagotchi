@@ -4,7 +4,7 @@ import type {
   JobFamilyKey,
 } from "@/types/character";
 import { clamp } from "./clamp";
-import { COMPANY_TYPES, JOB_FAMILIES } from "./jobs";
+import { COMPANY_TYPES, JOB_FAMILIES, RARITY_META } from "./jobs";
 
 // 0~100 정규화 (누적 스탯이 100 넘으면 만점 고착 방지 — exam.ts ci 패턴)
 const ci = (s: number) => Math.min(Math.max(s, 0), 100);
@@ -70,14 +70,22 @@ export function employmentReadiness(
   return clamp(employmentScore(c) + familyFitBonus(c, family), 0, 100);
 }
 
-/** 회사 유형 난이도 + 직업군 적합도 보정 후 합격 확률(%) */
+/** 직군 등급(레어도)에 따른 합격 확률 페널티 — 높은 등급일수록 취업이 어렵다 */
+export function rarityHiringMod(family: JobFamilyKey | null): number {
+  if (!family) return 0;
+  return -5 * RARITY_META[JOB_FAMILIES[family].rarity].order; // 일반 0 ~ 전설 -20
+}
+
+/** 회사 유형 난이도 + 직업군 적합도 + 직군 등급 보정 후 합격 확률(%) */
 export function employmentChance(
   c: Character,
   family: JobFamilyKey | null,
   company: CompanyTypeKey,
 ): number {
   return clamp(
-    employmentReadiness(c, family) + COMPANY_TYPES[company].chanceMod,
+    employmentReadiness(c, family) +
+      rarityHiringMod(family) +
+      COMPANY_TYPES[company].chanceMod,
     5,
     95,
   );

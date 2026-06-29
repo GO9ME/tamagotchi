@@ -11,6 +11,7 @@ import type {
 import { clamp, round2 } from "./clamp";
 import {
   EDU_STAGES,
+  MAX_AGE,
   MAX_NEGLECT_YEARS_APPLIED,
   YEARLY_TARGETS,
 } from "./constants";
@@ -247,15 +248,17 @@ export function runDueReviews(
   // 위험 이벤트: 대부분 회복 가능한 사고/병, 드물게 사망
   let incident: { cause: string; healthHit: number } | undefined;
   let death: { cause: string } | undefined;
+  // 다년 점프면 채점과 동일하게 중립 컨디션으로 위험 평가(잠깐 자리 비웠다고 사망률 폭증 방지)
   const risk = rollLifeRisk(
     ch,
     reviewAge,
     Math.random(),
     Math.random(),
     Math.random(),
+    multiYear,
   );
   if (risk.kind === "death") {
-    ch = { ...ch, deathAge: reviewAge, deathCause: risk.cause };
+    ch = { ...ch, deathAge: Math.min(reviewAge, MAX_AGE), deathCause: risk.cause };
     death = { cause: risk.cause };
   } else if (risk.kind === "incident") {
     ch = applyEffect(ch, { status: { health: -risk.healthHit, stress: 5 } });
@@ -282,26 +285,35 @@ export function runDueReviews(
     createdAt: now,
   });
 
-  // (B) 건너뛴 중간 연도 — 단일 방치 요약 (직전 1년에 사망하지 않았을 때만)
+  // (B) 건너뛴 중간 연도 — 방치 요약 (직전 1년에 사망하지 않았을 때만)
   if (multiYear && ch.deathAge == null) {
-    const stage = ch.lifeStage;
+    // 페널티 단계는 갭 대표(중간) 나이 기준 — 점프 후 단계로 학생 연도까지 성인 가중되는 것 방지
+    const midAge = reviewAge + Math.floor((yearsPassed - 1) / 2);
+    const stage = cappedStageForAge(midAge, ch.job != null);
     const effective = Math.min(yearsPassed - 1, MAX_NEGLECT_YEARS_APPLIED);
     const neglectEffect = scaleEffect(
       selfDevPenaltyEffect(0, stage),
       0.5 * effective,
     );
     ch = applyEffect(ch, neglectEffect);
-    // 갭 연도 저축 + 갭 동안 위험(사망 가능)
-    ch = { ...ch, savings: ch.savings + yearlyNet(ch) * (yearsPassed - 1) };
-    const gapRisk = rollLifeRisk(ch, age, Math.random(), Math.random(), Math.random());
+
+    // 갭 연도를 한 해씩 굴린다: 매년 저축 + 위험(중립 컨디션). 첫 사망 시 그 해를 deathAge 로.
+    // 연속 플레이와 동일하게 매년 굴려야 누적 사망확률(1-∏(1-p_y))이 보존됨(오프라인 치트 방지).
     let gapDeath: { cause: string } | undefined;
-    if (gapRisk.kind === "death") {
-      ch = { ...ch, deathAge: age, deathCause: gapRisk.cause };
-      gapDeath = { cause: gapRisk.cause };
+    const lastGapYear = Math.min(age, MAX_AGE);
+    for (let y = reviewAge + 1; y <= lastGapYear && ch.deathAge == null; y++) {
+      ch = { ...ch, savings: ch.savings + yearlyNet(ch) };
+      const gr = rollLifeRisk(ch, y, Math.random(), Math.random(), Math.random(), true);
+      if (gr.kind === "death") {
+        ch = { ...ch, deathAge: Math.min(y, MAX_AGE), deathCause: gr.cause };
+        gapDeath = { cause: gr.cause };
+      } else if (gr.kind === "incident") {
+        ch = applyEffect(ch, { status: { health: -gr.healthHit, stress: 5 } });
+      }
     }
     reviews.push({
       id: `${c.id}:neglect:${age}`,
-      age,
+      age: ch.deathAge ?? age,
       stage,
       kind: "neglected",
       counters: { ...ZERO_COUNTERS },

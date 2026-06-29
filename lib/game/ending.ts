@@ -1,6 +1,7 @@
 import type { Character, ReviewGrade } from "@/types/character";
 import { clamp } from "./clamp";
 import { GRADE_ORDER, JOB_FAMILIES } from "./jobs";
+import { INCIDENT_CAUSES } from "./life";
 
 const ci = (s: number) => Math.min(Math.max(s, 0), 100);
 
@@ -51,7 +52,8 @@ export interface LifeEnding {
   subtitle: string;
 }
 
-const FATAL_INCIDENTS = ["교통사고", "큰 병", "과로로 입원", "부상"];
+// 요절 판정용 사인 — life.ts INCIDENTS 와 단일 출처 동기화(문구 변경 시 자동 추종)
+const FATAL_INCIDENTS = INCIDENT_CAUSES;
 
 /** 여러 지표(수명·저축·행복·직업) 조합으로 갈리는 열린 결말 */
 export function lifeEnding(c: Character): LifeEnding {

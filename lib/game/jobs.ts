@@ -13,7 +13,7 @@ export interface JobFamily {
   coreStats: (keyof CharacterStats)[];
   statBar: number; // 합격 기준선(핵심 스탯 평균이 이보다 높을수록 유리)
   salaryMult: number; // 직무 연봉 배율
-  rarity: JobRarity; // 등급(높을수록 취업 어려움)
+  rarity: JobRarity; // 직군 등급(높을수록 합격 확률 페널티 ↑ + 연봉·엔딩 가중) — employment.rarityHiringMod 참조
   riskLevel: number; // 직업 위험도(연간 사고/질병 확률 기여)
   desc: string;
 }
@@ -23,10 +23,10 @@ export const JOB_FAMILIES: Record<JobFamilyKey, JobFamily> = {
   medical: { label: "전문직/의료", icon: "heart", coreStats: ["intelligence", "discipline", "memory"], statBar: 75, salaryMult: 1.5, rarity: "legendary", riskLevel: 0.025, desc: "고난이도·고연봉 전문직" },
   management: { label: "경영/전략", icon: "star", coreStats: ["careerPotential", "intelligence", "communication"], statBar: 62, salaryMult: 1.25, rarity: "epic", riskLevel: 0.018, desc: "기획·전략·리더십" },
   research: { label: "연구직", icon: "code", coreStats: ["intelligence", "memory", "creativity"], statBar: 65, salaryMult: 1.2, rarity: "epic", riskLevel: 0.012, desc: "연구·실험·논문" },
-  data: { label: "데이터/AI", icon: "chart", coreStats: ["intelligence", "memory", "discipline"], statBar: 60, salaryMult: 1.25, rarity: "epic", riskLevel: 0.01, desc: "통계·모델링·인사이트" },
+  data: { label: "데이터/AI", icon: "chart", coreStats: ["intelligence", "memory", "discipline"], statBar: 62, salaryMult: 1.25, rarity: "epic", riskLevel: 0.01, desc: "통계·모델링·인사이트" },
   finance: { label: "회계/재무", icon: "coin", coreStats: ["intelligence", "discipline", "memory"], statBar: 60, salaryMult: 1.2, rarity: "rare", riskLevel: 0.012, desc: "회계·재무·정확성" },
   legal: { label: "법무/컴플라이언스", icon: "resume", coreStats: ["intelligence", "discipline", "memory"], statBar: 60, salaryMult: 1.15, rarity: "rare", riskLevel: 0.01, desc: "법무·규정·정확성" },
-  dev: { label: "개발/IT", icon: "code", coreStats: ["intelligence", "discipline", "creativity"], statBar: 55, salaryMult: 1.25, rarity: "rare", riskLevel: 0.012, desc: "코딩·설계·협업" },
+  dev: { label: "개발/IT", icon: "code", coreStats: ["intelligence", "discipline", "creativity"], statBar: 58, salaryMult: 1.2, rarity: "rare", riskLevel: 0.012, desc: "코딩·설계·협업" },
   // 중간 난이도
   pm: { label: "기획/PM", icon: "star", coreStats: ["careerPotential", "communication", "creativity"], statBar: 50, salaryMult: 1.1, rarity: "uncommon", riskLevel: 0.014, desc: "기획·문서·실행" },
   civil: { label: "공무원", icon: "briefcase", coreStats: ["discipline", "intelligence"], statBar: 50, salaryMult: 0.95, rarity: "uncommon", riskLevel: 0.006, desc: "안정·정년보장·꾸준함" },

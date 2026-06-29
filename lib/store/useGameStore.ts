@@ -289,6 +289,8 @@ export const useGameStore = create<GameState>()(
         next = {
           ...next,
           activeSession: null,
+          // 세션 종료 후 다음 공부까지 쿨타임(연타 방지) — feed/doAction 과 동일 컨벤션
+          cooldowns: setCooldown(next, "study", t, cd(getAction("study")!.cooldownMs)),
           yearCounters: {
             ...next.yearCounters,
             study: next.yearCounters.study + 1,
@@ -379,7 +381,7 @@ export const useGameStore = create<GameState>()(
         next = {
           ...next,
           jobApplications: c.jobApplications + 1,
-          cooldowns: setCooldown(next, "jobApply", t, HOUR),
+          cooldowns: setCooldown(next, "jobApply", t, cd(HOUR)),
         };
         set({
           character: next,
@@ -394,7 +396,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 6,
+      version: 7,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -427,6 +429,10 @@ export const useGameStore = create<GameState>()(
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋
           bornAt: Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS,
           lastTickAt: Date.now(),
+          // 같은 시계를 쓰는 절대 타임스탬프 필드도 함께 정규화(옛 epoch 잔존 → 즉시 페널티/완료 방지)
+          lastExerciseAt: Date.now(),
+          cooldowns: {},
+          activeSession: null,
         };
         return { character: merged } as unknown as GameState;
       },
