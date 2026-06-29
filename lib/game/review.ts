@@ -15,7 +15,7 @@ import {
 } from "./constants";
 import { applyEffect } from "./engine";
 import { isActionUnlocked } from "./gating";
-import { stageForAge } from "./growth";
+import { cappedStageForAge } from "./growth";
 import { computeExamScore, examEffect, examTier } from "./exam";
 import { weightVerdict } from "./weight";
 
@@ -190,9 +190,10 @@ export function runDueReviews(
   const yearsPassed = age - last;
   const multiYear = yearsPassed >= 2;
 
-  // (A) 막 끝난 직전 1년 — 그 해의 나이/단계 기준으로 채점(점프 후 현재 단계가 아님)
+  // (A) 막 끝난 직전 1년 — 그 해의 나이/단계 기준으로 채점(점프 후 현재 단계가 아님).
+  // 미취업이면 jobseeker 로 캡(직장인 전용 페널티가 취준생에게 발동하지 않도록 게이트와 일치).
   const reviewAge = last + 1;
-  const reviewStage = stageForAge(reviewAge);
+  const reviewStage = cappedStageForAge(reviewAge, ch.job != null);
 
   const score = scoreYear(ch.yearCounters, ch.status, reviewAge, {
     neutralStatus: multiYear,

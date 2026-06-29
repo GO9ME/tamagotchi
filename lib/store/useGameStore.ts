@@ -27,7 +27,7 @@ import { isActionUnlocked } from "@/lib/game/gating";
 import { runDueReviews } from "@/lib/game/review";
 import {
   employmentChance,
-  employmentScore,
+  employmentReadiness,
   rollHire,
 } from "@/lib/game/employment";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
@@ -283,11 +283,11 @@ export const useGameStore = create<GameState>()(
         if (!isActionReady(c, "jobApply", t)) {
           return { ok: false, message: "아직 지원 쿨타임이에요." };
         }
-        const chance = employmentChance(c, company);
+        const chance = employmentChance(c, family, company);
         const { hired, roll } = rollHire(chance, Math.random());
 
         if (hired) {
-          const grade = gradeForScore(employmentScore(c));
+          const grade = gradeForScore(employmentReadiness(c, family));
           const salary = startingSalary(grade, company);
           const job: JobState = {
             family,

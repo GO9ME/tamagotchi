@@ -12,7 +12,7 @@ import {
   gradeForScore,
   startingSalary,
 } from "@/lib/game/jobs";
-import { employmentChance, employmentScore } from "@/lib/game/employment";
+import { employmentChance, employmentReadiness } from "@/lib/game/employment";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
 import { BottomNav } from "@/components/common/BottomNav";
+import { Toast } from "@/components/common/Toast";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 const PREP_ICON: Record<string, string> = {
@@ -39,6 +40,7 @@ export default function CareerPage() {
   const character = useGameStore((s) => s.character);
   const doAction = useGameStore((s) => s.doAction);
   const applyForJob = useGameStore((s) => s.applyForJob);
+  const tick = useGameStore((s) => s.tick);
   const now = useNow(1000);
 
   const [family, setFamily] = useState<JobFamilyKey | null>(null);
@@ -47,6 +49,22 @@ export default function CareerPage() {
   useEffect(() => {
     if (hydrated && !character) router.replace("/create");
   }, [hydrated, character, router]);
+
+  // 나이/단계 갱신: 직접 접근/새로고침 시에도 stale 단계 가드 방지 (대시보드와 동일)
+  useEffect(() => {
+    if (!character) return;
+    tick();
+    const id = setInterval(() => tick(), 5000);
+    const onVis = () => {
+      if (document.visibilityState === "visible") tick();
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", onVis);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [character?.id, tick]);
 
   if (!hydrated || !character) {
     return (
@@ -108,8 +126,8 @@ export default function CareerPage() {
   }
 
   // 취준생 — 취업 준비/지원
-  const score = employmentScore(character);
-  const grade = gradeForScore(score);
+  const readiness = employmentReadiness(character, family);
+  const grade = gradeForScore(readiness);
   const applyReadyAt = character.cooldowns["jobApply"] ?? 0;
   const onApplyCooldown = applyReadyAt > now;
   const canApply = !!family && !!company && !onApplyCooldown;
@@ -179,7 +197,7 @@ export default function CareerPage() {
           {COMPANY_KEYS.map((key) => {
             const c = COMPANY_TYPES[key];
             const active = company === key;
-            const chance = employmentChance(character, key);
+            const chance = employmentChance(character, family, key);
             const salary = startingSalary(grade, key);
             return (
               <button
@@ -222,6 +240,7 @@ export default function CareerPage() {
       </button>
 
       <JobResultModal />
+      <Toast />
       <BottomNav />
     </main>
   );
