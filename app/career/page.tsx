@@ -9,6 +9,7 @@ import { ACTIONS, PREP_KEYS } from "@/lib/game/actions";
 import {
   COMPANY_TYPES,
   JOB_FAMILIES,
+  RARITY_META,
   gradeForScore,
   startingSalary,
 } from "@/lib/game/jobs";
@@ -17,7 +18,6 @@ import {
   employmentReadiness,
   familyFitLabel,
 } from "@/lib/game/employment";
-import { ENDING_AGE } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
 import { cn } from "@/lib/utils";
@@ -55,7 +55,7 @@ export default function CareerPage() {
 
   useEffect(() => {
     if (hydrated && !character) router.replace("/create");
-    else if (hydrated && character && character.ageYears >= ENDING_AGE) {
+    else if (hydrated && character && character.deathAge != null) {
       router.replace("/dashboard"); // 엔딩은 대시보드에서
     }
   }, [hydrated, character, router]);
@@ -198,8 +198,10 @@ export default function CareerPage() {
                   </span>
                 </span>
                 <span className="flex items-center justify-between font-pixel text-[10px]">
+                  <span className={RARITY_META[f.rarity].cls}>
+                    {RARITY_META[f.rarity].label}
+                  </span>
                   <span className={fitMeta.cls}>{fitMeta.label}</span>
-                  {f.salaryMult >= 1.2 && <span className="text-ink/40">고연봉</span>}
                 </span>
               </button>
             );

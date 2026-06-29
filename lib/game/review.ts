@@ -19,6 +19,7 @@ import { isActionUnlocked } from "./gating";
 import { cappedStageForAge } from "./growth";
 import { computeExamScore, examEffect, examTier } from "./exam";
 import { processWorkReview } from "./work";
+import { rollLifeRisk, updateHappiness, yearlyNet } from "./life";
 import { weightVerdict } from "./weight";
 
 const ZERO_COUNTERS: YearCounters = {
@@ -183,6 +184,7 @@ export function runDueReviews(
   c: Character,
   now: number,
 ): { character: Character; reviews: YearlyReview[] } {
+  if (c.deathAge != null) return { character: c, reviews: [] }; // 사망 시 종료
   const age = c.ageYears;
   const last = c.lastReviewedAge;
   if (age <= last) return { character: c, reviews: [] }; // 멱등 no-op
@@ -236,6 +238,30 @@ export function runDueReviews(
     ch = applyEffect(ch, effect);
   }
 
+  // 저축·행복 갱신(직전 1년)
+  ch = {
+    ...ch,
+    savings: ch.savings + yearlyNet(ch),
+    happiness: updateHappiness(ch.happiness, ch.status),
+  };
+  // 위험 이벤트: 대부분 회복 가능한 사고/병, 드물게 사망
+  let incident: { cause: string; healthHit: number } | undefined;
+  let death: { cause: string } | undefined;
+  const risk = rollLifeRisk(
+    ch,
+    reviewAge,
+    Math.random(),
+    Math.random(),
+    Math.random(),
+  );
+  if (risk.kind === "death") {
+    ch = { ...ch, deathAge: reviewAge, deathCause: risk.cause };
+    death = { cause: risk.cause };
+  } else if (risk.kind === "incident") {
+    ch = applyEffect(ch, { status: { health: -risk.healthHit, stress: 5 } });
+    incident = { cause: risk.cause, healthHit: risk.healthHit };
+  }
+
   reviews.push({
     id: `${c.id}:${reviewAge}`,
     age: reviewAge,
@@ -246,6 +272,8 @@ export function runDueReviews(
     grade,
     exam,
     work,
+    incident,
+    death,
     selfDevPenaltyApplied: true,
     salaryBonusForfeited:
       isAdultStage(reviewStage) && c.yearCounters.selfDev === 0
@@ -254,8 +282,8 @@ export function runDueReviews(
     createdAt: now,
   });
 
-  // (B) 건너뛴 중간 연도 — 단일 방치 요약 (현재 도달 단계 기준, 상한 적용)
-  if (multiYear) {
+  // (B) 건너뛴 중간 연도 — 단일 방치 요약 (직전 1년에 사망하지 않았을 때만)
+  if (multiYear && ch.deathAge == null) {
     const stage = ch.lifeStage;
     const effective = Math.min(yearsPassed - 1, MAX_NEGLECT_YEARS_APPLIED);
     const neglectEffect = scaleEffect(
@@ -263,6 +291,14 @@ export function runDueReviews(
       0.5 * effective,
     );
     ch = applyEffect(ch, neglectEffect);
+    // 갭 연도 저축 + 갭 동안 위험(사망 가능)
+    ch = { ...ch, savings: ch.savings + yearlyNet(ch) * (yearsPassed - 1) };
+    const gapRisk = rollLifeRisk(ch, age, Math.random(), Math.random(), Math.random());
+    let gapDeath: { cause: string } | undefined;
+    if (gapRisk.kind === "death") {
+      ch = { ...ch, deathAge: age, deathCause: gapRisk.cause };
+      gapDeath = { cause: gapRisk.cause };
+    }
     reviews.push({
       id: `${c.id}:neglect:${age}`,
       age,
@@ -271,6 +307,7 @@ export function runDueReviews(
       counters: { ...ZERO_COUNTERS },
       score: 0,
       grade: "D",
+      death: gapDeath,
       selfDevPenaltyApplied: true,
       neglectedYears: yearsPassed - 1,
       createdAt: now,

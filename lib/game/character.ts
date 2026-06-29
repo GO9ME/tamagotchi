@@ -59,6 +59,8 @@ export function createCharacter(
     reviews: [],
     job: null,
     jobApplications: 0,
+    savings: 0,
+    happiness: 50,
   };
 }
 

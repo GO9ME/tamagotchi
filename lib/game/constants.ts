@@ -16,8 +16,11 @@ export const GAME_YEAR_MS: number = (() => {
   return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 9 * 60 * 1000;
 })();
 
-/** 한 판(출생→엔딩) 종료 나이 = 정년퇴직 */
-export const ENDING_AGE = 60;
+/** 연간 생활비(만원) — 저축 = 연봉 - 생활비 */
+export const LIVING_COST = 2000;
+
+/** 자연사 한계 나이(이 나이엔 사망 확률 100%) */
+export const MAX_AGE = 95;
 
 /** 액션 쿨타임 배율(빠른 회전). 1.0=원본(시간단위), 0.2≈5분의1 */
 export const COOLDOWN_SCALE = 0.2;

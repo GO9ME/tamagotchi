@@ -132,6 +132,8 @@ export interface YearlyReview {
   grade: ReviewGrade;
   exam?: { score: number; tier: string };
   work?: WorkReview; // 직장인 업무평가(있으면)
+  incident?: { cause: string; healthHit: number }; // 회복 가능한 병/사고
+  death?: { cause: string }; // 사망(엔딩)
   selfDevPenaltyApplied: boolean;
   salaryBonusForfeited?: boolean; // Phase3 연봉협상에서 소비
   neglectedYears?: number;
@@ -178,4 +180,8 @@ export interface Character {
   reviews: YearlyReview[]; // 연간 리뷰 기록 (성장 기록 화면)
   job: JobState | null; // 취업 전 null
   jobApplications: number; // 누적 지원 횟수
+  savings: number; // 누적 저축(만원, 음수=빚)
+  happiness: number; // 행복도(평생 평균, 0~100)
+  deathAge?: number; // 사망 나이(설정되면 엔딩)
+  deathCause?: string; // 사인
 }

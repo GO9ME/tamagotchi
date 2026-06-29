@@ -18,7 +18,6 @@ import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { CareerCard } from "@/components/dashboard/CareerCard";
 import { EndingScreen } from "@/components/EndingScreen";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
-import { ENDING_AGE } from "@/lib/game/constants";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -61,8 +60,8 @@ export default function DashboardPage() {
     );
   }
 
-  // 정년 도달 → 인생 결산 엔딩
-  if (character.ageYears >= ENDING_AGE) {
+  // 사망 → 인생 결산 엔딩
+  if (character.deathAge != null) {
     return <EndingScreen character={character} />;
   }
 

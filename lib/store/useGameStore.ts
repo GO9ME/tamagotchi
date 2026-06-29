@@ -89,6 +89,8 @@ function isMilestone(
     review.kind === "neglected" ||
     review.exam ||
     review.work?.promoted ||
+    review.incident ||
+    review.death ||
     review.grade === "S" ||
     review.grade === "D"
   ) {
@@ -141,6 +143,7 @@ export const useGameStore = create<GameState>()(
       tick: () => {
         const c = get().character;
         if (!c) return;
+        if (c.deathAge != null) return; // 사망 시 상태 동결(엔딩)
         const decayed = applyDecay(c, now());
         const { character, reviews } = runDueReviews(decayed, now());
         if (reviews.length > 0) {
@@ -391,7 +394,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 5,
+      version: 6,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -419,6 +422,8 @@ export const useGameStore = create<GameState>()(
           lastReviewedAge: c.lastReviewedAge ?? c.ageYears ?? 0,
           job: c.job ?? null,
           jobApplications: c.jobApplications ?? 0,
+          savings: c.savings ?? 0,
+          happiness: c.happiness ?? 50,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋
           bornAt: Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS,
           lastTickAt: Date.now(),

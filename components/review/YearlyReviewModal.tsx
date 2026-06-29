@@ -121,6 +121,12 @@ function NormalBody({ review }: { review: YearlyReview }) {
         </div>
       )}
 
+      {review.incident && (
+        <p className="mt-3 rounded-xl border-2 border-coral/40 bg-coral/15 px-4 py-2.5 text-center text-[12px] font-semibold text-coral">
+          {review.incident.cause}! 건강이 {review.incident.healthHit} 깎였어요.
+        </p>
+      )}
+
       {review.salaryBonusForfeited && (
         <p className="mt-3 rounded-xl bg-coral/15 px-4 py-2 text-[11px] text-coral">
           성인이 되어 1년간 자기개발이 전혀 없었어요. 커리어 경쟁력이 떨어졌어요.
