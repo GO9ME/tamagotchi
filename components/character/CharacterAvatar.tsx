@@ -2,6 +2,7 @@ import type { Character } from "@/types/character";
 import { stageLabel } from "@/lib/game/growth";
 import { formatMoney } from "@/lib/game/ending";
 import { currentHeight } from "@/lib/game/body";
+import { DEGREE_LABEL } from "@/lib/game/degree";
 import { TamaDevice } from "./TamaDevice";
 import { getMood, moodLabel } from "./Mascot";
 
@@ -25,6 +26,13 @@ export function CharacterAvatar({ character }: { character: Character }) {
           <span className={`pill ${female ? "bg-blush/50" : "bg-sky/40"} text-ink/70`}>
             {female ? "♀ 여아" : "♂ 남아"} · {currentHeight(character)}cm
           </span>
+          {(character.gradEnroll || character.degree !== "highschool") && (
+            <span className="pill bg-grape/20 text-ink/70">
+              {character.gradEnroll
+                ? `🎓 ${DEGREE_LABEL[character.gradEnroll.degree]}과정`
+                : DEGREE_LABEL[character.degree]}
+            </span>
+          )}
           <span className="pill bg-butter/40 text-ink/70">
             저축 {formatMoney(character.savings)}
           </span>

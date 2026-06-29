@@ -5,6 +5,7 @@ import type {
 } from "@/types/character";
 import { clamp } from "./clamp";
 import { currentHeight } from "./body";
+import { degreeHiringMod } from "./degree";
 import { COMPANY_TYPES, JOB_FAMILIES, RARITY_META } from "./jobs";
 
 // 0~100 정규화 (누적 스탯이 100 넘으면 만점 고착 방지 — exam.ts ci 패턴)
@@ -88,7 +89,7 @@ export function heightFitMod(c: Character, family: JobFamilyKey | null): number 
   return clamp(Math.round((currentHeight(c) - bar) * 1.0), -30, 18);
 }
 
-/** 회사 유형 난이도 + 직업군 적합도 + 직군 등급 + 신장 보정 후 합격 확률(%) */
+/** 회사 유형 난이도 + 직업군 적합도 + 직군 등급 + 신장 + 학위 보정 후 합격 확률(%) */
 export function employmentChance(
   c: Character,
   family: JobFamilyKey | null,
@@ -98,6 +99,7 @@ export function employmentChance(
     employmentReadiness(c, family) +
       rarityHiringMod(family) +
       heightFitMod(c, family) +
+      degreeHiringMod(c) +
       COMPANY_TYPES[company].chanceMod,
     5,
     95,

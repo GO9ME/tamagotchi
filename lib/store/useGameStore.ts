@@ -36,6 +36,7 @@ import {
   rollHire,
 } from "@/lib/game/employment";
 import { canNegotiate, negotiate } from "@/lib/game/negotiate";
+import { degreeSalaryMult, gradAdmission } from "@/lib/game/degree";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
 import {
@@ -80,6 +81,8 @@ interface GameState {
   ackJobResult: () => void;
   negotiateSalary: () => ActionResult;
   ackNegotiation: () => void;
+  enrollGrad: () => ActionResult;
+  dropGrad: () => ActionResult;
 }
 
 const now = () => Date.now();
@@ -98,6 +101,7 @@ function isMilestone(
     review.work?.promoted ||
     review.incident ||
     review.death ||
+    review.degreeChange ||
     review.grade === "S" ||
     review.grade === "D"
   ) {
@@ -351,6 +355,9 @@ export const useGameStore = create<GameState>()(
         if (c.lifeStage !== "jobseeker" || c.job) {
           return { ok: false, message: "지금은 취업 지원 단계가 아니에요." };
         }
+        if (c.gradEnroll) {
+          return { ok: false, message: "대학원 재학 중에는 지원할 수 없어요. 졸업 후에!" };
+        }
         const t = now();
         if (!isActionReady(c, "jobApply", t)) {
           return { ok: false, message: "아직 지원 쿨타임이에요." };
@@ -360,7 +367,9 @@ export const useGameStore = create<GameState>()(
 
         if (hired) {
           const grade = gradeForScore(employmentReadiness(c, family));
-          const salary = startingSalary(grade, company, family);
+          // 학위 보너스 반영(석/박사 초봉 ↑), 100만원 단위 반올림
+          const salary =
+            Math.round((startingSalary(grade, company, family) * degreeSalaryMult(c)) / 100) * 100;
           const job: JobState = {
             family,
             company,
@@ -453,11 +462,40 @@ export const useGameStore = create<GameState>()(
       },
 
       ackNegotiation: () => set({ negotiationResult: null }),
+
+      enrollGrad: () => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        const adm = gradAdmission(c);
+        if (!adm.ok || !adm.target) {
+          return { ok: false, message: adm.reason ?? "지금은 진학할 수 없어요." };
+        }
+        const target = adm.target;
+        set({
+          character: { ...c, gradEnroll: { degree: target, startAge: c.ageYears } },
+        });
+        pushToast(
+          target === "master"
+            ? "석사 과정 입학! 대학원 노예 라이프 시작…"
+            : "박사 과정 입학! 끝까지 버텨봐요.",
+        );
+        return { ok: true, message: "입학" };
+      },
+
+      dropGrad: () => {
+        const c = get().character;
+        if (!c || !c.gradEnroll) {
+          return { ok: false, message: "대학원 재학 중이 아니에요." };
+        }
+        set({ character: { ...c, gradEnroll: null } });
+        pushToast("대학원을 자퇴했어요. 학위는 이전 단계로 남아요.");
+        return { ok: true, message: "자퇴" };
+      },
       };
     },
     {
       name: "lifegotchi:character",
-      version: 9,
+      version: 10,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -475,6 +513,9 @@ export const useGameStore = create<GameState>()(
           gender,
           // 구버전 세이브: 성별 평균 키로 보정(결정적)
           heightPotential: c.heightPotential ?? (gender === "female" ? 162 : 175),
+          // 학위: 구버전은 나이로 추정(취준생 이상이면 학사)
+          degree: c.degree ?? ((c.ageYears ?? 0) >= 25 ? "bachelor" : "highschool"),
+          gradEnroll: c.gradEnroll ?? null,
           avatar: c.avatar || "🐣",
           stats: {
             ...c.stats,

@@ -23,6 +23,7 @@ import { useNow } from "@/lib/hooks/useNow";
 import { cn } from "@/lib/utils";
 import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
+import { GradSchoolPanel } from "@/components/career/GradSchoolPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
 import { NegotiationModal } from "@/components/negotiate/NegotiationModal";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
@@ -148,6 +149,8 @@ export default function CareerPage() {
 
       <JobPrepPanel character={character} />
 
+      <GradSchoolPanel character={character} />
+
       {/* 취업 준비 액션 */}
       <div className="card p-4">
         <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">취업 준비 활동</h3>
@@ -167,6 +170,12 @@ export default function CareerPage() {
         </div>
       </div>
 
+      {character.gradEnroll ? (
+        <div className="card p-4 text-center font-pixel text-[12px] leading-relaxed text-ink/60">
+          대학원 재학 중이에요. 졸업 후 취업에 지원할 수 있어요.
+        </div>
+      ) : (
+        <>
       {/* 직업군 선택 */}
       <div className="card p-4">
         <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">직업군 선택</h3>
@@ -259,6 +268,8 @@ export default function CareerPage() {
             ? "직업군과 회사를 선택하세요"
             : "이 회사에 지원하기"}
       </button>
+        </>
+      )}
 
       <YearlyReviewModal />
       <JobResultModal />

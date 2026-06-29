@@ -19,6 +19,8 @@ export function createCharacter(
     color: color || "blush",
     gender,
     heightPotential: rollHeightPotential(gender, Math.random(), Math.random()),
+    degree: "highschool",
+    gradEnroll: null,
     avatar: "🐣",
     ageYears: age,
     lifeStage: stageForAge(age),

@@ -8,6 +8,7 @@ import type { Character } from "@/types/character";
 import { TamaDevice } from "@/components/character/TamaDevice";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { computeLifeScore, formatMoney, lifeEnding } from "@/lib/game/ending";
+import { DEGREE_LABEL } from "@/lib/game/degree";
 import { COMPANY_TYPES, JOB_FAMILIES, RARITY_META } from "@/lib/game/jobs";
 import {
   computeRankings,
@@ -89,6 +90,7 @@ export function EndingScreen({ character }: { character: Character }) {
                 : "무직 (자유인)"
             }
           />
+          <Row label="최종 학위" value={DEGREE_LABEL[character.degree]} />
           <Row label="저축" value={formatMoney(character.savings)} strong />
           <Row label="행복도" value={`${character.happiness} / 100`} />
           <Row label="인생 점수" value={`${score} / 100`} />

@@ -2,6 +2,7 @@ import type { ActionEffect } from "@/types/action";
 import type {
   Character,
   CharacterStatus,
+  Degree,
   LifeStage,
   ReviewGrade,
   WorkReview,
@@ -21,7 +22,38 @@ import { cappedStageForAge } from "./growth";
 import { computeExamScore, examEffect, examTier } from "./exam";
 import { processWorkReview } from "./work";
 import { rollLifeRisk, updateHappiness, yearlyNet } from "./life";
+import {
+  BACHELOR_AGE,
+  DEGREE_YEARS,
+  GRAD_TUITION,
+  gradYearEffect,
+} from "./degree";
 import { weightVerdict } from "./weight";
+
+/**
+ * 한 해 학위 처리: 학사 자동 취득(대학 졸업) + 대학원(석/박사) 진행·졸업.
+ * 대학원 재학 중이면 학업·지능 폭증 + 등록금(저축 감소). 졸업 시 학위 갱신.
+ */
+function processDegreeYear(
+  ch: Character,
+  year: number,
+): { ch: Character; change?: { to: Degree } } {
+  let change: { to: Degree } | undefined;
+  if (ch.degree === "highschool" && year >= BACHELOR_AGE) {
+    ch = { ...ch, degree: "bachelor" };
+    change = { to: "bachelor" };
+  }
+  if (ch.gradEnroll) {
+    const g = ch.gradEnroll;
+    ch = applyEffect(ch, gradYearEffect());
+    ch = { ...ch, savings: ch.savings - GRAD_TUITION };
+    if (year - g.startAge >= DEGREE_YEARS[g.degree]) {
+      ch = { ...ch, degree: g.degree, gradEnroll: null };
+      change = { to: g.degree };
+    }
+  }
+  return { ch, change };
+}
 
 const ZERO_COUNTERS: YearCounters = {
   study: 0,
@@ -265,6 +297,14 @@ export function runDueReviews(
     incident = { cause: risk.cause, healthHit: risk.healthHit };
   }
 
+  // 학위: 학사 자동 취득 / 대학원 진행·졸업
+  let degreeChange: { to: Degree } | undefined;
+  if (ch.deathAge == null) {
+    const deg = processDegreeYear(ch, reviewAge);
+    ch = deg.ch;
+    degreeChange = deg.change;
+  }
+
   reviews.push({
     id: `${c.id}:${reviewAge}`,
     age: reviewAge,
@@ -277,6 +317,7 @@ export function runDueReviews(
     work,
     incident,
     death,
+    degreeChange,
     selfDevPenaltyApplied: true,
     salaryBonusForfeited:
       isAdultStage(reviewStage) && c.yearCounters.selfDev === 0
@@ -300,6 +341,7 @@ export function runDueReviews(
     // 갭 연도를 한 해씩 굴린다: 매년 저축 + 위험(중립 컨디션). 첫 사망 시 그 해를 deathAge 로.
     // 연속 플레이와 동일하게 매년 굴려야 누적 사망확률(1-∏(1-p_y))이 보존됨(오프라인 치트 방지).
     let gapDeath: { cause: string } | undefined;
+    let gapDegreeChange: { to: Degree } | undefined;
     const lastGapYear = Math.min(age, MAX_AGE);
     for (let y = reviewAge + 1; y <= lastGapYear && ch.deathAge == null; y++) {
       ch = { ...ch, savings: ch.savings + yearlyNet(ch) };
@@ -309,6 +351,11 @@ export function runDueReviews(
         gapDeath = { cause: gr.cause };
       } else if (gr.kind === "incident") {
         ch = applyEffect(ch, { status: { health: -gr.healthHit, stress: 5 } });
+      }
+      if (ch.deathAge == null) {
+        const deg = processDegreeYear(ch, y);
+        ch = deg.ch;
+        if (deg.change) gapDegreeChange = deg.change;
       }
     }
     reviews.push({
@@ -320,6 +367,7 @@ export function runDueReviews(
       score: 0,
       grade: "D",
       death: gapDeath,
+      degreeChange: gapDegreeChange,
       selfDevPenaltyApplied: true,
       neglectedYears: yearsPassed - 1,
       createdAt: now,

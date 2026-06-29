@@ -47,6 +47,15 @@ export interface CharacterStats {
 /** 캐릭터 성별 (게임 내 가상 속성 — 신장 분포·외형에만 영향) */
 export type Gender = "male" | "female";
 
+/** 최종 학위 — 높을수록 취업률·초봉 보너스(대신 대학원은 시간·등록금·스트레스 비용) */
+export type Degree = "highschool" | "bachelor" | "master" | "phd";
+
+/** 현재 대학원 재학 상태 (석/박사 과정) */
+export interface GradEnroll {
+  degree: "master" | "phd";
+  startAge: number; // 입학 게임나이
+}
+
 // --- 취업(Phase 3) ---
 export type JobFamilyKey =
   | "management"
@@ -151,6 +160,7 @@ export interface YearlyReview {
   work?: WorkReview; // 직장인 업무평가(있으면)
   incident?: { cause: string; healthHit: number }; // 회복 가능한 병/사고
   death?: { cause: string }; // 사망(엔딩)
+  degreeChange?: { to: Degree }; // 학위 취득(대학 졸업/대학원 졸업)
   selfDevPenaltyApplied: boolean;
   salaryBonusForfeited?: boolean; // Phase3 연봉협상에서 소비
   neglectedYears?: number;
@@ -181,6 +191,8 @@ export interface Character {
   color: string; // 마스코트 색상 팔레트 키 (blush/mint/sky/butter/grape/coral ...)
   gender: Gender; // 가상 성별 — 신장 분포·외형에만 영향
   heightPotential: number; // 성인 목표 키(cm). 출생 시 성별 기반 결정, 현재 키는 나이로 파생
+  degree: Degree; // 최종 학위(취업률·초봉 보너스)
+  gradEnroll: GradEnroll | null; // 대학원 재학 중이면 설정
   avatar: string; // (레거시) 이모지 — 마스코트 도입 후 미사용, 호환성 위해 유지
   ageYears: number; // 파생값(표시용). bornAt 으로부터 계산
   lifeStage: LifeStage;

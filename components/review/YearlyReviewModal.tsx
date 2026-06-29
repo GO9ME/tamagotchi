@@ -3,6 +3,7 @@
 import type { YearlyReview } from "@/types/character";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { stageLabel } from "@/lib/game/growth";
+import { DEGREE_LABEL } from "@/lib/game/degree";
 import { GRADE_LABEL } from "@/lib/game/jobs";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { gradeMeta } from "./gradeMeta";
@@ -121,6 +122,12 @@ function NormalBody({ review }: { review: YearlyReview }) {
         </div>
       )}
 
+      {review.degreeChange && (
+        <div className="mt-3 rounded-xl border-2 border-ink/15 bg-grape/25 px-4 py-2.5 text-center font-pixel text-sm font-bold text-ink">
+          🎓 {DEGREE_LABEL[review.degreeChange.to]} 취득!
+        </div>
+      )}
+
       {review.incident && (
         <p className="mt-3 rounded-xl border-2 border-coral/40 bg-coral/15 px-4 py-2.5 text-center text-[12px] font-semibold text-coral">
           {review.incident.cause}! 건강이 {review.incident.healthHit} 깎였어요.
@@ -148,6 +155,11 @@ function NeglectedBody({ review }: { review: YearlyReview }) {
       <p className="mt-1 text-xs text-ink/55">
         그동안 성장이 멈추고 능력치가 조금 떨어졌어요. 다시 꾸준히 돌봐주세요!
       </p>
+      {review.degreeChange && (
+        <div className="mt-3 w-full rounded-xl border-2 border-ink/15 bg-grape/25 px-4 py-2.5 font-pixel text-sm font-bold text-ink">
+          🎓 그 사이 {DEGREE_LABEL[review.degreeChange.to]} 취득!
+        </div>
+      )}
     </div>
   );
 }
