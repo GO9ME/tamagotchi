@@ -38,52 +38,108 @@ export function moodLabel(mood: MoodKey): string {
   }
 }
 
-// 성장 단계별 진화 형태 (실루엣 o=채움, 외곽선 자동 추출 + 흰 속칠)
+// 성장 단계별 사람 형태 (실루엣 o=채움, 외곽선 자동 추출 + 흰 속칠, hairRows=머리카락 진한색)
 interface Form {
   sil: string[];
   eyeY: number;
   mouthY: number;
+  hairRows?: number[]; // 이 행의 머리(내부)를 진하게 칠해 머리카락 표현
 }
 
 const FORMS: Record<string, Form> = {
+  // 아기 — 큰 머리 + 포대기 몸 + 작은 발 (머리카락 없음)
   egg: {
-    eyeY: 6,
-    mouthY: 9,
+    eyeY: 4,
+    mouthY: 6,
     sil: [
-      "................", "................", ".......oo.......", "......oooo......",
-      ".....oooooo.....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
-      "....oooooooo....", "....oooooooo....", ".....oooooo.....", ".....oooooo.....",
-      "......oooo......", ".......oo.......", "................", "................",
+      "................",
+      "................",
+      "................",
+      ".....oooooo.....",
+      "....oooooooo....",
+      "....oooooooo....",
+      "....oooooooo....",
+      ".....oooooo.....",
+      "....oooooooo....",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "....oooooooo....",
+      ".....oo..oo.....",
+      "................",
+      "................",
+      "................",
     ],
   },
+  // 어린이 — 작은 키, 또렷한 머리·몸·팔·다리
   chick: {
-    eyeY: 7,
-    mouthY: 11,
+    eyeY: 4,
+    mouthY: 6,
+    hairRows: [3],
     sil: [
-      "................", ".......oo.......", "......oooo......", ".....oooooo.....",
-      "....oooooooo....", "...oooooooooo...", "...oooooooooo...", "..oooooooooooo..",
-      "..oooooooooooo..", "..oooooooooooo..", "..oooooooooooo..", "...oooooooooo...",
-      "...oooooooooo...", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+      "................",
+      "................",
+      ".....oooooo.....",
+      "....oooooooo....",
+      "....oooooooo....",
+      "....oooooooo....",
+      ".....oooooo.....",
+      "......oooo......",
+      "....oooooooo....",
+      "....oooooooo....",
+      ".....oooooo.....",
+      ".....oo.oo......",
+      ".....oo.oo......",
+      "....ooo.ooo.....",
+      "................",
+      "................",
     ],
   },
+  // 청소년/청년 — 키 큰 사람
   round: {
-    eyeY: 7,
-    mouthY: 10,
+    eyeY: 3,
+    mouthY: 5,
+    hairRows: [2],
     sil: [
-      "................", "....oo....oo....", "...oooo..oooo...", "..oooooooooooo..",
-      "..oooooooooooo..", ".oooooooooooooo.", ".oooooooooooooo.", ".oooooooooooooo.",
-      ".oooooooooooooo.", ".oooooooooooooo.", "..oooooooooooo..", "..oooooooooooo..",
-      "...oooooooooo...", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+      "................",
+      ".....oooooo.....",
+      "....oooooooo....",
+      "....oooooooo....",
+      "....oooooooo....",
+      "....oooooooo....",
+      ".....oooooo.....",
+      "......oooo......",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "....oooooooo....",
+      "....oo..oo......",
+      "....oo..oo......",
+      "....oo..oo......",
+      "...ooo..ooo.....",
     ],
   },
+  // 성인 — 어깨 넓은 어른 (앞머리)
   tall: {
-    eyeY: 7,
-    mouthY: 10,
+    eyeY: 3,
+    mouthY: 5,
+    hairRows: [1, 2],
     sil: [
-      "................", "......oooo......", ".....oooooo.....", ".....oooooo.....",
-      "....oooooooo....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
-      "....oooooooo....", "....oooooooo....", "....oooooooo....", "....oooooooo....",
-      "....oooooooo....", "....oooooooo....", ".....o....o.....", "....oo....oo....",
+      "....oooooooo....",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "...oooooooooo...",
+      "....oooooooo....",
+      "......oooo......",
+      "...oooooooooo...",
+      "..oooooooooooo..",
+      "..oooooooooooo..",
+      "...oooooooooo...",
+      "....oooooooo....",
+      "....oo..oo......",
+      "....oo..oo......",
+      "....oo..oo......",
+      "...ooo..ooo.....",
     ],
   },
 };
@@ -187,6 +243,12 @@ export function mascotCells(
   const marks = buildMarks(f, getMood(status), gender);
   const block = new Set<string>();
   marks.dark.forEach(([x, y]) => block.add(`${x},${y}`));
+  // 머리카락: 지정 행의 머리 내부(외곽선 아닌 칸)를 진하게
+  (f.hairRows ?? []).forEach((hy) => {
+    for (let x = 0; x < N; x++) {
+      if (filled(x, hy) && !isOutline(x, hy)) block.add(`${x},${hy}`);
+    }
+  });
   const blushSet = new Set<string>();
   marks.blush.forEach(([x, y]) => blushSet.add(`${x},${y}`));
 
