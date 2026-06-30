@@ -1,0 +1,641 @@
+// ---------------------------------------------------------------------------
+// characterStageConfig.ts
+// 성장 단계별 외형 설정 + 사람형 픽셀 캐릭터를 "부품 레이어"로 조립하는 빌더.
+//
+// 단색 LCD 잉크 방향:
+//   매트릭스의 각 셀은 색이 아니라 코드(K/S/F/W)를 담고,
+//   렌더러가 팔레트(characterPalettes)로 명도 램프를 입힌다.
+//
+// 한 칸 = 16×20 그리드의 1픽셀. 부품(머리/머리카락/몸통/팔/다리/소품/오버레이)을
+// 순서대로 스탬핑해 조합하므로, 단계×상태 조합을 일일이 그리지 않아도 된다.
+// ---------------------------------------------------------------------------
+
+import type { Gender, LifeStage } from "@/types/character";
+import type {
+  CharacterVisualState,
+  ExpressionKey,
+  JobType,
+  PoseKey,
+} from "./characterVisualState";
+
+export const GRID_W = 16;
+export const GRID_H = 20;
+
+export type SpriteTier = "tiny" | "small" | "mid" | "full";
+export type RoomTheme =
+  | "nursery"
+  | "kidRoom"
+  | "studyRoom"
+  | "jobseekerRoom"
+  | "office"
+  | "seniorOffice";
+
+interface Outfit {
+  base: "F" | "S"; // 몸통 기본 톤
+  collar?: boolean; // 어두운 깃(교복/정장)
+  tie?: boolean; // 넥타이
+  blazer?: boolean; // 재킷(양 옆 S, 가운데 셔츠)
+  badge?: boolean; // 사원증
+  straps?: boolean; // 책가방 끈
+  hood?: boolean; // 후드티 끈
+  diaper?: boolean; // 아기 기저귀
+}
+
+export interface StageVisualConfig {
+  tier: SpriteTier;
+  hair: "tuft" | "short" | "mid" | "neat" | "senior";
+  outfit: Outfit;
+  room: RoomTheme;
+  /** 단계 고유 소품(액션 소품이 없을 때 표시) */
+  stageProp: "none" | "bag" | "file" | "badge" | "toy";
+  label: string;
+}
+
+export const STAGE_CONFIG: Record<LifeStage, StageVisualConfig> = {
+  baby: { tier: "tiny", hair: "tuft", outfit: { base: "F", diaper: true }, room: "nursery", stageProp: "toy", label: "아기" },
+  child: { tier: "small", hair: "short", outfit: { base: "F" }, room: "kidRoom", stageProp: "toy", label: "유아" },
+  elementary: { tier: "small", hair: "short", outfit: { base: "F", straps: true }, room: "kidRoom", stageProp: "bag", label: "초등학생" },
+  middle: { tier: "mid", hair: "mid", outfit: { base: "F", collar: true }, room: "studyRoom", stageProp: "none", label: "중학생" },
+  high: { tier: "mid", hair: "mid", outfit: { base: "F", collar: true, tie: true }, room: "studyRoom", stageProp: "none", label: "고등학생" },
+  university: { tier: "mid", hair: "mid", outfit: { base: "S", hood: true }, room: "studyRoom", stageProp: "none", label: "대학생" },
+  jobseeker: { tier: "mid", hair: "neat", outfit: { base: "F", blazer: true, collar: true }, room: "jobseekerRoom", stageProp: "file", label: "취준생" },
+  employee: { tier: "full", hair: "neat", outfit: { base: "F", collar: true, tie: true, badge: true }, room: "office", stageProp: "badge", label: "직장인" },
+  senior: { tier: "full", hair: "senior", outfit: { base: "S", blazer: true, collar: true, tie: true, badge: true }, room: "seniorOffice", stageProp: "badge", label: "경력직" },
+  retirement: { tier: "full", hair: "senior", outfit: { base: "S", blazer: true }, room: "seniorOffice", stageProp: "none", label: "은퇴 준비" },
+};
+
+export function roomThemeForStage(stage: LifeStage): RoomTheme {
+  return STAGE_CONFIG[stage].room;
+}
+
+// ---------------------------------------------------------------------------
+// 그리드 유틸
+// ---------------------------------------------------------------------------
+
+type Grid = string[][];
+
+function blank(): Grid {
+  return Array.from({ length: GRID_H }, () => Array<string>(GRID_W).fill("."));
+}
+function set(g: Grid, x: number, y: number, c: string) {
+  if (c !== "." && x >= 0 && x < GRID_W && y >= 0 && y < GRID_H) g[y][x] = c;
+}
+function fillRect(g: Grid, x0: number, x1: number, y0: number, y1: number, c: string) {
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(g, x, y, c);
+}
+/** 작은 비트맵 스탬프 (".": 건너뜀) */
+function stamp(g: Grid, x0: number, y0: number, rows: string[]) {
+  rows.forEach((r, dy) => r.split("").forEach((c, dx) => set(g, x0 + dx, y0 + dy, c)));
+}
+
+// ---------------------------------------------------------------------------
+// 앵커(부품 위치) — small/mid/full 공통(머리 위치 동일), tiny 는 별도 처리
+// ---------------------------------------------------------------------------
+
+interface Anchor {
+  headTop: number;
+  eyesRow: number;
+  mouthRow: number;
+  chin: number;
+  torsoTop: number;
+  torsoBot: number;
+  legTop: number;
+  legBot: number;
+  tl: number; // 몸통 좌측 열
+  tr: number; // 몸통 우측 열
+}
+
+function anchorFor(tier: SpriteTier): Anchor {
+  const head = { headTop: 1, eyesRow: 3, mouthRow: 5, chin: 6, torsoTop: 8 };
+  if (tier === "small")
+    return { ...head, torsoBot: 11, legTop: 12, legBot: 15, tl: 6, tr: 9 };
+  if (tier === "full")
+    return { ...head, torsoBot: 12, legTop: 13, legBot: 18, tl: 5, tr: 10 };
+  // mid (default)
+  return { ...head, torsoBot: 12, legTop: 13, legBot: 17, tl: 5, tr: 10 };
+}
+
+// ---------------------------------------------------------------------------
+// 얼굴(표정)
+// ---------------------------------------------------------------------------
+
+function drawFace(g: Grid, expr: ExpressionKey, A: Anchor) {
+  const eR = A.eyesRow;
+  const mR = A.mouthRow;
+  const cR = A.chin;
+
+  const openEyes = () => {
+    set(g, 6, eR, "K");
+    set(g, 9, eR, "K");
+  };
+  const closedEyes = () => {
+    set(g, 5, eR, "K");
+    set(g, 6, eR, "K");
+    set(g, 9, eR, "K");
+    set(g, 10, eR, "K");
+  };
+  const brows = () => {
+    set(g, 5, eR - 1, "K");
+    set(g, 10, eR - 1, "K");
+  };
+  const mouthNeutral = () => {
+    set(g, 7, mR, "K");
+    set(g, 8, mR, "K");
+  };
+  const mouthSmile = () => {
+    set(g, 6, mR, "K");
+    set(g, 9, mR, "K");
+    set(g, 7, cR, "K");
+    set(g, 8, cR, "K");
+  };
+  const mouthFrown = () => {
+    set(g, 7, mR, "K");
+    set(g, 8, mR, "K");
+    set(g, 6, cR, "K");
+    set(g, 9, cR, "K");
+  };
+  const mouthOpen = () => {
+    set(g, 7, mR, "K");
+    set(g, 8, mR, "K");
+    set(g, 7, cR, "K");
+    set(g, 8, cR, "K");
+  };
+
+  switch (expr) {
+    case "happy":
+      openEyes();
+      mouthSmile();
+      break;
+    case "sad":
+      openEyes();
+      mouthFrown();
+      break;
+    case "sleepy":
+      closedEyes();
+      mouthNeutral();
+      break;
+    case "hungry":
+      openEyes();
+      mouthOpen();
+      break;
+    case "sick":
+      closedEyes();
+      mouthFrown();
+      break;
+    case "tired":
+      closedEyes();
+      mouthNeutral();
+      break;
+    case "stressed":
+      openEyes();
+      brows();
+      mouthNeutral();
+      break;
+    default:
+      openEyes();
+      mouthNeutral();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 머리 + 머리카락
+// ---------------------------------------------------------------------------
+
+function drawHead(g: Grid, A: Anchor, cfg: StageVisualConfig, gender?: Gender) {
+  // 피부(머리 윤곽) cols 5-10, rows headTop..chin
+  stamp(g, 5, A.headTop, [
+    ".FFFF.",
+    "FFFFFF",
+    "FFFFFF",
+    "FFFFFF",
+    "FFFFFF",
+    ".FFFF.",
+  ]);
+
+  // 머리카락
+  const female = gender === "female";
+  switch (cfg.hair) {
+    case "tuft": // 아기: 정수리 한 줌
+      set(g, 7, 0, "K");
+      set(g, 8, 0, "K");
+      set(g, 8, 1, "K");
+      break;
+    case "short":
+      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
+      break;
+    case "mid":
+      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
+      set(g, 5, 2, "K");
+      set(g, 10, 2, "K");
+      break;
+    case "neat":
+      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
+      set(g, 7, 1, "F"); // 가르마 하이라이트
+      break;
+    case "senior": // 희끗(S 톤) + 살짝 벗겨진 정수리
+      stamp(g, 5, 0, [".SSSS.", "S.SS.S"]);
+      set(g, 5, 2, "S");
+      set(g, 10, 2, "S");
+      break;
+  }
+  // 여성: 옆머리를 볼까지 길게
+  if (female && cfg.hair !== "tuft") {
+    const side = cfg.hair === "senior" ? "S" : "K";
+    set(g, 5, 2, side);
+    set(g, 10, 2, side);
+    set(g, 5, 3, side);
+    set(g, 10, 3, side);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 몸통 + 옷 + 팔
+// ---------------------------------------------------------------------------
+
+function drawBody(
+  g: Grid,
+  A: Anchor,
+  cfg: StageVisualConfig,
+  pose: PoseKey,
+  jobType: JobType,
+) {
+  const o = applyJobOutfit(cfg.outfit, cfg, jobType);
+  const { tl, tr, torsoTop, torsoBot } = A;
+
+  // 목
+  set(g, 7, A.chin + 1, "F");
+  set(g, 8, A.chin + 1, "F");
+
+  // 몸통(셔츠/재킷 기본)
+  fillRect(g, tl, tr, torsoTop, torsoBot, o.base);
+
+  // 재킷: 양 옆 S, 가운데 셔츠(F) 띠
+  if (o.blazer) {
+    fillRect(g, tl, tl + 1, torsoTop, torsoBot, "S");
+    fillRect(g, tr - 1, tr, torsoTop, torsoBot, "S");
+    fillRect(g, 7, 8, torsoTop, torsoBot, "F");
+  }
+  // 깃
+  if (o.collar) {
+    set(g, 6, torsoTop, "K");
+    set(g, 9, torsoTop, "K");
+    set(g, 7, torsoTop, "F");
+    set(g, 8, torsoTop, "F");
+  }
+  // 넥타이
+  if (o.tie) {
+    set(g, 7, torsoTop, "K");
+    set(g, 8, torsoTop, "K");
+    for (let y = torsoTop + 1; y <= torsoBot - 1; y++) set(g, 7, y, "K");
+  }
+  // 후드 끈
+  if (o.hood) {
+    set(g, 6, torsoTop, "F");
+    set(g, 9, torsoTop, "F");
+    set(g, 7, torsoTop + 1, "K");
+    set(g, 8, torsoTop + 2, "K");
+  }
+  // 책가방 끈(어깨)
+  if (o.straps) {
+    for (let y = torsoTop; y <= torsoBot - 1; y++) {
+      set(g, tl, y, "S");
+      set(g, tr, y, "S");
+    }
+  }
+  // 사원증(목걸이 줄 + 카드)
+  if (o.badge) {
+    set(g, 6, torsoTop + 1, "K");
+    set(g, 6, torsoTop + 2, "S");
+    set(g, 6, torsoTop + 3, "S");
+  }
+  // 기저귀(아기는 별도 처리되지만 안전망)
+  if (o.diaper) {
+    fillRect(g, tl, tr, torsoBot, torsoBot, "F");
+  }
+
+  // 팔(포즈별)
+  const sleeve = o.base;
+  if (pose === "exercise") {
+    // 두 팔 위로
+    stamp(g, tl - 1, torsoTop - 2, [sleeve, sleeve, sleeve]);
+    stamp(g, tr + 1, torsoTop - 2, [sleeve, sleeve, sleeve]);
+    set(g, tl - 1, torsoTop - 3, "F"); // 손
+    set(g, tr + 1, torsoTop - 3, "F");
+  } else if (pose === "sit") {
+    // 팔을 앞으로(책상/노트북 쪽)
+    set(g, tl - 1, torsoTop + 1, sleeve);
+    set(g, tr + 1, torsoTop + 1, sleeve);
+    set(g, tl - 1, torsoTop + 2, sleeve);
+    set(g, tr + 1, torsoTop + 2, sleeve);
+    set(g, tl, torsoBot, "F"); // 앞으로 모은 손
+    set(g, tr, torsoBot, "F");
+  } else {
+    // stand: 양 옆으로 내림
+    for (let y = torsoTop; y <= torsoBot - 1; y++) {
+      set(g, tl - 1, y, sleeve);
+      set(g, tr + 1, y, sleeve);
+    }
+    set(g, tl - 1, torsoBot, "F"); // 손
+    set(g, tr + 1, torsoBot, "F");
+  }
+}
+
+function applyJobOutfit(o: Outfit, cfg: StageVisualConfig, jobType: JobType): Outfit {
+  // 직장인/경력직만 직업 악센트 적용
+  if (cfg.tier !== "full" && cfg.outfit.blazer !== true && !cfg.outfit.badge)
+    return o;
+  const next: Outfit = { ...o };
+  if (jobType === "tech") {
+    next.tie = false;
+    next.hood = true;
+    next.base = "S";
+  } else if (jobType === "creative") {
+    next.tie = false;
+    next.base = "S";
+  } else if (jobType === "physical") {
+    next.tie = false;
+    next.blazer = false;
+    next.base = "F";
+  }
+  return next;
+}
+
+// ---------------------------------------------------------------------------
+// 다리(포즈별)
+// ---------------------------------------------------------------------------
+
+function drawLegs(g: Grid, A: Anchor, pose: PoseKey, cfg: StageVisualConfig) {
+  const { legTop, legBot, tl, tr } = A;
+  const pants = "S"; // 바지/하의는 중간 톤
+
+  if (pose === "sit") {
+    // 앉은 자세: 허벅지(가로) + 발 모음
+    fillRect(g, tl, tr, legTop, legTop + 1, "S");
+    set(g, tl + 1, legTop + 2, "K");
+    set(g, tr - 1, legTop + 2, "K");
+    return;
+  }
+  if (pose === "exercise") {
+    // 다리 벌린 스탠스
+    for (let y = legTop; y <= legBot - 1; y++) {
+      set(g, tl, y, pants);
+      set(g, tr, y, pants);
+    }
+    set(g, tl, legBot, "K");
+    set(g, tr, legBot, "K");
+    return;
+  }
+  // stand: 두 다리(몸통 양 끝 아래로, 가운데는 비워 분리)
+  const narrow = tr - tl <= 3;
+  const legCols = narrow ? [[tl], [tr]] : [[tl, tl + 1], [tr - 1, tr]];
+  for (const grp of legCols) {
+    for (const x of grp) {
+      for (let y = legTop; y <= legBot - 1; y++) set(g, x, y, pants);
+      set(g, x, legBot, "K"); // 신발
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 소품(손/책상)
+// ---------------------------------------------------------------------------
+
+function drawProps(g: Grid, vs: CharacterVisualState, A: Anchor, cfg: StageVisualConfig) {
+  const prop = vs.prop !== "none" ? vs.prop : cfg.stageProp;
+  const lapY = A.legTop - 1;
+
+  switch (prop) {
+    case "book": {
+      // 펼친 노트 + 연필
+      stamp(g, 5, lapY, ["KKKKKK", "FKFFKF"]);
+      set(g, 11, lapY - 1, "S"); // 연필
+      set(g, 11, lapY, "K");
+      break;
+    }
+    case "laptop": {
+      stamp(g, 5, lapY - 1, ["SSSSSS", "KFFFFK"]);
+      set(g, 5, lapY, "K");
+      set(g, 10, lapY, "K");
+      break;
+    }
+    case "coffee": {
+      set(g, 3, A.torsoBot - 1, "S");
+      set(g, 3, A.torsoBot, "K");
+      set(g, 2, A.torsoBot - 1, "K"); // 손잡이
+      break;
+    }
+    case "dumbbell": {
+      // 위로 든 손 옆 작은 아령
+      set(g, A.tl - 2, A.torsoTop - 3, "K");
+      set(g, A.tr + 2, A.torsoTop - 3, "K");
+      break;
+    }
+    case "bag": {
+      // 등 뒤 책가방
+      stamp(g, A.tr + 1, A.torsoTop + 1, ["S", "S", "K"]);
+      break;
+    }
+    case "file": {
+      // 손에 든 서류
+      stamp(g, 6, A.torsoBot, ["FFFF", "KKKK"]);
+      break;
+    }
+    case "toy": {
+      // 작은 공
+      set(g, 11, A.torsoBot, "S");
+      set(g, 12, A.torsoBot, "K");
+      set(g, 11, A.torsoBot - 1, "K");
+      break;
+    }
+    default:
+      break;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 오버레이(머리 위 아이콘)
+// ---------------------------------------------------------------------------
+
+function drawOverlays(g: Grid, vs: CharacterVisualState) {
+  for (const ov of vs.overlays) {
+    switch (ov) {
+      case "zzz":
+        stamp(g, 11, 0, ["KKK", ".K.", "KKK"]);
+        set(g, 14, 2, "K");
+        set(g, 14, 3, "K");
+        break;
+      case "cloud":
+        stamp(g, 4, 0, [".SSSSSS.", "SSSSSSSS"]);
+        set(g, 5, 2, "K");
+        set(g, 8, 2, "K");
+        set(g, 11, 2, "K");
+        break;
+      case "sweat":
+        set(g, 11, 2, "W");
+        set(g, 11, 3, "K");
+        break;
+      case "hungerBubble":
+        stamp(g, 11, 0, ["FFFF", "FKKF", "FFFF"]);
+        set(g, 11, 3, "F");
+        break;
+      case "sparkle":
+        set(g, 12, 1, "W");
+        set(g, 11, 2, "K");
+        set(g, 13, 2, "K");
+        set(g, 12, 3, "K");
+        set(g, 3, 2, "W");
+        break;
+      case "bandage":
+        set(g, 10, 4, "K"); // 볼 밴드
+        set(g, 9, 4, "F");
+        break;
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 아기(별도 컴팩트 조립)
+// ---------------------------------------------------------------------------
+
+function drawBaby(g: Grid, vs: CharacterVisualState) {
+  // 큰 머리 cols 4-11, rows 2-8
+  stamp(g, 4, 2, [
+    "..FFFF..",
+    ".FFFFFF.",
+    "FFFFFFFF",
+    "FFFFFFFF",
+    "FFFFFFFF",
+    ".FFFFFF.",
+    "..FFFF..",
+  ]);
+  // 머리 한 줌
+  set(g, 7, 1, "K");
+  set(g, 8, 1, "K");
+  // 얼굴: 눈 rows 5, 입 rows 7
+  const A: Anchor = {
+    headTop: 2,
+    eyesRow: 5,
+    mouthRow: 7,
+    chin: 8,
+    torsoTop: 9,
+    torsoBot: 11,
+    legTop: 12,
+    legBot: 12,
+    tl: 5,
+    tr: 10,
+  };
+  // 아기 눈은 좀 더 안쪽
+  if (vs.expression === "sleepy" || vs.expression === "sick" || vs.expression === "tired") {
+    set(g, 5, 5, "K");
+    set(g, 6, 5, "K");
+    set(g, 9, 5, "K");
+    set(g, 10, 5, "K");
+  } else {
+    set(g, 6, 5, "K");
+    set(g, 9, 5, "K");
+  }
+  // 입
+  if (vs.expression === "happy") {
+    set(g, 6, 7, "K");
+    set(g, 9, 7, "K");
+    set(g, 7, 8, "K");
+    set(g, 8, 8, "K");
+  } else if (vs.expression === "hungry" || vs.expression === "sad") {
+    set(g, 7, 7, "K");
+    set(g, 8, 7, "K");
+    set(g, 7, 8, "K");
+    set(g, 8, 8, "K");
+  } else {
+    set(g, 7, 7, "K");
+    set(g, 8, 7, "K");
+  }
+  // 통통한 몸(우주복/기저귀)
+  fillRect(g, 5, 10, 9, 11, "F");
+  fillRect(g, 5, 10, 12, 12, "S"); // 기저귀
+  // 짧은 팔
+  set(g, 4, 10, "F");
+  set(g, 11, 10, "F");
+  drawProps(g, vs, A, STAGE_CONFIG.baby);
+  drawOverlays(g, vs);
+}
+
+// ---------------------------------------------------------------------------
+// 누운 자세(수면)
+// ---------------------------------------------------------------------------
+
+function drawLying(g: Grid, vs: CharacterVisualState, cfg: StageVisualConfig) {
+  const baseY = 13;
+  // 베개
+  fillRect(g, 1, 3, baseY, baseY + 2, "F");
+  set(g, 1, baseY - 1, "S");
+  // 머리(왼쪽)
+  stamp(g, 3, baseY - 1, [".FFF.", "FFFFF", "FFFFF", ".FFF."]);
+  // 머리카락
+  const hair = cfg.hair === "senior" ? "S" : "K";
+  set(g, 3, baseY - 1, hair);
+  set(g, 4, baseY - 1, hair);
+  // 감은 눈 + 작은 입
+  set(g, 5, baseY + 1, "K");
+  set(g, 6, baseY + 1, "K");
+  set(g, 5, baseY + 2, "K");
+  // 이불(몸)
+  fillRect(g, 7, 14, baseY + 1, baseY + 3, "S");
+  stamp(g, 7, baseY, ["SSSSSSSS"]);
+  set(g, 14, baseY + 1, "F"); // 발끝
+  // 침대 프레임 라인
+  fillRect(g, 1, 15, baseY + 4, baseY + 4, "K");
+  // Z
+  stamp(g, 9, baseY - 5, ["KKK", ".K.", "KKK"]);
+  set(g, 12, baseY - 3, "K");
+}
+
+// ---------------------------------------------------------------------------
+// 조립 진입점
+// ---------------------------------------------------------------------------
+
+export function buildCharacterMatrix(
+  vs: CharacterVisualState,
+  lifeStage: LifeStage,
+  jobType: JobType = "none",
+  gender?: Gender,
+): string[] {
+  const cfg = STAGE_CONFIG[lifeStage];
+  const g = blank();
+
+  if (cfg.tier === "tiny") {
+    drawBaby(g, vs);
+    return g.map((r) => r.join(""));
+  }
+
+  if (vs.pose === "lie") {
+    drawLying(g, vs, cfg);
+    return g.map((r) => r.join(""));
+  }
+
+  const A = anchorFor(cfg.tier);
+  // 순서: 다리 → 몸통/팔 → 머리/표정 → 소품 → 오버레이
+  drawLegs(g, A, vs.pose, cfg);
+  drawBody(g, A, cfg, vs.pose, jobType);
+  drawHead(g, A, cfg, gender);
+  drawFace(g, vs.expression, A);
+  drawProps(g, vs, A, cfg);
+  drawOverlays(g, vs);
+
+  return g.map((r) => r.join(""));
+}
+
+export interface PixelCell {
+  x: number;
+  y: number;
+  code: string;
+}
+
+export function matrixToCells(matrix: string[]): PixelCell[] {
+  const cells: PixelCell[] = [];
+  matrix.forEach((row, y) =>
+    row.split("").forEach((code, x) => {
+      if (code !== ".") cells.push({ x, y, code });
+    }),
+  );
+  return cells;
+}
