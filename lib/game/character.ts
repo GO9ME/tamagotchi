@@ -21,6 +21,7 @@ export function createCharacter(
     heightPotential: rollHeightPotential(gender, Math.random(), Math.random()),
     degree: "highschool",
     gradEnroll: null,
+    university: null,
     avatar: "🐣",
     ageYears: age,
     lifeStage: stageForAge(age),

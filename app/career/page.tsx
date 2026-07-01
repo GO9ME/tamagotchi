@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { CooldownButton } from "@/components/actions/CooldownButton";
 import { JobPrepPanel } from "@/components/character/JobPrepPanel";
 import { GradSchoolPanel } from "@/components/career/GradSchoolPanel";
+import { UniversityPanel } from "@/components/career/UniversityPanel";
 import { JobResultModal } from "@/components/job/JobResultModal";
 import { NegotiationModal } from "@/components/negotiate/NegotiationModal";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
@@ -108,6 +109,24 @@ export default function CareerPage() {
         <YearlyReviewModal />
         <JobResultModal />
         <NegotiationModal />
+        <Toast />
+        <OutcomeBurst />
+        <BottomNav />
+      </main>
+    );
+  }
+
+  // 대학생 — 대학 선택/재학 현황
+  if (character.lifeStage === "university") {
+    return (
+      <main className="mx-auto max-w-2xl space-y-4 px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+        <header className="flex items-center justify-between">
+          {back}
+          <h1 className="font-pixel text-base font-bold">대학</h1>
+          <span className="w-16" />
+        </header>
+        <UniversityPanel character={character} />
+        <YearlyReviewModal />
         <Toast />
         <OutcomeBurst />
         <BottomNav />

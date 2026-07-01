@@ -6,6 +6,7 @@ import type {
 import { clamp } from "./clamp";
 import { currentHeight } from "./body";
 import { degreeHiringMod } from "./degree";
+import { universityHiringMod } from "./university";
 import { COMPANY_TYPES, JOB_FAMILIES, RARITY_META } from "./jobs";
 
 // 0~100 정규화 (누적 스탯이 100 넘으면 만점 고착 방지 — exam.ts ci 패턴)
@@ -100,6 +101,7 @@ export function employmentChance(
       rarityHiringMod(family) +
       heightFitMod(c, family) +
       degreeHiringMod(c) +
+      universityHiringMod(c) +
       COMPANY_TYPES[company].chanceMod,
     5,
     95,

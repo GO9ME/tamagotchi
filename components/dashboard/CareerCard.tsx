@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import type { Character } from "@/types/character";
 import { COMPANY_TYPES, GRADE_LABEL, JOB_FAMILIES } from "@/lib/game/jobs";
+import { formatMoney } from "@/lib/game/ending";
+import { UNIVERSITY_TIERS } from "@/lib/game/university";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 export function CareerCard({ character }: { character: Character }) {
@@ -37,6 +39,34 @@ export function CareerCard({ character }: { character: Character }) {
         {character.status.burnout > 80 && (
           <p className="mt-2 font-pixel text-[11px] text-coral">번아웃 주의 — 휴식 필요</p>
         )}
+      </Link>
+    );
+  }
+
+  // 대학생 — 대학 선택/재학 현황
+  if (character.lifeStage === "university") {
+    const u = character.university;
+    return (
+      <Link
+        href="/career"
+        className="card flex items-center gap-3 p-4 transition-transform hover:-translate-y-0.5"
+      >
+        <span className="text-ink">
+          <PixelIcon name="study" size={26} />
+        </span>
+        <div className="flex-1">
+          <h3 className="font-pixel text-sm font-bold text-ink/80">
+            {u ? UNIVERSITY_TIERS[u.tier].label : "대학 선택하기"}
+          </h3>
+          <p className="font-sans text-[11px] text-ink/55">
+            {u
+              ? u.loanBalance > 0
+                ? `학자금대출 ${formatMoney(u.loanBalance)}`
+                : "학자금대출 없음"
+              : "등록금·학자금대출을 비교하고 대학을 골라보세요."}
+          </p>
+        </div>
+        <span className="font-pixel text-xs text-coral">→</span>
       </Link>
     );
   }

@@ -16,6 +16,7 @@ import type {
   JobOutcome,
   JobState,
   NegotiationResult,
+  UniversityTierKey,
   YearlyReview,
 } from "@/types/character";
 import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
@@ -53,6 +54,11 @@ import {
 } from "@/lib/game/employment";
 import { canNegotiate, negotiate } from "@/lib/game/negotiate";
 import { formatMoney } from "@/lib/game/ending";
+import {
+  canChooseUniversity,
+  UNIVERSITY_TIERS,
+  universitySalaryMult,
+} from "@/lib/game/university";
 import { degreeSalaryMult, gradAdmission } from "@/lib/game/degree";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
@@ -105,6 +111,7 @@ interface GameState {
   enrollGrad: () => ActionResult;
   dropGrad: () => ActionResult;
   allocateStat: (statKey: keyof CharacterStats) => ActionResult;
+  chooseUniversity: (tier: UniversityTierKey) => ActionResult;
 }
 
 const now = () => Date.now();
@@ -454,9 +461,14 @@ export const useGameStore = create<GameState>()(
 
         if (hired) {
           const grade = gradeForScore(employmentReadiness(c, family));
-          // 학위 보너스 반영(석/박사 초봉 ↑), 100만원 단위 반올림
+          // 학위 + 출신 대학 보너스 반영(석/박사·명문대일수록 초봉 ↑), 100만원 단위 반올림
           const salary =
-            Math.round((startingSalary(grade, company, family) * degreeSalaryMult(c)) / 100) * 100;
+            Math.round(
+              (startingSalary(grade, company, family) *
+                degreeSalaryMult(c) *
+                universitySalaryMult(c)) /
+                100,
+            ) * 100;
           const job: JobState = {
             family,
             company,
@@ -592,11 +604,34 @@ export const useGameStore = create<GameState>()(
         pushToast(`${label} +1!`);
         return { ok: true, message: "배분 완료" };
       },
+
+      chooseUniversity: (tier) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (!canChooseUniversity(c)) {
+          return { ok: false, message: "지금은 대학을 선택할 수 없어요." };
+        }
+        const bar = UNIVERSITY_TIERS[tier].academicBar;
+        if (c.stats.academic < bar) {
+          return {
+            ok: false,
+            message: `학업 ${bar} 이상 필요해요. (현재 ${Math.round(c.stats.academic)})`,
+          };
+        }
+        set({
+          character: {
+            ...c,
+            university: { tier, enrolledAtAge: c.ageYears, loanBalance: 0 },
+          },
+        });
+        pushToast(`${UNIVERSITY_TIERS[tier].label} 입학!`);
+        return { ok: true, message: "입학" };
+      },
       };
     },
     {
       name: "lifegotchi:character",
-      version: 12,
+      version: 13,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -617,6 +652,7 @@ export const useGameStore = create<GameState>()(
           // 학위: 구버전은 나이로 추정(취준생 이상이면 학사)
           degree: c.degree ?? ((c.ageYears ?? 0) >= 25 ? "bachelor" : "highschool"),
           gradEnroll: c.gradEnroll ?? null,
+          university: c.university ?? null,
           avatar: c.avatar || "🐣",
           statPoints: c.statPoints ?? 0,
           stats: {

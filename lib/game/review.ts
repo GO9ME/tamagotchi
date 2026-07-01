@@ -28,6 +28,7 @@ import {
   GRAD_TUITION,
   gradYearEffect,
 } from "./degree";
+import { processUniversityYear } from "./university";
 import { weightVerdict } from "./weight";
 
 /**
@@ -272,12 +273,16 @@ export function runDueReviews(
   }
 
   // 저축·행복 갱신(직전 1년)
-  const yearSavingsDelta = yearlyNet(ch);
+  let yearSavingsDelta = yearlyNet(ch);
   ch = {
     ...ch,
     savings: ch.savings + yearSavingsDelta,
     happiness: updateHappiness(ch.happiness, ch.status),
   };
+  // 대학 등록금/학자금대출 처리(재학 중이면 등록금 청구, 취업 후면 대출 자동 상환)
+  const uni = processUniversityYear(ch, reviewAge);
+  ch = uni.character;
+  yearSavingsDelta += uni.savingsDelta;
   // 위험 이벤트: 대부분 회복 가능한 사고/병, 드물게 사망
   let incident: { cause: string; healthHit: number } | undefined;
   let death: { cause: string } | undefined;
@@ -350,6 +355,9 @@ export function runDueReviews(
       const net = yearlyNet(ch);
       ch = { ...ch, savings: ch.savings + net };
       gapSavingsDelta += net;
+      const uniGap = processUniversityYear(ch, y);
+      ch = uniGap.character;
+      gapSavingsDelta += uniGap.savingsDelta;
       const gr = rollLifeRisk(ch, y, Math.random(), Math.random(), Math.random(), true);
       if (gr.kind === "death") {
         ch = { ...ch, deathAge: Math.min(y, MAX_AGE), deathCause: gr.cause };

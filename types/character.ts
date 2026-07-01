@@ -58,6 +58,16 @@ export interface GradEnroll {
   startAge: number; // 입학 게임나이
 }
 
+/** 학부(대학교) 티어 — 등록금·학업 커트라인·취업 보너스가 다름 */
+export type UniversityTierKey = "elite" | "national" | "mid" | "local";
+
+/** 선택한 대학 + 학자금대출 상태 */
+export interface UniversityChoice {
+  tier: UniversityTierKey;
+  enrolledAtAge: number; // 입학 게임나이
+  loanBalance: number; // 학자금대출 잔액(만원). 0이면 없음/완납
+}
+
 // --- 취업(Phase 3) ---
 export type JobFamilyKey =
   | "management"
@@ -196,6 +206,7 @@ export interface Character {
   heightPotential: number; // 성인 목표 키(cm). 출생 시 성별 기반 결정, 현재 키는 나이로 파생
   degree: Degree; // 최종 학위(취업률·초봉 보너스)
   gradEnroll: GradEnroll | null; // 대학원 재학 중이면 설정
+  university: UniversityChoice | null; // 학부 선택(대학생 단계~) — 등록금/학자금대출 추적
   avatar: string; // (레거시) 이모지 — 마스코트 도입 후 미사용, 호환성 위해 유지
   ageYears: number; // 파생값(표시용). bornAt 으로부터 계산
   lifeStage: LifeStage;
