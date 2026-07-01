@@ -34,6 +34,8 @@ export interface CharacterStats {
   creativity: number;
   memory: number;
   fitness: number;
+  stamina: number; // 지구력(유산소 운동으로 성장)
+  strength: number; // 근력(웨이트 트레이닝으로 성장)
   communication: number;
   careerPotential: number;
   employability: number;

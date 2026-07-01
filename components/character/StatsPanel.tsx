@@ -8,6 +8,8 @@ const STAT_META: { key: keyof Character["stats"]; label: string }[] = [
   { key: "memory", label: "기억력" },
   { key: "academic", label: "학업" },
   { key: "fitness", label: "체력단련" },
+  { key: "stamina", label: "지구력" },
+  { key: "strength", label: "근력" },
   { key: "communication", label: "소통" },
   { key: "careerPotential", label: "커리어" },
   { key: "employability", label: "취업력" },

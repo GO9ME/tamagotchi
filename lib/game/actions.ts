@@ -62,10 +62,10 @@ export const ACTIONS: ActionDef[] = [
     minStage: "elementary",
   },
   {
-    key: "exercise",
-    label: "운동하기",
+    key: "cardio",
+    label: "유산소 운동",
     emoji: "🏃",
-    desc: "체력을 단련하고 몸무게를 줄여요.",
+    desc: "체중 감량 효과가 크고 지구력을 키워요.",
     kind: "instant",
     cooldownMs: 1 * HOUR,
     category: "fitness",
@@ -74,15 +74,41 @@ export const ACTIONS: ActionDef[] = [
       const m = weightEfficiencyMultiplier(c);
       return {
         status: {
-          weight: -0.3 * m,
-          energy: -8,
-          stress: -3,
-          mood: 3,
+          weight: -0.45 * m,
+          energy: -10,
+          stress: -5,
+          mood: 5,
           health: 2,
         },
-        stats: { fitness: 1.5 * m },
+        stats: { stamina: 1.8 * m, fitness: 0.6 * m },
         exp: 8,
-        message: "운동으로 땀을 흘렸어요. 상쾌하다!",
+        message: "유산소 운동으로 땀을 흠뻑 흘렸어요! 몸이 가벼워요.",
+      };
+    },
+  },
+  {
+    key: "strength",
+    label: "근력 운동",
+    emoji: "🏋️",
+    desc: "체중 감량은 적지만 근력을 크게 키워요.",
+    kind: "instant",
+    cooldownMs: 1 * HOUR,
+    category: "fitness",
+    minStage: "elementary",
+    effect: (c: Character) => {
+      const m = weightEfficiencyMultiplier(c);
+      return {
+        status: {
+          weight: -0.15 * m,
+          energy: -12,
+          stress: -3,
+          mood: 2,
+          health: 2,
+          confidence: 2,
+        },
+        stats: { strength: 1.8 * m, fitness: 0.6 * m },
+        exp: 9,
+        message: "근력 운동으로 몸을 다졌어요. 점점 탄탄해져요!",
       };
     },
   },

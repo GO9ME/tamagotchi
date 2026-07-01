@@ -1,4 +1,4 @@
-import type { FoodDef } from "@/types/action";
+import type { CalorieTier, FoodDef } from "@/types/action";
 import type { JobGrade, LifeStage } from "@/types/character";
 
 // ---------------------------------------------------------------------------
@@ -109,6 +109,7 @@ export const FOODS: FoodDef[] = [
     key: "homeMeal",
     label: "집밥",
     emoji: "🍚",
+    calorieTier: "medium",
     effect: {
       status: { hunger: 40, health: 5, weight: 0.2 },
       message: "집밥을 먹었어요. 든든하고 건강해요!",
@@ -118,6 +119,7 @@ export const FOODS: FoodDef[] = [
     key: "cafeteria",
     label: "급식/학식",
     emoji: "🍱",
+    calorieTier: "medium",
     effect: {
       status: { hunger: 35, weight: 0.2 },
       message: "급식으로 한 끼 해결!",
@@ -127,6 +129,7 @@ export const FOODS: FoodDef[] = [
     key: "convenience",
     label: "편의점",
     emoji: "🍙",
+    calorieTier: "medium",
     effect: {
       status: { hunger: 25, mood: 3, health: -1, weight: 0.1 },
       message: "편의점 음식으로 간단히 때웠어요.",
@@ -136,34 +139,132 @@ export const FOODS: FoodDef[] = [
     key: "fastfood",
     label: "패스트푸드",
     emoji: "🍔",
+    calorieTier: "high",
+    junk: true,
     effect: {
-      status: { hunger: 40, mood: 8, health: -2, weight: 0.5 },
-      message: "기분은 좋지만 살이 조금 붙었어요.",
+      status: { hunger: 40, mood: 10, health: -3, weight: 0.6 },
+      message: "기분은 최고지만 살이 확 붙었어요.",
+    },
+  },
+  {
+    key: "ramyeon",
+    label: "라면",
+    emoji: "🍜",
+    calorieTier: "high",
+    junk: true,
+    effect: {
+      status: { hunger: 38, mood: 6, health: -2, weight: 0.5, stress: -2 },
+      message: "얼큰한 라면으로 스트레스가 좀 풀렸지만, 나트륨이 걱정돼요.",
+    },
+  },
+  {
+    key: "chicken",
+    label: "치킨",
+    emoji: "🍗",
+    calorieTier: "high",
+    junk: true,
+    effect: {
+      status: { hunger: 35, mood: 12, health: -3, weight: 0.55 },
+      message: "치킨은 진리! 기분은 최고, 칼로리도 최고예요.",
+    },
+  },
+  {
+    key: "tteokbokki",
+    label: "떡볶이",
+    emoji: "🌶️",
+    calorieTier: "high",
+    junk: true,
+    effect: {
+      status: { hunger: 30, mood: 9, health: -2, weight: 0.45, stress: -3 },
+      message: "매콤달콤 떡볶이로 스트레스가 확 풀렸어요!",
+    },
+  },
+  {
+    key: "samgyeopsal",
+    label: "삼겹살",
+    emoji: "🥓",
+    calorieTier: "high",
+    effect: {
+      status: { hunger: 42, health: 2, mood: 6, weight: 0.5 },
+      message: "삼겹살 회식! 배부르고 든든하지만 기름져요.",
+    },
+  },
+  {
+    key: "chickenBreast",
+    label: "닭가슴살",
+    emoji: "🍖",
+    calorieTier: "low",
+    effect: {
+      status: { hunger: 18, health: 4, weight: 0.02 },
+      stats: { strength: 0.3 },
+      message: "헬스인의 필수템! 담백하지만 근력에 도움이 돼요.",
     },
   },
   {
     key: "salad",
     label: "샐러드",
     emoji: "🥗",
+    calorieTier: "low",
     effect: {
       status: { hunger: 20, health: 5, weight: 0.05 },
       message: "가볍고 건강한 한 끼!",
     },
   },
   {
+    key: "fruit",
+    label: "과일",
+    emoji: "🍎",
+    calorieTier: "low",
+    effect: {
+      status: { hunger: 15, health: 3, mood: 2, weight: 0.03 },
+      message: "상큼한 과일로 비타민 충전!",
+    },
+  },
+  {
+    key: "boiledEgg",
+    label: "삶은 계란",
+    emoji: "🥚",
+    calorieTier: "low",
+    effect: {
+      status: { hunger: 12, health: 2, weight: 0.03 },
+      stats: { strength: 0.15 },
+      message: "간단하고 든든한 단백질 간식!",
+    },
+  },
+  {
     key: "coffee",
     label: "커피",
     emoji: "☕",
+    calorieTier: "low",
+    isDrink: true,
     effect: {
       status: { focus: 15, stress: 3, sleepQuality: -5 },
       message: "집중력이 올라갔어요. 너무 늦게 마시면 잠을 설칠 수 있어요.",
+    },
+  },
+  {
+    key: "energyDrink",
+    label: "에너지드링크",
+    emoji: "🥤",
+    calorieTier: "medium",
+    junk: true,
+    isDrink: true,
+    effect: {
+      status: { focus: 18, stress: 5, sleepQuality: -9, health: -1, weight: 0.1, mood: 3 },
+      message: "각성 효과는 확실하지만 몸에는 부담이 될 수 있어요.",
     },
   },
 ];
 
 /** 과식 기준: 이미 배부른 상태(>=85)에서 또 먹으면 과식 페널티 */
 export const OVEREAT_HUNGER_THRESHOLD = 85;
-export const OVEREAT_EXTRA_WEIGHT = 0.5;
+
+/** 칼로리 등급별 과식 추가 체중 증가(kg) — 고칼로리일수록 과식 페널티가 크다 */
+export const OVEREAT_EXTRA_WEIGHT_BY_TIER: Record<CalorieTier, number> = {
+  low: 0.15,
+  medium: 0.5,
+  high: 0.9,
+};
 
 // ---------------------------------------------------------------------------
 // Phase 2: 단계 인덱스 / 연간 리뷰 / 시험

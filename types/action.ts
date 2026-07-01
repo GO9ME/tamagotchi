@@ -32,9 +32,17 @@ export interface ActionDef {
   category: "care" | "study" | "fitness" | "selfdev" | "fun" | "rest";
 }
 
+/** 칼로리 등급 — 과식 페널티(체중 증가폭)와 UI 배지에 사용 */
+export type CalorieTier = "low" | "medium" | "high";
+
 export interface FoodDef {
   key: string;
   label: string;
   emoji: string;
+  calorieTier: CalorieTier;
+  /** 불량식품(정크푸드) — 과식 시 건강·기분 추가 페널티 */
+  junk?: boolean;
+  /** 식사가 아닌 음료(커피·에너지드링크 등) — 연간 "식사" 카운터에서 제외 */
+  isDrink?: boolean;
   effect: ActionEffect; // status delta + message
 }

@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-import type { StatusDelta } from "@/types/action";
+import type { CalorieTier, StatusDelta } from "@/types/action";
 import type { Character } from "@/types/character";
 import { FOODS } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
-import { formatDuration } from "@/lib/utils";
+import { cn, formatDuration } from "@/lib/utils";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 
 function effectHint(status?: StatusDelta): string {
@@ -15,10 +15,18 @@ function effectHint(status?: StatusDelta): string {
   const parts: string[] = [];
   if (status.hunger) parts.push(`배고픔 +${status.hunger}`);
   if (status.health) parts.push(`건강 ${status.health > 0 ? "+" : ""}${status.health}`);
+  if (status.mood) parts.push(`기분 ${status.mood > 0 ? "+" : ""}${status.mood}`);
+  if (status.stress) parts.push(`스트레스 ${status.stress > 0 ? "+" : ""}${status.stress}`);
   if (status.focus) parts.push(`집중 +${status.focus}`);
   if (status.weight) parts.push(`몸무게 +${status.weight}kg`);
   return parts.join(" · ");
 }
+
+const CALORIE_META: Record<CalorieTier, { label: string; cls: string }> = {
+  low: { label: "저칼로리", cls: "bg-mint/50 text-ink/70" },
+  medium: { label: "보통", cls: "bg-butter/60 text-ink/70" },
+  high: { label: "고칼로리", cls: "bg-coral/70 text-white" },
+};
 
 export function FoodSelector({
   character,
@@ -93,29 +101,38 @@ export function FoodSelector({
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              {FOODS.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => {
-                    feed(f.key);
-                    setOpen(false);
-                  }}
-                  className="toy-btn flex flex-col items-start gap-1 bg-white"
-                >
-                  <span className="text-ink">
-                    <PixelIcon name={f.key} size={24} />
-                  </span>
-                  <span className="text-sm font-bold">{f.label}</span>
-                  <span className="font-sans text-[10px] font-medium leading-tight text-ink/55">
-                    {effectHint(f.effect.status)}
-                  </span>
-                </button>
-              ))}
+            <div className="grid max-h-[58vh] grid-cols-2 gap-2.5 overflow-y-auto pr-0.5">
+              {FOODS.map((f) => {
+                const cal = CALORIE_META[f.calorieTier];
+                return (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => {
+                      feed(f.key);
+                      setOpen(false);
+                    }}
+                    className="toy-btn flex flex-col items-start gap-1 bg-white"
+                  >
+                    <div className="flex w-full items-center justify-between">
+                      <span className="text-ink">
+                        <PixelIcon name={f.key} size={24} />
+                      </span>
+                      <span className={cn("pill", cal.cls)}>{cal.label}</span>
+                    </div>
+                    <span className="text-sm font-bold">
+                      {f.label}
+                      {f.junk && <span className="ml-1 text-[10px] text-coral">불량식품</span>}
+                    </span>
+                    <span className="font-sans text-[10px] font-medium leading-tight text-ink/55">
+                      {effectHint(f.effect.status)}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
             <p className="mt-3 text-center font-sans text-[11px] text-ink/45">
-              배부른 상태에서 또 먹이면 과식으로 살이 더 쪄요.
+              배부른 상태에서 또 먹이면 과식으로 살이 더 쪄요. 고칼로리·불량식품일수록 페널티가 커요.
             </p>
           </div>
         </div>

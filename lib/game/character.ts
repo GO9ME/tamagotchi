@@ -45,6 +45,8 @@ export function createCharacter(
       creativity: 5,
       memory: 5,
       fitness: 5,
+      stamina: 5,
+      strength: 5,
       communication: 5,
       careerPotential: 5,
       employability: 5,

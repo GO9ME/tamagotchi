@@ -27,7 +27,7 @@ import {
   COOLDOWN_SCALE,
   FOODS,
   GAME_YEAR_MS,
-  OVEREAT_EXTRA_WEIGHT,
+  OVEREAT_EXTRA_WEIGHT_BY_TIER,
   OVEREAT_HUNGER_THRESHOLD,
 } from "@/lib/game/constants";
 import { applyEffect, isActionReady, setCooldown } from "@/lib/game/engine";
@@ -220,16 +220,23 @@ export const useGameStore = create<GameState>()(
 
         let next = applyEffect(c, food.effect);
 
-        // 과식 처리: 이미 배부른 상태에서 또 먹으면 체중 추가 증가
+        // 과식 처리: 이미 배부른 상태에서 또 먹으면 체중 추가 증가(칼로리 등급이 높을수록 크게)
         let message = food.effect.message ?? "잘 먹었어요!";
         if (c.status.hunger >= OVEREAT_HUNGER_THRESHOLD) {
+          const extraWeight = OVEREAT_EXTRA_WEIGHT_BY_TIER[food.calorieTier];
           next = applyEffect(next, {
-            status: { weight: OVEREAT_EXTRA_WEIGHT, mood: 2 },
+            status: {
+              weight: extraWeight,
+              mood: food.junk ? 1 : 2,
+              health: food.junk ? -1.5 : 0,
+            },
           });
-          message = "과식했어요! 살이 조금 더 붙었어요.";
+          message = food.junk
+            ? "불량식품을 과식했어요! 살도 찌고 속도 안 좋아요…"
+            : "과식했어요! 살이 조금 더 붙었어요.";
         }
 
-        const isMeal = food.key !== "coffee";
+        const isMeal = !food.isDrink;
         next = {
           ...next,
           cooldowns: setCooldown(next, "feed", t, cd(getAction("feed")!.cooldownMs)),
@@ -276,7 +283,7 @@ export const useGameStore = create<GameState>()(
         // 액션별 부가 처리
         const counters = { ...next.yearCounters };
         let lastExerciseAt = next.lastExerciseAt;
-        if (key === "exercise") {
+        if (key === "cardio" || key === "strength") {
           counters.exercise += 1;
           lastExerciseAt = t;
         } else if (
@@ -530,7 +537,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 10,
+      version: 11,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -559,6 +566,9 @@ export const useGameStore = create<GameState>()(
             interviewScore: c.stats?.interviewScore ?? 0,
             certificateScore: c.stats?.certificateScore ?? 0,
             performance: c.stats?.performance ?? 0,
+            // 유산소/근력 분리(구버전은 fitness 값을 물려받아 시작, 없으면 5)
+            stamina: c.stats?.stamina ?? c.stats?.fitness ?? 5,
+            strength: c.stats?.strength ?? c.stats?.fitness ?? 5,
           },
           reviews: c.reviews ?? [],
           // 기존 값 보존(없는 구버전 세이브만 ageYears 로 폴백 → 리뷰 폭탄 방지)

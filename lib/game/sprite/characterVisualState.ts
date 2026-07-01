@@ -267,7 +267,7 @@ const PREP_ACTION_KEYS = new Set([
 ]);
 
 export function actionStateForActionKey(key: string): ActionState {
-  if (key === "exercise") return "exercising";
+  if (key === "cardio" || key === "strength") return "exercising";
   if (key === "sleep" || key === "nap") return "sleeping";
   if (key === "study" || key === "read" || key === "selfDev" || key === "workSelfDev")
     return "studying";
