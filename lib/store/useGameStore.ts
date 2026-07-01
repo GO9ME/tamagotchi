@@ -23,6 +23,7 @@ import {
   COOLDOWN_SCALE,
   FOODS,
   GAME_YEAR_MS,
+  NEGLECT_DEATH_MS,
   OVEREAT_EXTRA_WEIGHT,
   OVEREAT_HUNGER_THRESHOLD,
 } from "@/lib/game/constants";
@@ -179,6 +180,21 @@ export const useGameStore = create<GameState>()(
         const c = get().character;
         if (!c) return;
         if (c.deathAge != null) return; // 사망 시 상태 동결(엔딩)
+
+        // 방치 사망: 현실 8시간 이상 앱을 열지 않은 경우
+        // applyDecay 이전에 체크하여 시간 점프 없이 방치 사망으로 처리
+        const elapsed = now() - c.lastTickAt;
+        if (elapsed > NEGLECT_DEATH_MS) {
+          set({
+            character: {
+              ...c,
+              deathAge: c.ageYears,
+              deathCause: "방치",
+            },
+          });
+          return;
+        }
+
         const decayed = applyDecay(c, now());
         const { character, reviews } = runDueReviews(decayed, now());
         if (reviews.length > 0) {
