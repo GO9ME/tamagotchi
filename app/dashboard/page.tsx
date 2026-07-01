@@ -18,6 +18,7 @@ import { SaveNotice } from "@/components/common/SaveNotice";
 import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { CareerCard } from "@/components/dashboard/CareerCard";
 import { EndingScreen } from "@/components/EndingScreen";
+import { NeglectEndingScreen } from "@/components/NeglectEndingScreen";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
@@ -61,7 +62,12 @@ export default function DashboardPage() {
     );
   }
 
-  // 사망 → 인생 결산 엔딩
+  // 방치 사망 → 전용 엔딩
+  if (character.deathAge != null && character.deathCause === "방치") {
+    return <NeglectEndingScreen character={character} />;
+  }
+
+  // 일반 사망 → 인생 결산 엔딩
   if (character.deathAge != null) {
     return <EndingScreen character={character} />;
   }
