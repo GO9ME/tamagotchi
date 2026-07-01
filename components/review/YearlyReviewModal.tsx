@@ -5,8 +5,31 @@ import { useGameStore } from "@/lib/store/useGameStore";
 import { stageLabel } from "@/lib/game/growth";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { GRADE_LABEL } from "@/lib/game/jobs";
+import { formatMoney } from "@/lib/game/ending";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { gradeMeta } from "./gradeMeta";
+
+function SavingsRow({ delta }: { delta: number }) {
+  if (delta === 0) return null;
+  const positive = delta > 0;
+  return (
+    <div
+      className={`mt-3 flex items-center justify-between rounded-xl border-2 px-4 py-2.5 ${
+        positive ? "border-mint/50 bg-mint/20" : "border-coral/40 bg-coral/15"
+      }`}
+    >
+      <span className="flex items-center gap-1.5 font-pixel text-sm font-bold text-ink/75">
+        <PixelIcon name="coin" size={15} /> 저축 변동
+      </span>
+      <span
+        className={`font-pixel text-sm font-bold tabular-nums ${positive ? "text-ink" : "text-coral"}`}
+      >
+        {positive ? "+" : ""}
+        {formatMoney(delta)}
+      </span>
+    </div>
+  );
+}
 
 const COUNTER_META: {
   key: keyof YearlyReview["counters"];
@@ -139,6 +162,8 @@ function NormalBody({ review }: { review: YearlyReview }) {
           성인이 되어 1년간 자기개발이 전혀 없었어요. 커리어 경쟁력이 떨어졌어요.
         </p>
       )}
+
+      <SavingsRow delta={review.savingsDelta} />
     </>
   );
 }
@@ -160,6 +185,9 @@ function NeglectedBody({ review }: { review: YearlyReview }) {
           🎓 그 사이 {DEGREE_LABEL[review.degreeChange.to]} 취득!
         </div>
       )}
+      <div className="w-full">
+        <SavingsRow delta={review.savingsDelta} />
+      </div>
     </div>
   );
 }

@@ -73,10 +73,10 @@ export function rollLifeRisk(
   return { kind: "incident", cause: inc.cause, healthHit: inc.hit };
 }
 
-/** 연간 저축 변화(만원) = 연봉 − 생활비 (무직이면 음수) */
+/** 연간 저축 변화(만원) = 연봉 − 생활비. 취업 전(학생·취준생 포함)에는 생활비 면제(0). */
 export function yearlyNet(c: Character): number {
-  const income = c.job ? c.job.salaryManwon : 0;
-  return income - LIVING_COST;
+  if (!c.job) return 0;
+  return c.job.salaryManwon - LIVING_COST;
 }
 
 /** 행복도 갱신 — 그 해 컨디션으로 평생 평균을 갱신 */

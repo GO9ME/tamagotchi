@@ -52,6 +52,7 @@ import {
   rollHire,
 } from "@/lib/game/employment";
 import { canNegotiate, negotiate } from "@/lib/game/negotiate";
+import { formatMoney } from "@/lib/game/ending";
 import { degreeSalaryMult, gradAdmission } from "@/lib/game/degree";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
@@ -224,10 +225,20 @@ export const useGameStore = create<GameState>()(
 
         const decayed = applyDecay(c, now());
         const { character, reviews } = runDueReviews(decayed, now());
+
+        // 레벨업/저축 변동 알림(한 tick 에 둘 다 나면 토스트 하나로 합침)
+        const toastParts: string[] = [];
         if (character.level > c.level) {
           const gained = (character.level - c.level) * STAT_POINTS_PER_LEVEL;
-          pushToast(`🎉 레벨 업! Lv.${character.level} (스탯 포인트 +${gained})`);
+          toastParts.push(`🎉 레벨 업! Lv.${character.level} (스탯 포인트 +${gained})`);
         }
+        const savingsDelta = reviews.reduce((sum, r) => sum + r.savingsDelta, 0);
+        if (savingsDelta !== 0) {
+          const sign = savingsDelta > 0 ? "+" : "";
+          toastParts.push(`💰 저축 ${sign}${formatMoney(savingsDelta)}`);
+        }
+        if (toastParts.length > 0) pushToast(toastParts.join(" · "));
+
         if (reviews.length > 0) {
           set((s) => {
             const existing = new Set(s.pendingReviews.map((r) => r.id));

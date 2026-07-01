@@ -166,6 +166,7 @@ export interface YearlyReview {
   selfDevPenaltyApplied: boolean;
   salaryBonusForfeited?: boolean; // Phase3 연봉협상에서 소비
   neglectedYears?: number;
+  savingsDelta: number; // 그 해(구간) 저축 변동(만원) — 연봉-생활비, 무직 기간엔 0
   createdAt: number;
 }
 

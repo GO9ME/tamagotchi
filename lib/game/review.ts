@@ -272,9 +272,10 @@ export function runDueReviews(
   }
 
   // 저축·행복 갱신(직전 1년)
+  const yearSavingsDelta = yearlyNet(ch);
   ch = {
     ...ch,
-    savings: ch.savings + yearlyNet(ch),
+    savings: ch.savings + yearSavingsDelta,
     happiness: updateHappiness(ch.happiness, ch.status),
   };
   // 위험 이벤트: 대부분 회복 가능한 사고/병, 드물게 사망
@@ -323,6 +324,7 @@ export function runDueReviews(
       isAdultStage(reviewStage) && c.yearCounters.selfDev === 0
         ? true
         : undefined,
+    savingsDelta: yearSavingsDelta,
     createdAt: now,
   });
 
@@ -342,9 +344,12 @@ export function runDueReviews(
     // 연속 플레이와 동일하게 매년 굴려야 누적 사망확률(1-∏(1-p_y))이 보존됨(오프라인 치트 방지).
     let gapDeath: { cause: string } | undefined;
     let gapDegreeChange: { to: Degree } | undefined;
+    let gapSavingsDelta = 0;
     const lastGapYear = Math.min(age, MAX_AGE);
     for (let y = reviewAge + 1; y <= lastGapYear && ch.deathAge == null; y++) {
-      ch = { ...ch, savings: ch.savings + yearlyNet(ch) };
+      const net = yearlyNet(ch);
+      ch = { ...ch, savings: ch.savings + net };
+      gapSavingsDelta += net;
       const gr = rollLifeRisk(ch, y, Math.random(), Math.random(), Math.random(), true);
       if (gr.kind === "death") {
         ch = { ...ch, deathAge: Math.min(y, MAX_AGE), deathCause: gr.cause };
@@ -370,6 +375,7 @@ export function runDueReviews(
       degreeChange: gapDegreeChange,
       selfDevPenaltyApplied: true,
       neglectedYears: yearsPassed - 1,
+      savingsDelta: gapSavingsDelta,
       createdAt: now,
     });
   }
