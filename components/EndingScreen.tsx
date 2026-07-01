@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import type { Character } from "@/types/character";
-import { TamaDevice } from "@/components/character/TamaDevice";
+import { CharacterPreviewCard } from "@/components/character/CharacterPreviewCard";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { computeLifeScore, formatMoney, lifeEnding } from "@/lib/game/ending";
 import { DEGREE_LABEL } from "@/lib/game/degree";
@@ -81,13 +81,12 @@ export function EndingScreen({ character }: { character: Character }) {
         <span className="pill mx-auto bg-ink/10 text-ink/70">인생 결산</span>
 
         <div className="my-4 opacity-80">
-          <TamaDevice
-            colorKey={character.color}
+          <CharacterPreviewCard
+            lifeStage="retirement"
             status={character.status}
-            stage="retirement"
             gender={character.gender}
-            mascotSize={104}
-            showStatus={false}
+            jobFamily={character.job?.family}
+            width={200}
           />
         </div>
 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { CharacterStatus, Gender } from "@/types/character";
-import { TamaDevice } from "@/components/character/TamaDevice";
+import { CharacterPreviewCard } from "@/components/character/CharacterPreviewCard";
 import { MASCOT_COLORS } from "@/lib/game/constants";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { cn } from "@/lib/utils";
@@ -47,13 +47,12 @@ export default function CreatePage() {
       <main className="mx-auto flex min-h-screen max-w-md flex-col items-center justify-center px-5 text-center">
         <div className="card w-full p-7">
           <div className="mx-auto max-w-[180px]">
-            <TamaDevice
-              colorKey={existing.color}
+            <CharacterPreviewCard
+              lifeStage={existing.lifeStage}
               status={existing.status}
-              stage={existing.lifeStage}
               gender={existing.gender}
-              mascotSize={92}
-              showStatus={false}
+              jobFamily={existing.job?.family}
+              width={180}
             />
           </div>
           <h1 className="mt-4 font-pixel text-xl font-bold">
@@ -95,7 +94,7 @@ export default function CreatePage() {
 
         {/* 미리보기 */}
         <div className="my-5 max-w-[220px] mx-auto">
-          <TamaDevice colorKey={color} status={PREVIEW_STATUS} stage="baby" gender={gender} mascotSize={112} showStatus={false} />
+          <CharacterPreviewCard lifeStage="baby" status={PREVIEW_STATUS} gender={gender} width={220} />
         </div>
 
         <label className="block font-pixel text-sm font-bold text-ink/70">이름</label>

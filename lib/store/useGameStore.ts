@@ -18,6 +18,10 @@ import type {
   YearlyReview,
 } from "@/types/character";
 import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
+import {
+  actionStateForActionKey,
+  type ActionState,
+} from "@/lib/game/sprite/characterVisualState";
 import { createCharacter } from "@/lib/game/character";
 import {
   COOLDOWN_SCALE,
@@ -70,6 +74,8 @@ interface GameState {
   negotiationResult: NegotiationResult | null;
   /** 대성공/잭팟 연출 트리거 (비영속) */
   outcomeFx: { tier: OutcomeTier; label: string; token: number } | null;
+  /** 캐릭터 반응 포즈 펄스 (비영속) — 액션을 누르면 잠깐 그 행동 포즈를 취함 */
+  charAction: { state: ActionState; token: number } | null;
 
   setHydrated: () => void;
   createNew: (name: string, color: string, gender: Gender) => void;
@@ -144,6 +150,12 @@ export const useGameStore = create<GameState>()(
         }));
       };
 
+      // 액션 누르면 캐릭터가 잠깐 그 행동 포즈를 취하도록 펄스
+      const pulseAction = (state: ActionState) =>
+        set((s) => ({
+          charAction: { state, token: (s.charAction?.token ?? 0) + 1 },
+        }));
+
       return {
         character: null,
         hydrated: false,
@@ -152,6 +164,7 @@ export const useGameStore = create<GameState>()(
         jobResult: null,
         negotiationResult: null,
         outcomeFx: null,
+        charAction: null,
 
         setHydrated: () => set({ hydrated: true }),
 
@@ -228,6 +241,7 @@ export const useGameStore = create<GameState>()(
 
         set({ character: next });
         pushToast(message);
+        pulseAction("playing"); // 냠냠 반응
         return { ok: true, message };
       },
 
@@ -287,6 +301,7 @@ export const useGameStore = create<GameState>()(
           outcome && outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg;
         pushToast(message);
         fireFx(outcome);
+        pulseAction(actionStateForActionKey(key)); // 누른 행동에 맞는 포즈
         return { ok: true, message };
       },
 
@@ -306,6 +321,7 @@ export const useGameStore = create<GameState>()(
         }
         const session = buildStudySession(t, cd(def.sessionMs ?? 30 * 60 * 1000));
         set({ character: { ...c, activeSession: session } });
+        pulseAction("studying");
         return { ok: true, message: "공부를 시작했어요. 30분 집중!" };
       },
 

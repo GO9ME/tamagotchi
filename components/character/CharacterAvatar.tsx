@@ -1,23 +1,22 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { Character } from "@/types/character";
 import { stageLabel } from "@/lib/game/growth";
 import { formatMoney } from "@/lib/game/ending";
 import { currentHeight } from "@/lib/game/body";
 import { DEGREE_LABEL } from "@/lib/game/degree";
+import { useGameStore } from "@/lib/store/useGameStore";
 import { PixelRoom } from "@/components/game/PixelRoom";
 import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { CharacterSpeechBubble } from "@/components/game/CharacterSpeechBubble";
 import { CharacterStatusIcon } from "@/components/game/CharacterStatusIcon";
 import {
+  actionStateDurationMs,
   getCharacterVisualState,
   jobTypeFromFamily,
   type ActionState,
 } from "@/lib/game/sprite/characterVisualState";
-
-/** 진행 중인 세션/컨디션에서 현재 액션 상태를 도출 (없으면 컨디션 기반 표현) */
-function deriveActionState(c: Character): ActionState | undefined {
-  if (c.activeSession?.actionType === "study") return "studying";
-  return undefined;
-}
 
 /** 말풍선을 띄울 컨디션 상태 */
 const BUBBLE_WARN = new Set(["hungry", "sick", "burned_out", "tired"]);
@@ -25,7 +24,23 @@ const BUBBLE_WARN = new Set(["hungry", "sick", "burned_out", "tired"]);
 export function CharacterAvatar({ character }: { character: Character }) {
   const female = character.gender === "female";
   const jobType = jobTypeFromFamily(character.job?.family);
-  const actionState = deriveActionState(character);
+
+  // 액션 펄스: 버튼을 누르면 잠깐 그 행동 포즈를 취하고, 시간이 지나면 평상시로
+  const fx = useGameStore((s) => s.charAction);
+  const [live, setLive] = useState<ActionState | null>(null);
+  const lastToken = useRef(0);
+  useEffect(() => {
+    if (!fx || fx.token === lastToken.current) return;
+    lastToken.current = fx.token;
+    setLive(fx.state);
+    const id = setTimeout(() => setLive(null), actionStateDurationMs(fx.state));
+    return () => clearTimeout(id);
+  }, [fx]);
+
+  // 진행 중인 공부 세션은 펄스가 없을 때도 계속 공부 포즈
+  const sessionAction: ActionState | undefined =
+    character.activeSession?.actionType === "study" ? "studying" : undefined;
+  const actionState = live ?? sessionAction;
 
   const vs = getCharacterVisualState({
     lifeStage: character.lifeStage,
@@ -38,7 +53,8 @@ export function CharacterAvatar({ character }: { character: Character }) {
     jobType,
   });
 
-  const showBubble = BUBBLE_WARN.has(vs.state) || vs.state === "happy";
+  // 행동 중(펄스)일 땐 경고 말풍선 대신 행동 라벨을 우선
+  const showBubble = !!live || BUBBLE_WARN.has(vs.state) || vs.state === "happy";
   const night = vs.pose === "lie";
 
   return (

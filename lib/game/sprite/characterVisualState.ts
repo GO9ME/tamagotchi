@@ -210,6 +210,10 @@ export function getCharacterVisualState(
   if (action === "exercising") {
     return mk("exercising", "happy", "exercise", ["sweat"], "dumbbell", "pump", tone);
   }
+  if (action === "playing") {
+    // 밥·간식·놀기·씻기 등 즉시 액션 반응(가벼운 기쁨)
+    return mk("happy", "happy", "stand", ["sparkle"], "none", "bounce", tone);
+  }
 
   // --- 2) 컨디션 기반 ---
   if (sick) {
@@ -240,4 +244,42 @@ function mk(
   tone: ToneKey,
 ): CharacterVisualState {
   return { state, expression, pose, overlays, prop, anim, tone, label: STATE_LABEL[state] };
+}
+
+// ---------------------------------------------------------------------------
+// 액션 키 → 반응 포즈
+//   대시보드에서 버튼을 누르면 잠깐 그 행동에 맞는 포즈를 취하게 하는 매핑.
+//   (store 가 액션 성공 시 이 값을 pulse 로 띄우고, 캐릭터가 몇 초간 유지)
+// ---------------------------------------------------------------------------
+
+const WORK_ACTION_KEYS = new Set([
+  "focusWork",
+  "writeDoc",
+  "meeting",
+  "handleIssue",
+  "overtime",
+]);
+const PREP_ACTION_KEYS = new Set([
+  "resume",
+  "portfolio",
+  "interviewPrep",
+  "certStudy",
+]);
+
+export function actionStateForActionKey(key: string): ActionState {
+  if (key === "exercise") return "exercising";
+  if (key === "sleep" || key === "nap") return "sleeping";
+  if (key === "study" || key === "read" || key === "selfDev" || key === "workSelfDev")
+    return "studying";
+  if (WORK_ACTION_KEYS.has(key)) return "working";
+  if (PREP_ACTION_KEYS.has(key)) return "studying";
+  // play/snack/bath/feed/workRest 등 → 가벼운 기쁨 반응
+  return "playing";
+}
+
+/** 반응 포즈를 유지할 시간(ms) — 수면은 길게, 나머지는 짧게 */
+export function actionStateDurationMs(state: ActionState): number {
+  if (state === "sleeping") return 3800;
+  if (state === "exercising") return 2800;
+  return 2300;
 }
