@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Character } from "@/types/character";
-import { stageLabel } from "@/lib/game/growth";
+import { msUntilNextAge, stageLabel } from "@/lib/game/growth";
 import { formatMoney } from "@/lib/game/ending";
 import { currentHeight } from "@/lib/game/body";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { useNow } from "@/lib/hooks/useNow";
+import { formatDuration } from "@/lib/utils";
 import { PixelRoom } from "@/components/game/PixelRoom";
 import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { CharacterSpeechBubble } from "@/components/game/CharacterSpeechBubble";
@@ -24,6 +26,10 @@ const BUBBLE_WARN = new Set(["hungry", "sick", "burned_out", "tired"]);
 export function CharacterAvatar({ character }: { character: Character }) {
   const female = character.gender === "female";
   const jobType = jobTypeFromFamily(character.job?.family);
+
+  // 실시간 다음 생일 카운트다운(시간이 실제로 흐르고 있다는 걸 눈으로 확인)
+  const now = useNow(1000);
+  const msToNextAge = msUntilNextAge(character.bornAt, character.ageYears, now);
 
   // 액션 펄스: 버튼을 누르면 잠깐 그 행동 포즈를 취하고, 시간이 지나면 평상시로
   const fx = useGameStore((s) => s.charAction);
@@ -92,6 +98,11 @@ export function CharacterAvatar({ character }: { character: Character }) {
           </span>
           <CharacterStatusIcon state={vs.state} />
         </div>
+        {msToNextAge != null && (
+          <div className="mt-0.5 font-pixel text-[10px] tabular-nums text-ink/40">
+            다음 생일까지 {formatDuration(msToNextAge)}
+          </div>
+        )}
         <div className="mt-1.5 flex flex-wrap justify-center gap-2">
           <span className={`pill ${female ? "bg-blush/50" : "bg-sky/40"} text-ink/70`}>
             {female ? "♀ 여아" : "♂ 남아"} · {currentHeight(character)}cm

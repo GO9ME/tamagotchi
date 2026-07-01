@@ -1,9 +1,25 @@
 import type { LifeStage } from "@/types/character";
-import { GAME_YEAR_MS, LIFE_STAGES, STAGE_INDEX, StageInfo } from "./constants";
+import { GAME_YEAR_MS, LIFE_STAGES, MAX_AGE, STAGE_INDEX, StageInfo } from "./constants";
 
 /** bornAt 기준으로 현재 게임 나이(정수) 계산 */
 export function ageFromBornAt(bornAt: number, now: number): number {
   return Math.max(0, Math.floor((now - bornAt) / GAME_YEAR_MS));
+}
+
+/**
+ * 다음 나이(년)까지 남은 실시간(ms). 시간이 실제로 흐르고 있음을 눈으로
+ * 확인할 수 있도록 하는 실시간 카운트다운용. 자연사 한계(MAX_AGE) 도달 시
+ * 더 이상 의미가 없으므로 null.
+ */
+export function msUntilNextAge(
+  bornAt: number,
+  ageYears: number,
+  now: number,
+): number | null {
+  if (ageYears >= MAX_AGE) return null;
+  const elapsed = Math.max(0, now - bornAt);
+  const rem = elapsed % GAME_YEAR_MS;
+  return GAME_YEAR_MS - rem;
 }
 
 /** 나이로부터 성장 단계 정보 반환 */
