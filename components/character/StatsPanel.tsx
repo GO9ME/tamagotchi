@@ -1,5 +1,9 @@
+"use client";
+
 import type { Character } from "@/types/character";
 import { expProgress } from "@/lib/game/character";
+import { ALLOCATABLE_STATS } from "@/lib/game/statPoints";
+import { useGameStore } from "@/lib/store/useGameStore";
 
 const STAT_META: { key: keyof Character["stats"]; label: string }[] = [
   { key: "intelligence", label: "지능" },
@@ -16,8 +20,13 @@ const STAT_META: { key: keyof Character["stats"]; label: string }[] = [
   { key: "performance", label: "업무성과" },
 ];
 
+const ALLOCATABLE_KEYS = new Set(ALLOCATABLE_STATS.map((s) => s.key));
+
 export function StatsPanel({ character }: { character: Character }) {
   const prog = expProgress(character);
+  const allocateStat = useGameStore((s) => s.allocateStat);
+  const points = character.statPoints;
+
   return (
     <div className="card p-4">
       <div className="mb-3 flex items-center justify-between">
@@ -40,20 +49,46 @@ export function StatsPanel({ character }: { character: Character }) {
         </div>
       </div>
 
+      {points > 0 && (
+        <div className="mb-3 flex items-center justify-between rounded-xl border-2 border-butter bg-butter/30 px-3 py-2">
+          <span className="font-pixel text-xs font-bold text-ink/80">
+            스탯 포인트 {points}개 남음!
+          </span>
+          <span className="font-pixel text-[10px] text-ink/55">
+            아래 스탯의 + 버튼으로 배분해요
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
-        {STAT_META.map((m) => (
-          <div
-            key={m.key}
-            className="flex items-center justify-between rounded-lg border-2 border-ink/10 bg-black/[0.02] px-3 py-2"
-          >
-            <span className="font-pixel text-[11px] font-bold text-ink/70">
-              {m.label}
-            </span>
-            <span className="font-pixel text-sm font-bold tabular-nums">
-              {Math.round(character.stats[m.key])}
-            </span>
-          </div>
-        ))}
+        {STAT_META.map((m) => {
+          const allocatable = ALLOCATABLE_KEYS.has(m.key);
+          return (
+            <div
+              key={m.key}
+              className="flex items-center justify-between rounded-lg border-2 border-ink/10 bg-black/[0.02] px-3 py-2"
+            >
+              <span className="font-pixel text-[11px] font-bold text-ink/70">
+                {m.label}
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="font-pixel text-sm font-bold tabular-nums">
+                  {Math.round(character.stats[m.key])}
+                </span>
+                {allocatable && points > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => allocateStat(m.key)}
+                    className="flex h-5 w-5 items-center justify-center rounded-md border-2 border-ink bg-mint font-pixel text-[11px] font-bold text-ink transition-transform active:translate-y-px"
+                    aria-label={`${m.label} 스탯 포인트 배분`}
+                  >
+                    +
+                  </button>
+                )}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

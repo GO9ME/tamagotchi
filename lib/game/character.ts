@@ -26,6 +26,7 @@ export function createCharacter(
     lifeStage: stageForAge(age),
     level: 1,
     exp: 0,
+    statPoints: 0,
     status: {
       hunger: 70,
       energy: 80,

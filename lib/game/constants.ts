@@ -96,8 +96,8 @@ export const HEALTHY_WEIGHT: Record<LifeStage, [number, number]> = {
 // ---------------------------------------------------------------------------
 
 export function expForLevel(level: number): number {
-  // 1 -> 2 는 14, 점점 증가(기존 30 기준은 실제 획득 가능한 exp 대비 과했음 — 완화)
-  return Math.round(14 * Math.pow(level, 1.4));
+  // 1 -> 2 는 8, 점점 증가(더 빠른 레벨업 요청으로 재완화 — 스탯 포인트 배분 체감 위해)
+  return Math.round(8 * Math.pow(level, 1.4));
 }
 
 // ---------------------------------------------------------------------------

@@ -9,6 +9,7 @@ import {
 
 import type {
   Character,
+  CharacterStats,
   CompanyTypeKey,
   Gender,
   JobFamilyKey,
@@ -23,6 +24,11 @@ import {
   type ActionState,
 } from "@/lib/game/sprite/characterVisualState";
 import { createCharacter } from "@/lib/game/character";
+import {
+  ALLOCATABLE_STATS,
+  allocateStatPoint,
+  STAT_POINTS_PER_LEVEL,
+} from "@/lib/game/statPoints";
 import {
   COOLDOWN_SCALE,
   FOODS,
@@ -97,6 +103,7 @@ interface GameState {
   ackNegotiation: () => void;
   enrollGrad: () => ActionResult;
   dropGrad: () => ActionResult;
+  allocateStat: (statKey: keyof CharacterStats) => ActionResult;
 }
 
 const now = () => Date.now();
@@ -157,6 +164,13 @@ export const useGameStore = create<GameState>()(
           charAction: { state, token: (s.charAction?.token ?? 0) + 1 },
         }));
 
+      // 레벨업 시 토스트 메시지에 덧붙일 안내(스탯 포인트 지급) — 토스트는 한 번에 하나뿐이라 합쳐서 표시
+      const levelUpSuffix = (before: Character, after: Character): string => {
+        if (after.level <= before.level) return "";
+        const gained = (after.level - before.level) * STAT_POINTS_PER_LEVEL;
+        return ` 🎉 레벨 업! Lv.${after.level} (스탯 포인트 +${gained})`;
+      };
+
       return {
         character: null,
         hydrated: false,
@@ -210,6 +224,10 @@ export const useGameStore = create<GameState>()(
 
         const decayed = applyDecay(c, now());
         const { character, reviews } = runDueReviews(decayed, now());
+        if (character.level > c.level) {
+          const gained = (character.level - c.level) * STAT_POINTS_PER_LEVEL;
+          pushToast(`🎉 레벨 업! Lv.${character.level} (스탯 포인트 +${gained})`);
+        }
         if (reviews.length > 0) {
           set((s) => {
             const existing = new Set(s.pendingReviews.map((r) => r.id));
@@ -263,7 +281,7 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ character: next });
-        pushToast(message);
+        pushToast(message + levelUpSuffix(c, next));
         pulseAction("playing"); // 냠냠 반응
         return { ok: true, message };
       },
@@ -322,7 +340,7 @@ export const useGameStore = create<GameState>()(
         const baseMsg = baseEffect.message ?? `${def.label} 완료!`;
         const message =
           outcome && outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg;
-        pushToast(message);
+        pushToast(message + levelUpSuffix(c, next));
         fireFx(outcome);
         pulseAction(actionStateForActionKey(key)); // 누른 행동에 맞는 포즈
         return { ok: true, message };
@@ -374,7 +392,8 @@ export const useGameStore = create<GameState>()(
         set({ character: next });
         const baseMsg = result.effect.message ?? "공부 완료!";
         pushToast(
-          outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg,
+          (outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg) +
+            levelUpSuffix(c, next),
         );
         fireFx(outcome);
         return result;
@@ -451,7 +470,7 @@ export const useGameStore = create<GameState>()(
             character: next,
             jobResult: { success: true, family, company, chance, roll, job },
           });
-          pushToast("합격! 출근을 준비해요.");
+          pushToast("합격! 출근을 준비해요." + levelUpSuffix(c, next));
           return { ok: true, message: "합격!" };
         }
 
@@ -549,11 +568,24 @@ export const useGameStore = create<GameState>()(
         pushToast("대학원을 자퇴했어요. 학위는 이전 단계로 남아요.");
         return { ok: true, message: "자퇴" };
       },
+
+      allocateStat: (statKey) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.statPoints <= 0) {
+          return { ok: false, message: "사용할 수 있는 스탯 포인트가 없어요." };
+        }
+        const next = allocateStatPoint(c, statKey);
+        set({ character: next });
+        const label = ALLOCATABLE_STATS.find((s) => s.key === statKey)?.label ?? statKey;
+        pushToast(`${label} +1!`);
+        return { ok: true, message: "배분 완료" };
+      },
       };
     },
     {
       name: "lifegotchi:character",
-      version: 11,
+      version: 12,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -575,6 +607,7 @@ export const useGameStore = create<GameState>()(
           degree: c.degree ?? ((c.ageYears ?? 0) >= 25 ? "bachelor" : "highschool"),
           gradEnroll: c.gradEnroll ?? null,
           avatar: c.avatar || "🐣",
+          statPoints: c.statPoints ?? 0,
           stats: {
             ...c.stats,
             academic: c.stats?.academic ?? 5,

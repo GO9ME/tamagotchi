@@ -200,6 +200,7 @@ export interface Character {
   lifeStage: LifeStage;
   level: number;
   exp: number;
+  statPoints: number; // 레벨업으로 누적된 미배분 스탯 포인트(메이플스토리 스타일)
   status: CharacterStatus;
   stats: CharacterStats;
   bornAt: number; // 게임 나이 계산 기준 (epoch ms)

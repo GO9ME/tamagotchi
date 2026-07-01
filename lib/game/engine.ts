@@ -6,6 +6,7 @@ import type {
 } from "@/types/character";
 import { clampStatus, round2 } from "./clamp";
 import { expForLevel } from "./constants";
+import { STAT_POINTS_PER_LEVEL } from "./statPoints";
 
 /** status delta(부분)를 더해 새 status 반환 (clamp 포함) */
 export function addStatus(
@@ -38,27 +39,28 @@ export function addExp(
   level: number,
   exp: number,
   gain: number,
-): { level: number; exp: number; leveledUp: boolean } {
+): { level: number; exp: number; leveledUp: boolean; levelsGained: number } {
   let lv = level;
   let e = exp + Math.max(0, gain);
-  let leveledUp = false;
+  let levelsGained = 0;
   // 무한루프 방지용 상한
   for (let i = 0; i < 100; i++) {
     const need = expForLevel(lv);
     if (e < need) break;
     e -= need;
     lv += 1;
-    leveledUp = true;
+    levelsGained += 1;
   }
-  return { level: lv, exp: e, leveledUp };
+  return { level: lv, exp: e, leveledUp: levelsGained > 0, levelsGained };
 }
 
-/** 액션 효과를 캐릭터에 적용한 새 캐릭터 반환 */
+/** 액션 효과를 캐릭터에 적용한 새 캐릭터 반환 (레벨업 시 스탯 포인트 지급) */
 export function applyEffect(c: Character, effect: ActionEffect): Character {
   const status = addStatus(c.status, effect.status);
   const stats = addStats(c.stats, effect.stats);
-  const { level, exp } = addExp(c.level, c.exp, effect.exp ?? 0);
-  return { ...c, status, stats, level, exp };
+  const { level, exp, levelsGained } = addExp(c.level, c.exp, effect.exp ?? 0);
+  const statPoints = c.statPoints + levelsGained * STAT_POINTS_PER_LEVEL;
+  return { ...c, status, stats, level, exp, statPoints };
 }
 
 // --- 쿨타임 ---
