@@ -96,8 +96,8 @@ export const HEALTHY_WEIGHT: Record<LifeStage, [number, number]> = {
 // ---------------------------------------------------------------------------
 
 export function expForLevel(level: number): number {
-  // 1 -> 2 는 30, 점점 증가
-  return Math.round(30 * Math.pow(level, 1.4));
+  // 1 -> 2 는 14, 점점 증가(기존 30 기준은 실제 획득 가능한 exp 대비 과했음 — 완화)
+  return Math.round(14 * Math.pow(level, 1.4));
 }
 
 // ---------------------------------------------------------------------------
@@ -112,6 +112,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "medium",
     effect: {
       status: { hunger: 40, health: 5, weight: 0.2 },
+      exp: 4,
       message: "집밥을 먹었어요. 든든하고 건강해요!",
     },
   },
@@ -122,6 +123,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "medium",
     effect: {
       status: { hunger: 35, weight: 0.2 },
+      exp: 4,
       message: "급식으로 한 끼 해결!",
     },
   },
@@ -132,6 +134,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "medium",
     effect: {
       status: { hunger: 25, mood: 3, health: -1, weight: 0.1 },
+      exp: 4,
       message: "편의점 음식으로 간단히 때웠어요.",
     },
   },
@@ -143,6 +146,7 @@ export const FOODS: FoodDef[] = [
     junk: true,
     effect: {
       status: { hunger: 40, mood: 10, health: -3, weight: 0.6 },
+      exp: 4,
       message: "기분은 최고지만 살이 확 붙었어요.",
     },
   },
@@ -154,6 +158,7 @@ export const FOODS: FoodDef[] = [
     junk: true,
     effect: {
       status: { hunger: 38, mood: 6, health: -2, weight: 0.5, stress: -2 },
+      exp: 4,
       message: "얼큰한 라면으로 스트레스가 좀 풀렸지만, 나트륨이 걱정돼요.",
     },
   },
@@ -165,6 +170,7 @@ export const FOODS: FoodDef[] = [
     junk: true,
     effect: {
       status: { hunger: 35, mood: 12, health: -3, weight: 0.55 },
+      exp: 4,
       message: "치킨은 진리! 기분은 최고, 칼로리도 최고예요.",
     },
   },
@@ -176,6 +182,7 @@ export const FOODS: FoodDef[] = [
     junk: true,
     effect: {
       status: { hunger: 30, mood: 9, health: -2, weight: 0.45, stress: -3 },
+      exp: 4,
       message: "매콤달콤 떡볶이로 스트레스가 확 풀렸어요!",
     },
   },
@@ -186,6 +193,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "high",
     effect: {
       status: { hunger: 42, health: 2, mood: 6, weight: 0.5 },
+      exp: 4,
       message: "삼겹살 회식! 배부르고 든든하지만 기름져요.",
     },
   },
@@ -197,6 +205,7 @@ export const FOODS: FoodDef[] = [
     effect: {
       status: { hunger: 18, health: 4, weight: 0.02 },
       stats: { strength: 0.3 },
+      exp: 4,
       message: "헬스인의 필수템! 담백하지만 근력에 도움이 돼요.",
     },
   },
@@ -207,6 +216,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "low",
     effect: {
       status: { hunger: 20, health: 5, weight: 0.05 },
+      exp: 4,
       message: "가볍고 건강한 한 끼!",
     },
   },
@@ -217,6 +227,7 @@ export const FOODS: FoodDef[] = [
     calorieTier: "low",
     effect: {
       status: { hunger: 15, health: 3, mood: 2, weight: 0.03 },
+      exp: 4,
       message: "상큼한 과일로 비타민 충전!",
     },
   },
@@ -228,6 +239,7 @@ export const FOODS: FoodDef[] = [
     effect: {
       status: { hunger: 12, health: 2, weight: 0.03 },
       stats: { strength: 0.15 },
+      exp: 4,
       message: "간단하고 든든한 단백질 간식!",
     },
   },
@@ -239,6 +251,7 @@ export const FOODS: FoodDef[] = [
     isDrink: true,
     effect: {
       status: { focus: 15, stress: 3, sleepQuality: -5 },
+      exp: 4,
       message: "집중력이 올라갔어요. 너무 늦게 마시면 잠을 설칠 수 있어요.",
     },
   },
@@ -251,6 +264,7 @@ export const FOODS: FoodDef[] = [
     isDrink: true,
     effect: {
       status: { focus: 18, stress: 5, sleepQuality: -9, health: -1, weight: 0.1, mood: 3 },
+      exp: 4,
       message: "각성 효과는 확실하지만 몸에는 부담이 될 수 있어요.",
     },
   },
