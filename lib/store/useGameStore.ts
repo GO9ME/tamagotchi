@@ -17,6 +17,7 @@ import type {
   JobOutcome,
   JobState,
   NegotiationResult,
+  RoomItemKey,
   UniversityTierKey,
   YearlyReview,
 } from "@/types/character";
@@ -70,6 +71,13 @@ import {
   computeStudyResult,
   isStudyReady,
 } from "@/lib/game/study";
+import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
+import {
+  canStartSecondGen,
+  inheritanceAmount,
+  inheritedStatBonus,
+  nextGenName,
+} from "@/lib/game/legacy";
 import { getOrCreateUserId } from "@/lib/storage/local";
 
 export interface ActionResult {
@@ -119,6 +127,8 @@ interface GameState {
   dropGrad: () => ActionResult;
   allocateStat: (statKey: keyof CharacterStats) => ActionResult;
   chooseUniversity: (tier: UniversityTierKey) => ActionResult;
+  buyRoomItem: (key: RoomItemKey) => ActionResult;
+  startSecondGeneration: () => ActionResult;
 }
 
 const now = () => Date.now();
@@ -135,6 +145,7 @@ function isMilestone(
     review.kind === "neglected" ||
     review.exam ||
     review.work?.promoted ||
+    review.event ||
     review.incident ||
     review.death ||
     review.degreeChange ||
@@ -637,11 +648,61 @@ export const useGameStore = create<GameState>()(
         pushToast(`${UNIVERSITY_TIERS[tier].label} 입학!`);
         return { ok: true, message: "입학" };
       },
+
+      buyRoomItem: (key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
+        const gate = canBuyRoomItem(key, c.roomItems, c.savings);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
+        const def = roomItemDef(key)!;
+        let next = applyEffect(c, { status: { mood: 4 } });
+        next = {
+          ...next,
+          savings: c.savings - def.price,
+          roomItems: [...c.roomItems, key],
+          happiness: Math.min(100, c.happiness + 1),
+        };
+        set({ character: next });
+        pushToast(`${def.emoji} ${def.label} 구입! 방이 아늑해졌어요. (-${formatMoney(def.price)})`);
+        pulseAction("playing");
+        return { ok: true, message: "구입 완료" };
+      },
+
+      startSecondGeneration: () => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (!canStartSecondGen(c)) {
+          return { ok: false, message: "자녀가 있을 때만 2세대를 시작할 수 있어요." };
+        }
+        const userId = getOrCreateUserId();
+        const inherited = inheritanceAmount(c);
+        const gender: Gender = Math.random() < 0.5 ? "male" : "female";
+        const base = createCharacter(userId, nextGenName(c), c.color, gender, now());
+        const child: Character = {
+          ...base,
+          savings: inherited,
+          stats: { ...base.stats, ...inheritedStatBonus(c.stats) },
+          generation: (c.generation ?? 1) + 1,
+          legacy: { parentName: c.name, inheritedManwon: inherited },
+        };
+        set({
+          character: child,
+          pendingReviews: [],
+          jobResult: null,
+          negotiationResult: null,
+          toast: null,
+        });
+        pushToast(
+          `👶 ${child.name} 탄생! ${c.name}의 유산 ${formatMoney(inherited)}과 재능을 물려받았어요.`,
+        );
+        return { ok: true, message: "2세대 시작" };
+      },
       };
     },
     {
       name: "lifegotchi:character",
-      version: 14,
+      version: 15,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -683,6 +744,7 @@ export const useGameStore = create<GameState>()(
           job: c.job ?? null,
           jobApplications: c.jobApplications ?? 0,
           savings: c.savings ?? 0,
+          roomItems: c.roomItems ?? [],
           happiness: c.happiness ?? 50,
           negotiateBackfire: c.negotiateBackfire ?? false,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋

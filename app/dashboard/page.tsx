@@ -8,6 +8,7 @@ import { CharacterAvatar } from "@/components/character/CharacterAvatar";
 import { StatusPanel } from "@/components/character/StatusPanel";
 import { StatsPanel } from "@/components/character/StatsPanel";
 import { WeightCard } from "@/components/character/WeightCard";
+import { RoomShopPanel } from "@/components/room/RoomShopPanel";
 import { ActionGrid } from "@/components/actions/ActionGrid";
 import { FoodSelector } from "@/components/actions/FoodSelector";
 import { StudyCard } from "@/components/actions/StudyCard";
@@ -20,9 +21,11 @@ import { CareerCard } from "@/components/dashboard/CareerCard";
 import { EndingScreen } from "@/components/EndingScreen";
 import { NeglectEndingScreen } from "@/components/NeglectEndingScreen";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
+import { NotificationBell } from "@/components/common/NotificationBell";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
+import { useCareNotifications } from "@/lib/hooks/useCareNotifications";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -30,6 +33,7 @@ export default function DashboardPage() {
   const character = useGameStore((s) => s.character);
   const tick = useGameStore((s) => s.tick);
   const now = useNow(1000);
+  const { permission, requestPermission } = useCareNotifications(character);
 
   // 캐릭터가 없으면 생성 화면으로
   useEffect(() => {
@@ -82,6 +86,7 @@ export default function DashboardPage() {
           ← LifeGotchi
         </Link>
         <div className="flex items-center gap-2">
+          <NotificationBell permission={permission} onRequest={requestPermission} />
           {next && (
             <span className="pill bg-white text-ink/60">
               다음: {next.label}까지 {next.inYears}살
@@ -108,6 +113,7 @@ export default function DashboardPage() {
           </div>
           <StatusPanel character={character} />
           <WeightCard character={character} />
+          <RoomShopPanel character={character} />
         </div>
 
         {/* 오른쪽: 액션 + 스탯 */}
