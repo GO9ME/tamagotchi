@@ -65,10 +65,10 @@ describe("rollYearlyEvent", () => {
     expect(ev?.record.savingsDelta).toBe(20); // 0이 아니므로 기록에도 포함
   });
 
-  it("나이 게이트: 7세는 적격 이벤트가 없어 null, 8세는 foundCash 만 가능", () => {
+  it("나이 게이트: 7세는 적격 이벤트가 없어 null, 8세는 어린이용 이벤트만 가능", () => {
     const c = makeChar(); // job 없음, savings 0
     expect(rollYearlyEvent(c, 7, 0, 0)).toBeNull();
-    expect(possibleKeys(c, 8)).toEqual(new Set(["foundCash"]));
+    expect(possibleKeys(c, 8)).toEqual(new Set(["foundCash", "schoolPrize"]));
   });
 
   it("bonus 는 취업 상태에서만 풀에 포함되고, 금액은 연봉의 5% 반올림", () => {

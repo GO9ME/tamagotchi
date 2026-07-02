@@ -60,6 +60,7 @@ const THEME_TINT: Record<RoomTheme, Pick<RoomPalette, "wall" | "floor" | "floorL
   nursery: { wall: "#F3EADB", floor: "#E2D4BE", floorLine: "#C6B498" },
   kidRoom: { wall: "#EDEFD3", floor: "#DADEB5", floorLine: "#BCC192" },
   studyRoom: { wall: "#E9EDD8", floor: "#D6DBBE", floorLine: "#B7BD9C" },
+  campus: { wall: "#E7F0DC", floor: "#D2DFC0", floorLine: "#B2C29E" },
   jobseekerRoom: { wall: "#E2E5D9", floor: "#CCD0BF", floorLine: "#ADB29D" },
   office: { wall: "#DFE7E3", floor: "#C8D2CC", floorLine: "#A7B3AC" },
   seniorOffice: { wall: "#E5E0D1", floor: "#D0C9B5", floorLine: "#B1A98E" },
@@ -168,8 +169,8 @@ function DeskGear({ theme, job, pal }: { theme: RoomTheme; job: JobType; pal: Ro
       </>
     );
   }
-  if (isOffice || theme === "jobseekerRoom") {
-    // 기본: 노트북/모니터
+  if (isOffice || theme === "jobseekerRoom" || theme === "campus") {
+    // 기본: 노트북/모니터 (대학생은 과제용 노트북)
     return (
       <div
         className="absolute"
@@ -221,7 +222,7 @@ function FurnSet({ theme, job, pal }: { theme: RoomTheme; job: JobType; pal: Roo
   );
 
   // 책장(중앙 뒤) 또는 화분
-  if (theme === "studyRoom" || theme === "kidRoom" || theme === "jobseekerRoom") {
+  if (theme === "studyRoom" || theme === "kidRoom" || theme === "jobseekerRoom" || theme === "campus") {
     pieces.push(
       <Furn key="shelf" left="40%" bottom="30%" w="20%" h="34%" bg={propHi} ink={ink} z={0}>
         {[70, 40, 10].map((b) => (
@@ -318,6 +319,17 @@ function WallDecor({ theme, pal }: { theme: RoomTheme; pal: RoomPalette }) {
           <span className="absolute" style={{ left: "48%", top: "48%", width: "28%", height: 2, background: ink }} />
         </div>
       );
+    case "campus":
+      // 대학 페넌트 깃발(벽에 비스듬히) — 캠퍼스 낭만
+      return (
+        <div className="absolute" style={{ left: "52%", top: "10%", width: "26%", height: "18%" }}>
+          <span className="absolute" style={{ left: 0, top: 0, width: 3, height: "100%", background: ink }} />
+          <span
+            className="absolute"
+            style={{ left: 3, top: "8%", width: "82%", height: "52%", background: prop, border: `2px solid ${ink}`, clipPath: "polygon(0 0, 100% 50%, 0 100%)" }}
+          />
+        </div>
+      );
     case "jobseekerRoom":
       // 달력(그리드) — 취준의 디데이 느낌
       return (
@@ -364,23 +376,33 @@ function WallDecor({ theme, pal }: { theme: RoomTheme; pal: RoomPalette }) {
   }
 }
 
-/** 계절 파티클 — 창문 안에 흩날리는 꽃잎/낙엽/눈송이 점 3개 */
+/** 계절 파티클 — 창문 안에 살랑살랑 떨어지는 꽃잎/잎/낙엽/눈송이 */
 function SeasonParticles({ season }: { season?: Season }) {
   if (!season) return null;
   const color = SEASON_PARTICLE[season];
   if (!color) return null;
-  const spots: [string, string][] = [
-    ["18%", "18%"],
-    ["52%", "44%"],
-    ["76%", "26%"],
+  // 위치/타이밍은 고정값(렌더마다 랜덤이면 SSR 하이드레이션이 어긋남)
+  const spots: { left: string; delay: string; dur: string }[] = [
+    { left: "14%", delay: "0s", dur: "4.2s" },
+    { left: "46%", delay: "1.6s", dur: "5.1s" },
+    { left: "72%", delay: "3.1s", dur: "4.6s" },
   ];
   return (
     <>
-      {spots.map(([left, top], i) => (
+      {spots.map((p, i) => (
         <span
           key={i}
-          className="absolute"
-          style={{ left, top, width: "9%", aspectRatio: "1", background: color, borderRadius: season === "winter" ? "50%" : "20%" }}
+          className="room-particle absolute"
+          style={{
+            left: p.left,
+            top: 0,
+            width: "9%",
+            aspectRatio: "1",
+            background: color,
+            borderRadius: season === "winter" ? "50%" : "20%",
+            animationDelay: p.delay,
+            animationDuration: p.dur,
+          }}
         />
       ))}
     </>
@@ -429,6 +451,13 @@ function WindowView({
               <span className="absolute" style={{ left: "50%", bottom: "40%", width: "7%", height: "9%", background: "#E9E3B4" }} />
             </>
           )}
+        </>
+      )}
+      {/* 캠퍼스: 잔디밭 + 낮고 넓은 강의동 */}
+      {theme === "campus" && (
+        <>
+          <span className="absolute bottom-0 left-0 right-0" style={{ height: "22%", background: "#A9C68B" }} />
+          <span className="absolute" style={{ left: "18%", bottom: "20%", width: "56%", height: "34%", background: ink, opacity: 0.5 }} />
         </>
       )}
       <SeasonParticles season={season} />

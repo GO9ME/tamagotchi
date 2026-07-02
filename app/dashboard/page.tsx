@@ -23,6 +23,7 @@ import { EndingScreen } from "@/components/EndingScreen";
 import { NeglectEndingScreen } from "@/components/NeglectEndingScreen";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { NotificationBell } from "@/components/common/NotificationBell";
+import { SoundToggle } from "@/components/common/SoundToggle";
 import { nextStageInfo } from "@/lib/game/growth";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -87,6 +88,7 @@ export default function DashboardPage() {
           ← LifeGotchi
         </Link>
         <div className="flex items-center gap-2">
+          <SoundToggle />
           <NotificationBell permission={permission} onRequest={requestPermission} />
           {next && (
             <span className="pill bg-white text-ink/60">

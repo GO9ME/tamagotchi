@@ -36,10 +36,10 @@ export const SKY_COLOR: Record<SkyPhase, string> = {
   night: "#5C6448",
 };
 
-/** 계절별 파티클(꽃잎/잎/눈송이) 색 — 창문 안에서만 쓰는 포인트 컬러 */
+/** 계절별 파티클(꽃잎/잎/낙엽/눈송이) 색 — 창문 안에서만 쓰는 포인트 컬러 */
 export const SEASON_PARTICLE: Record<Season, string | null> = {
   spring: "#EFB7C4", // 벚꽃
-  summer: null, // 여름은 파티클 없이 해가 쨍쨍
+  summer: "#9CCB6B", // 신록 잎
   autumn: "#D89B5E", // 낙엽
   winter: "#FFFFFF", // 눈
 };

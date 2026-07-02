@@ -7,6 +7,8 @@ import { formatMoney } from "@/lib/game/ending";
 import { currentHeight } from "@/lib/game/body";
 import { bodyShapeForWeight } from "@/lib/game/weight";
 import { seasonAt, skyPhaseAt } from "@/lib/game/sprite/roomAmbience";
+import { paletteForColor } from "@/lib/game/sprite/characterPalettes";
+import { playActionBeep } from "@/lib/sound/beeps";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -41,9 +43,21 @@ export function CharacterAvatar({ character }: { character: Character }) {
     if (!fx || fx.token === lastToken.current) return;
     lastToken.current = fx.token;
     setLive(fx.state);
+    playActionBeep(fx.state); // 액션 클릭 직후라 유저 제스처 안에서 재생됨
     const id = setTimeout(() => setLive(null), actionStateDurationMs(fx.state));
     return () => clearTimeout(id);
   }, [fx]);
+
+  // 🎨 컬러 도트 모드 — 캐릭터 생성 때 고른 기기 색으로 도트를 칠한다(기본은 단색 LCD)
+  const [colorMode, setColorMode] = useState(false);
+  useEffect(() => {
+    setColorMode(localStorage.getItem("lifegotchi:colorMode") === "1");
+  }, []);
+  const toggleColorMode = () =>
+    setColorMode((v) => {
+      localStorage.setItem("lifegotchi:colorMode", v ? "0" : "1");
+      return !v;
+    });
 
   // 진행 중인 공부 세션은 펄스가 없을 때도 계속 공부 포즈
   const sessionAction: ActionState | undefined =
@@ -111,9 +125,19 @@ export function CharacterAvatar({ character }: { character: Character }) {
             gender={character.gender}
             appearance={character.appearance}
             bodyShape={bodyShape}
+            palette={colorMode ? paletteForColor(character.color, vs.tone) : undefined}
             size={128}
           />
         </PixelRoom>
+        {/* 컬러/단색 토글 — 방 우상단 작은 버튼 */}
+        <button
+          type="button"
+          onClick={toggleColorMode}
+          className="absolute right-1.5 top-1.5 z-10 rounded-lg border-2 border-ink/25 bg-white/80 px-1.5 py-0.5 font-pixel text-[10px] font-bold text-ink/60 hover:bg-white"
+          title={colorMode ? "단색 LCD로 보기" : "내 기기 색으로 칠하기"}
+        >
+          {colorMode ? "🎨 컬러" : "▦ 단색"}
+        </button>
       </div>
 
       <div className="text-center">

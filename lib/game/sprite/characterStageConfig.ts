@@ -35,6 +35,7 @@ export type RoomTheme =
   | "nursery"
   | "kidRoom"
   | "studyRoom"
+  | "campus"
   | "jobseekerRoom"
   | "office"
   | "seniorOffice";
@@ -66,7 +67,7 @@ export const STAGE_CONFIG: Record<LifeStage, StageVisualConfig> = {
   elementary: { tier: "small", hair: "short", outfit: { base: "F", straps: true }, room: "kidRoom", stageProp: "bag", label: "초등학생" },
   middle: { tier: "mid", hair: "mid", outfit: { base: "F", collar: true }, room: "studyRoom", stageProp: "none", label: "중학생" },
   high: { tier: "mid", hair: "mid", outfit: { base: "F", collar: true, tie: true }, room: "studyRoom", stageProp: "none", label: "고등학생" },
-  university: { tier: "mid", hair: "mid", outfit: { base: "S", hood: true }, room: "studyRoom", stageProp: "none", label: "대학생" },
+  university: { tier: "mid", hair: "mid", outfit: { base: "S", hood: true }, room: "campus", stageProp: "none", label: "대학생" },
   jobseeker: { tier: "mid", hair: "neat", outfit: { base: "F", blazer: true, collar: true }, room: "jobseekerRoom", stageProp: "file", label: "취준생" },
   employee: { tier: "full", hair: "neat", outfit: { base: "F", collar: true, tie: true, badge: true }, room: "office", stageProp: "badge", label: "직장인" },
   senior: { tier: "full", hair: "senior", outfit: { base: "S", blazer: true, collar: true, tie: true, badge: true }, room: "seniorOffice", stageProp: "badge", label: "경력직" },

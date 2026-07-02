@@ -47,6 +47,27 @@ export function paletteForTone(tone: ToneKey): PixelPalette {
   return tone === "pale" ? LCD_PALE_PALETTE : LCD_INK_PALETTE;
 }
 
+// ---------------------------------------------------------------------------
+// 컬러(휴) 팔레트 — 캐릭터 생성 시 고른 기기 색(character.color)별 도트 팔레트.
+// 같은 K/S/F/W 코드 인터페이스라 렌더러 수정 없이 palette prop 으로만 켜진다.
+// (기본은 여전히 단색 LCD — 유저가 🎨 토글로 선택하는 옵션)
+// ---------------------------------------------------------------------------
+
+export const CHARACTER_PALETTES: Record<string, PixelPalette> = {
+  blush: { ink: "#4A2430", shade: "#C96A82", fill: "#FFE7ED", glint: "#FFFFFF" },
+  mint: { ink: "#1F3D33", shade: "#4FA98A", fill: "#E2F7EE", glint: "#FFFFFF" },
+  sky: { ink: "#223A4E", shade: "#5B93BC", fill: "#E3F1FB", glint: "#FFFFFF" },
+  butter: { ink: "#4A3A18", shade: "#C9A24E", fill: "#FFF3D6", glint: "#FFFFFF" },
+  grape: { ink: "#35284A", shade: "#8A6FBC", fill: "#EFE8FB", glint: "#FFFFFF" },
+  coral: { ink: "#4A2A22", shade: "#D97B5F", fill: "#FFE9E2", glint: "#FFFFFF" },
+};
+
+/** 기기 색 → 컬러 팔레트 (아프면(pale) 컬러 대신 창백 팔레트 유지) */
+export function paletteForColor(color: string, tone: ToneKey): PixelPalette {
+  if (tone === "pale") return LCD_PALE_PALETTE;
+  return CHARACTER_PALETTES[color] ?? LCD_INK_PALETTE;
+}
+
 /** 매트릭스 코드 → 팔레트 색. "." 은 투명(배경 LCD가 비침)이라 null. */
 export function colorForCode(code: string, p: PixelPalette): string | null {
   switch (code) {
