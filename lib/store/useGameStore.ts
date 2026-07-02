@@ -894,7 +894,10 @@ export const useGameStore = create<GameState>()(
           happiness: c.happiness ?? 50,
           negotiateBackfire: c.negotiateBackfire ?? false,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋
-          bornAt: Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS,
+          // ageYears=0이면 기존 bornAt 보존(리셋 시 0살 고착 방지); ageYears>0이면 재기준
+          bornAt: (c.ageYears ?? 0) > 0
+            ? Date.now() - (c.ageYears ?? 0) * GAME_YEAR_MS
+            : (c.bornAt ?? Date.now()),
           lastTickAt: Date.now(),
           // 같은 시계를 쓰는 절대 타임스탬프 필드도 함께 정규화(옛 epoch 잔존 → 즉시 페널티/완료 방지)
           lastExerciseAt: Date.now(),
