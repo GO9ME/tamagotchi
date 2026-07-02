@@ -77,6 +77,7 @@ export function createCharacter(
     job: null,
     jobApplications: 0,
     savings: 0,
+    roomItems: [],
     happiness: 50,
   };
 }

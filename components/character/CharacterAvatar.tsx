@@ -5,6 +5,8 @@ import type { Character } from "@/types/character";
 import { msUntilNextAge, stageLabel } from "@/lib/game/growth";
 import { formatMoney } from "@/lib/game/ending";
 import { currentHeight } from "@/lib/game/body";
+import { bodyShapeForWeight } from "@/lib/game/weight";
+import { seasonAt, skyPhaseAt } from "@/lib/game/sprite/roomAmbience";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { useNow } from "@/lib/hooks/useNow";
@@ -63,6 +65,12 @@ export function CharacterAvatar({ character }: { character: Character }) {
   const showBubble = !!live || BUBBLE_WARN.has(vs.state) || vs.state === "happy";
   const night = vs.pose === "lie";
 
+  // 실제 시각·계절 → 창밖 분위기 / 체중 → 체형 / 행복도 70+ → 고양이
+  const sky = skyPhaseAt(now);
+  const season = seasonAt(now);
+  const bodyShape = bodyShapeForWeight(character.status.weight, character.ageYears);
+  const pet = character.happiness >= 70 ? ("cat" as const) : undefined;
+
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="relative">
@@ -74,7 +82,16 @@ export function CharacterAvatar({ character }: { character: Character }) {
             />
           </div>
         )}
-        <PixelRoom stage={character.lifeStage} night={night} width={250}>
+        <PixelRoom
+          stage={character.lifeStage}
+          jobType={jobType}
+          night={night}
+          sky={sky}
+          season={season}
+          pet={pet}
+          items={character.roomItems}
+          width={250}
+        >
           <PixelCharacter
             lifeStage={character.lifeStage}
             mood={character.status.mood}
@@ -86,6 +103,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
             jobType={jobType}
             gender={character.gender}
             appearance={character.appearance}
+            bodyShape={bodyShape}
             size={128}
           />
         </PixelRoom>
@@ -119,6 +137,16 @@ export function CharacterAvatar({ character }: { character: Character }) {
             저축 {formatMoney(character.savings)}
           </span>
           <span className="pill bg-blush/40 text-ink/70">행복 {character.happiness}</span>
+          {(character.generation ?? 1) >= 2 && (
+            <span className="pill bg-grape/25 text-ink/70">{character.generation}세대</span>
+          )}
+          {character.marriedAtAge != null && (
+            <span className="pill bg-coral/20 text-ink/70">
+              💍 기혼
+              {(character.childrenBornAges?.length ?? 0) > 0 &&
+                ` · 👶 ${character.childrenBornAges!.length}`}
+            </span>
+          )}
         </div>
       </div>
     </div>

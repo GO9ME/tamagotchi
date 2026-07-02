@@ -11,6 +11,7 @@
 // ---------------------------------------------------------------------------
 
 import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
+import type { BodyShape } from "@/lib/game/weight";
 import type {
   CharacterVisualState,
   ExpressionKey,
@@ -23,6 +24,7 @@ export const DEFAULT_APPEARANCE: CharacterAppearance = {
   hairVariant: 0,
   hairTone: "dark",
   glasses: false,
+  faceAccent: "none",
 };
 
 export const GRID_W = 16;
@@ -86,6 +88,10 @@ function blank(): Grid {
 }
 function set(g: Grid, x: number, y: number, c: string) {
   if (c !== "." && x >= 0 && x < GRID_W && y >= 0 && y < GRID_H) g[y][x] = c;
+}
+/** 픽셀 지우기(투명으로) — slim 체형의 실루엣 다듬기에 사용 */
+function clear(g: Grid, x: number, y: number) {
+  if (x >= 0 && x < GRID_W && y >= 0 && y < GRID_H) g[y][x] = ".";
 }
 function fillRect(g: Grid, x0: number, x1: number, y0: number, y1: number, c: string) {
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) set(g, x, y, c);
@@ -209,19 +215,47 @@ function drawGlasses(g: Grid, A: Anchor) {
   for (let x = 5; x <= 10; x++) set(g, x, A.eyesRow, "K");
 }
 
+/**
+ * 볼 포인트(주근깨/볼터치) — 눈과 입 사이 볼 위치에 점을 찍는다.
+ * 밴드(bandage) 오버레이가 나중에 그려지므로 아픈 상태에선 자연스럽게 덮인다.
+ */
+function drawFaceAccent(
+  g: Grid,
+  A: Anchor,
+  accent: CharacterAppearance["faceAccent"],
+  cheekRow = A.eyesRow + 1,
+) {
+  if (accent === "freckles") {
+    set(g, 5, cheekRow, "K");
+    set(g, 10, cheekRow, "K");
+  } else if (accent === "blush") {
+    set(g, 5, cheekRow, "S");
+    set(g, 6, cheekRow, "S");
+    set(g, 9, cheekRow, "S");
+    set(g, 10, cheekRow, "S");
+  }
+}
+
 // ---------------------------------------------------------------------------
-// 머리 + 머리카락 (스타일 3종 × 톤 2종으로 캐릭터마다 다르게 보이도록)
+// 머리 + 머리카락 (스타일 5종 × 톤 2종으로 캐릭터마다 다르게 보이도록)
 // ---------------------------------------------------------------------------
 
-/** 앞머리 스타일 템플릿(가운데 가르마/사이드/스파이키) — "K" 자리에 실제 톤 색을 채운다 */
-function hairTopTemplate(variant: 0 | 1 | 2): string {
+/**
+ * 앞머리 스타일 템플릿(윗줄/이마줄 2행) — "K" 자리에 실제 톤 색을 채운다.
+ * "." 은 비워 두어 아래 피부(F)가 비치므로 텍스처 차이가 생긴다.
+ */
+function hairTemplate(variant: CharacterAppearance["hairVariant"]): [string, string] {
   switch (variant) {
     case 1:
-      return "KKKKK."; // 사이드(비대칭 앞머리)
+      return ["KKKKK.", "KKKKKK"]; // 사이드(비대칭 앞머리)
     case 2:
-      return ".K.K.K"; // 스파이키(텍스처)
+      return [".K.K.K", "KKKKKK"]; // 스파이키(텍스처)
+    case 3:
+      return ["KKKKKK", "KKKKKK"]; // 일자 풀뱅(덮는 앞머리)
+    case 4:
+      return [".KKKK.", "K.KK.K"]; // 곱슬(이마줄에 컬 텍스처)
     default:
-      return ".KKKK."; // 가운데 가르마(기본)
+      return [".KKKK.", "KKKKKK"]; // 가운데 가르마(기본)
   }
 }
 
@@ -261,15 +295,17 @@ function drawHead(
       break;
     case "short":
     case "mid":
-    case "neat":
-      stamp(g, 5, 0, [tonedRow(hairTopTemplate(appearance.hairVariant), tone), `${tone.repeat(6)}`]);
+    case "neat": {
+      const [top, brow] = hairTemplate(appearance.hairVariant);
+      stamp(g, 5, 0, [tonedRow(top, tone), tonedRow(brow, tone)]);
       if (cfg.hair === "mid") {
         set(g, 5, 2, tone);
         set(g, 10, 2, tone);
-      } else if (cfg.hair === "neat") {
-        set(g, 7, 1, "F"); // 가르마 하이라이트
+      } else if (cfg.hair === "neat" && appearance.hairVariant <= 1) {
+        set(g, 7, 1, "F"); // 가르마 하이라이트(가르마 스타일에만)
       }
       break;
+    }
     case "senior": // 희끗(S 톤) + 살짝 벗겨진 정수리
       stamp(g, 5, 0, [".SSSS.", "S.SS.S"]);
       set(g, 5, 2, "S");
@@ -296,6 +332,7 @@ function drawBody(
   cfg: StageVisualConfig,
   pose: PoseKey,
   jobType: JobType,
+  bodyShape: BodyShape = "normal",
 ) {
   const o = applyJobOutfit(cfg.outfit, cfg, jobType);
   const { tl, tr, torsoTop, torsoBot } = A;
@@ -375,6 +412,24 @@ function drawBody(
     }
     set(g, tl - 1, torsoBot, "F"); // 손
     set(g, tr + 1, torsoBot, "F");
+  }
+
+  // 체형 반영 — heavy: 하반 몸통이 옆으로 불룩 / slim: 어깨·허리 모서리를 깎아 갸름하게
+  if (bodyShape === "heavy") {
+    const bellyTop = torsoTop + Math.ceil((torsoBot - torsoTop) / 2);
+    for (let y = bellyTop; y <= torsoBot; y++) {
+      set(g, tl - 1, y, o.base);
+      set(g, tr + 1, y, o.base);
+    }
+    if (pose === "stand") {
+      set(g, tl - 1, torsoBot, "F"); // 배에 덮인 손 복원
+      set(g, tr + 1, torsoBot, "F");
+    }
+  } else if (bodyShape === "slim" && pose !== "sit") {
+    clear(g, tl, torsoTop);
+    clear(g, tr, torsoTop);
+    clear(g, tl, torsoBot);
+    clear(g, tr, torsoBot);
   }
 }
 
@@ -599,6 +654,7 @@ function drawBaby(
   set(g, 4, 10, "F");
   set(g, 11, 10, "F");
   if (appearance.glasses) drawGlasses(g, A);
+  drawFaceAccent(g, A, appearance.faceAccent, 6); // 아기 볼은 눈(5)보다 한 칸 아래
   drawProps(g, vs, A, STAGE_CONFIG.baby);
   drawOverlays(g, vs);
 }
@@ -649,6 +705,7 @@ export function buildCharacterMatrix(
   jobType: JobType = "none",
   gender?: Gender,
   appearance: CharacterAppearance = DEFAULT_APPEARANCE,
+  bodyShape: BodyShape = "normal",
 ): string[] {
   const cfg = STAGE_CONFIG[lifeStage];
   const g = blank();
@@ -664,12 +721,17 @@ export function buildCharacterMatrix(
   }
 
   const A = anchorFor(cfg.tier);
-  // 순서: 다리 → 몸통/팔 → 머리/표정 → 안경(눈 위 덧그림) → 소품 → 오버레이
+  // 순서: 다리 → 몸통/팔 → 머리/표정 → 안경(눈 위 덧그림) → 볼 포인트 → 소품 → 오버레이
   drawLegs(g, A, vs.pose, cfg);
-  drawBody(g, A, cfg, vs.pose, jobType);
+  drawBody(g, A, cfg, vs.pose, jobType, bodyShape);
   drawHead(g, A, cfg, gender, appearance);
+  if (bodyShape === "heavy") {
+    set(g, 4, A.eyesRow + 1, "F"); // 통통한 볼(얼굴 폭 +1)
+    set(g, 11, A.eyesRow + 1, "F");
+  }
   drawFace(g, vs.expression, A);
   if (appearance.glasses) drawGlasses(g, A);
+  drawFaceAccent(g, A, appearance.faceAccent);
   drawProps(g, vs, A, cfg);
   drawOverlays(g, vs);
 

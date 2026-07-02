@@ -1,7 +1,7 @@
 import type { LifeStage } from "@/types/character";
 import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { PixelRoom } from "@/components/game/PixelRoom";
-import type { ActionState } from "@/lib/game/sprite/characterVisualState";
+import type { ActionState, JobType } from "@/lib/game/sprite/characterVisualState";
 import { STAGE_CONFIG } from "@/lib/game/sprite/characterStageConfig";
 import { rollAppearance } from "@/lib/game/sprite/characterAppearance";
 
@@ -53,10 +53,10 @@ export default function CharacterPreviewPage() {
         단색 LCD 잉크 · CSS 도트 · 외부 이미지 없음
       </p>
 
-      {/* 랜덤 외형 다양성 데모 — 같은 조건, 다른 캐릭터마다 다른 헤어스타일/톤/안경 */}
-      <h2 className="mt-8 font-pixel text-sm font-bold">랜덤 외형 다양성 (동일 조건, 8명)</h2>
+      {/* 랜덤 외형 다양성 데모 — 같은 조건, 다른 캐릭터마다 다른 헤어스타일/톤/안경/볼 포인트 */}
+      <h2 className="mt-8 font-pixel text-sm font-bold">랜덤 외형 다양성 (동일 조건, 12명)</h2>
       <div className="mt-3 flex flex-wrap gap-3">
-        {Array.from({ length: 8 }, (_, i) => (
+        {Array.from({ length: 12 }, (_, i) => (
           <Tile key={i} label={`#${i + 1}`}>
             <PixelCharacter
               lifeStage="employee"
@@ -79,6 +79,29 @@ export default function CharacterPreviewPage() {
             </PixelRoom>
             <span className="font-pixel text-[11px] text-ink/60">
               {STAGE_CONFIG[stage].label} ({stage})
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* 직업별 사무실 — 직장인 방이 직업 대분류에 따라 달라지는지 확인 */}
+      <h2 className="mt-8 font-pixel text-sm font-bold">직업별 방 변화 (직장인)</h2>
+      <div className="mt-3 flex flex-wrap gap-4">
+        {(
+          [
+            ["office", "사무직"],
+            ["tech", "개발/IT"],
+            ["creative", "디자인/마케팅"],
+            ["physical", "생산/운동"],
+            ["expert", "의료/연구"],
+          ] as [JobType, string][]
+        ).map(([job, label]) => (
+          <div key={job} className="flex flex-col items-center gap-1">
+            <PixelRoom stage="employee" jobType={job} width={150}>
+              <PixelCharacter lifeStage="employee" {...M} jobType={job} size={84} />
+            </PixelRoom>
+            <span className="font-pixel text-[11px] text-ink/60">
+              {label} ({job})
             </span>
           </div>
         ))}

@@ -8,6 +8,7 @@
 // ---------------------------------------------------------------------------
 
 import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
+import type { BodyShape } from "@/lib/game/weight";
 import {
   getCharacterVisualState,
   type ActionState,
@@ -31,6 +32,8 @@ export interface PixelCharacterProps {
   jobType?: JobType;
   gender?: Gender;
   appearance?: CharacterAppearance;
+  /** 체형(체중 반영) */
+  bodyShape?: BodyShape;
   size?: number;
   /** "css"(기본) | "sprite" */
   renderer?: "css" | "sprite";
@@ -50,6 +53,7 @@ export function PixelCharacter({
   jobType = "none",
   gender,
   appearance,
+  bodyShape = "normal",
   size = 144,
   renderer = "css",
   sheet,
@@ -89,6 +93,7 @@ export function PixelCharacter({
       jobType={jobType}
       gender={gender}
       appearance={appearance}
+      bodyShape={bodyShape}
       size={size}
       palette={palette}
       className={className}

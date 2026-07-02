@@ -51,10 +51,23 @@ export type Gender = "male" | "female";
 
 /** 픽셀 캐릭터 외형 — 생성 시 1회 랜덤 결정되어 평생 유지(머리 스타일 다양화) */
 export interface CharacterAppearance {
-  hairVariant: 0 | 1 | 2; // 앞머리 스타일(가르마/사이드/스파이키)
+  hairVariant: 0 | 1 | 2 | 3 | 4; // 앞머리 스타일(가르마/사이드/스파이키/일자앞머리/곱슬)
   hairTone: "dark" | "light"; // 머리 톤(단색 램프 내 진하게/밝게)
   glasses: boolean; // 안경 착용 여부
+  faceAccent?: "none" | "freckles" | "blush"; // 볼 포인트(주근깨/볼터치) — 구버전 저장분은 undefined(=none)
 }
+
+/** 방 꾸미기 아이템 키 — 저축으로 구매해 방에 영구 배치 */
+export type RoomItemKey =
+  | "rug" // 러그
+  | "lamp" // 스탠드 조명
+  | "bigPlant" // 대형 화분
+  | "curtain" // 커튼
+  | "fishbowl" // 어항
+  | "console" // 게임기(TV)
+  | "puppy" // 강아지
+  | "robotVacuum" // 로봇청소기
+  | "artFrame"; // 명화 액자
 
 /** 최종 학위 — 높을수록 취업률·초봉 보너스(대신 대학원은 시간·등록금·스트레스 비용) */
 export type Degree = "highschool" | "bachelor" | "master" | "phd";
@@ -166,6 +179,15 @@ export interface JobOutcome {
 
 export type ReviewGrade = "S" | "A" | "B" | "C" | "D";
 
+/** 연간 랜덤 인생 이벤트 기록 (YearlyReview.event) */
+export interface LifeEventRecord {
+  key: string;
+  emoji: string;
+  label: string; // 짧은 제목 (예: "복권 당첨")
+  detail: string; // 설명 문장
+  savingsDelta?: number; // 저축 변화(만원, 있으면)
+}
+
 /** 나이 1살 증가 시 생성되는 연간 리뷰 기록 */
 export interface YearlyReview {
   id: string;
@@ -177,6 +199,7 @@ export interface YearlyReview {
   grade: ReviewGrade;
   exam?: { score: number; tier: string };
   work?: WorkReview; // 직장인 업무평가(있으면)
+  event?: LifeEventRecord; // 랜덤 인생 이벤트(결혼/출산 포함)
   incident?: { cause: string; healthHit: number }; // 회복 가능한 병/사고
   death?: { cause: string }; // 사망(엔딩)
   degreeChange?: { to: Degree }; // 학위 취득(대학 졸업/대학원 졸업)
@@ -235,7 +258,12 @@ export interface Character {
   job: JobState | null; // 취업 전 null
   jobApplications: number; // 누적 지원 횟수
   savings: number; // 누적 저축(만원, 음수=빚)
+  roomItems: RoomItemKey[]; // 구매한 방 꾸미기 아이템(영구)
   happiness: number; // 행복도(평생 평균, 0~100)
+  marriedAtAge?: number; // 결혼한 나이(미혼이면 없음) — 인생 이벤트로 발생
+  childrenBornAges?: number[]; // 자녀 출생 시 부모 나이 목록(최대 2명)
+  generation?: number; // 세대(1세대=1). 2세대부터 부모 유산 상속
+  legacy?: { parentName: string; inheritedManwon: number }; // 2세대 상속 내역
   deathAge?: number; // 사망 나이(설정되면 엔딩)
   deathCause?: string; // 사인
   negotiateBackfire?: boolean; // 협상 역효과(괘씸죄) — 다음 연말 평가 1회 소비

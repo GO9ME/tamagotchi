@@ -19,6 +19,14 @@ export function weightVerdictLabel(v: WeightVerdict): string {
   return v === "low" ? "저체중" : v === "high" ? "과체중" : "적정";
 }
 
+/** 픽셀 스프라이트 체형 — 저체중=slim, 과체중=heavy (스프라이트 몸통 폭에 반영) */
+export type BodyShape = "slim" | "normal" | "heavy";
+
+export function bodyShapeForWeight(weight: number, age: number): BodyShape {
+  const v = weightVerdict(weight, age);
+  return v === "low" ? "slim" : v === "high" ? "heavy" : "normal";
+}
+
 /**
  * 몸무게가 적정 범위를 벗어났을 때의 시간 경과 페널티(틱마다 적용).
  * PRD: 초과 시 health -2 / 저체중 시 health -3, focus -2 등.

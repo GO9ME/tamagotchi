@@ -31,8 +31,9 @@ export function CharacterPreviewCard({
   charSize?: number;
   className?: string;
 }) {
+  const jobType = jobTypeFromFamily(jobFamily);
   return (
-    <PixelRoom stage={lifeStage} width={width} className={className}>
+    <PixelRoom stage={lifeStage} jobType={jobType} width={width} className={className}>
       <PixelCharacter
         lifeStage={lifeStage}
         mood={status.mood}
@@ -40,7 +41,7 @@ export function CharacterPreviewCard({
         energy={status.energy}
         health={status.health}
         burnout={status.burnout}
-        jobType={jobTypeFromFamily(jobFamily)}
+        jobType={jobType}
         gender={gender}
         appearance={appearance}
         size={charSize ?? Math.round(width * 0.52)}
