@@ -9,7 +9,7 @@ const TABS = [
   { href: "/dashboard", label: "홈" },
   { href: "/history", label: "성장기록" },
   { href: "/ranking", label: "랭킹" },
-  { href: "/", label: "정보" },
+  { href: "/help", label: "도움말" },
 ];
 
 export function BottomNav() {

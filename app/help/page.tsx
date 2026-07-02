@@ -1,0 +1,114 @@
+import Link from "next/link";
+import { BottomNav } from "@/components/common/BottomNav";
+
+// 게임 규칙 도움말 — "9분=1년, 방치하면 죽는다" 같은 핵심 규칙을 처음으로 명시하는 화면.
+// BottomNav 의 도움말 탭에서 진입한다(랜딩 페이지는 신규 유저용으로 유지).
+
+const SECTIONS: { emoji: string; title: string; lines: string[] }[] = [
+  {
+    emoji: "⏱️",
+    title: "시간은 진짜로 흐른다",
+    lines: [
+      "게임 1년 = 현실 9분. 태어나서 60세(자연사 한계)까지 약 9시간 — 하루 근무시간 한 판이에요.",
+      "페이지를 켜 둔 동안 배고픔·에너지가 실시간으로 줄어요. 다른 탭(성장기록·랭킹)에 있어도 시간은 흘러요.",
+      "현실 8시간 이상 접속하지 않으면 캐릭터가 방치로 세상을 떠나요. 오래 자리를 비울 땐 마음의 준비를!",
+    ],
+  },
+  {
+    emoji: "🍚",
+    title: "돌봄의 기본",
+    lines: [
+      "배고픔·에너지·기분·청결이 낮으면 건강이 깎이고 공부/업무 효율이 떨어져요(씻기기도 잊지 마세요 — 냄새나요).",
+      "배부른데 또 먹이면 과식으로 살이 쪄요. 불량식품은 더 심해요. 체중이 적정 범위를 벗어나면 매시간 건강 페널티.",
+      "운동(유산소/근력)은 체중 관리 + 지구력/근력을 키워요. 단련된 몸은 사고를 당해도 덜 다쳐요(최대 40% 경감).",
+    ],
+  },
+  {
+    emoji: "📚",
+    title: "성장과 커리어",
+    lines: [
+      "공부는 30분 집중 세션 — 제때 완료하면 보너스. 레벨업마다 스탯 포인트 5개를 자유 배분해요.",
+      "대학은 티어별로 등록금·커트라인·취업 보너스가 달라요. 등록금이 모자라면 학자금대출(연 3% 복리)로 넘어가고, 취업 후 연봉의 8%씩 자동 상환돼요.",
+      "직장인의 연말 평가에는 업무 성과뿐 아니라 수면의 질, 그 해 운동·식사 실천까지 반영돼요. 자기개발을 1년 내내 안 하면 커리어가 깎여요.",
+      "55세부터는 은퇴 준비 단계 — 마지막 5년을 마무리하는 시간이에요.",
+    ],
+  },
+  {
+    emoji: "💍",
+    title: "인생 이벤트와 가족",
+    lines: [
+      "해마다 22% 확률로 인생 이벤트가 찾아와요(복권·여행·첫사랑·투자·스미싱…). 연말 결산 모달과 성장기록에 남아요.",
+      "결혼 조건: 26~45세 · 취업 상태 · 행복도 55 이상. 결혼하면 배우자가 방에 함께 살아요.",
+      "결혼 1년 후부터 아이가 생길 수 있어요(최대 2명). 아이는 방에 등장하고, 1명당 연 400만원 양육비가 들지만 가족이 있으면 행복도가 매년 조금씩 올라요.",
+    ],
+  },
+  {
+    emoji: "🛋️",
+    title: "돈 쓰는 재미",
+    lines: [
+      "방 꾸미기 상점: 러그부터 명화 액자까지 — 사면 방에 바로 놓여요.",
+      "대형 자산: 경차→세단→수입차, 전세→내집→한강뷰. 업그레이드는 차액만 내요(이전 자산 매각).",
+      "자산은 순자산으로 남아 엔딩 점수·부자 판정·2세대 유산에 전부 반영돼요. 저축만 쌓아두면 손해!",
+    ],
+  },
+  {
+    emoji: "👶",
+    title: "엔딩과 2세대",
+    lines: [
+      "수명·순자산·행복도·직업에 따라 12가지 이상의 열린 결말이 갈려요. 행복도는 매년 컨디션의 평생 평균이에요.",
+      "자녀가 있다면 사망 후 '2세대로 이어가기' — 순자산의 20%를 유산으로, 부모 스탯의 일부를 재능으로 물려받아요.",
+      "엔딩 화면에서 결과 카드를 이미지로 공유할 수 있어요.",
+    ],
+  },
+  {
+    emoji: "🔔",
+    title: "편의 기능",
+    lines: [
+      "알림을 켜면 탭이 백그라운드일 때 캐릭터가 배고프거나 아프면 알려줘요(탭을 완전히 닫으면 알림이 오지 않아요).",
+      "캐릭터 방 우상단 🎨 버튼으로 단색 LCD ↔ 내 기기 색 컬러 도트를 전환할 수 있어요.",
+      "헤더의 🔊 버튼으로 8비트 효과음을 켜고 끌 수 있어요.",
+    ],
+  },
+];
+
+export default function HelpPage() {
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+      <header className="mb-4 flex items-center justify-between">
+        <Link href="/dashboard" className="font-pixel text-sm font-bold text-ink/55">
+          ← 대시보드
+        </Link>
+        <h1 className="font-pixel text-base font-bold">게임 도움말</h1>
+        <span className="w-16" />
+      </header>
+
+      <p className="mb-4 text-sm text-ink/55">
+        LifeGotchi 는 <b>페이지를 켜 두고 주기적으로 직접 돌봐야</b> 성장하는 인생
+        육성 게임이에요. 핵심 규칙만 알면 어렵지 않아요.
+      </p>
+
+      <div className="flex flex-col gap-3">
+        {SECTIONS.map((s) => (
+          <section key={s.title} className="card p-4">
+            <h2 className="mb-2 font-pixel text-sm font-bold text-ink/80">
+              {s.emoji} {s.title}
+            </h2>
+            <ul className="flex flex-col gap-1.5">
+              {s.lines.map((line, i) => (
+                <li key={i} className="flex gap-1.5 text-[13px] leading-relaxed text-ink/70">
+                  <span className="text-ink/30">·</span>
+                  <span>{line}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+      </div>
+
+      <p className="mt-4 text-center text-xs text-ink/45">
+        데이터는 이 브라우저에만 저장돼요 · 개인정보를 받지 않아요
+      </p>
+      <BottomNav />
+    </main>
+  );
+}
