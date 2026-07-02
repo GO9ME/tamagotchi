@@ -11,6 +11,7 @@ import { WeightCard } from "@/components/character/WeightCard";
 import { RoomShopPanel } from "@/components/room/RoomShopPanel";
 import { AssetPanel } from "@/components/room/AssetPanel";
 import { ActionGrid } from "@/components/actions/ActionGrid";
+import { LeisurePanel } from "@/components/leisure/LeisurePanel";
 import { FoodSelector } from "@/components/actions/FoodSelector";
 import { StudyCard } from "@/components/actions/StudyCard";
 import { Toast } from "@/components/common/Toast";
@@ -129,6 +130,7 @@ export default function DashboardPage() {
             <FoodSelector character={character} now={now} />
           </div>
           <ActionGrid character={character} now={now} />
+          <LeisurePanel character={character} now={now} />
           <StatsPanel character={character} />
         </div>
       </div>

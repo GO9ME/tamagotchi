@@ -74,6 +74,7 @@ import {
 } from "@/lib/game/study";
 import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
 import { assetDef, canBuyAsset } from "@/lib/game/assets";
+import { canDoLeisure, leisureCooldownKey, leisureDef } from "@/lib/game/leisure";
 import {
   canStartSecondGen,
   inheritanceAmount,
@@ -131,6 +132,7 @@ interface GameState {
   chooseUniversity: (tier: UniversityTierKey) => ActionResult;
   buyRoomItem: (key: RoomItemKey) => ActionResult;
   buyAsset: (key: AssetKey) => ActionResult;
+  doLeisure: (key: string) => ActionResult;
   startSecondGeneration: () => ActionResult;
 }
 
@@ -670,6 +672,30 @@ export const useGameStore = create<GameState>()(
         pushToast(`${def.emoji} ${def.label} 구입! 방이 아늑해졌어요. (-${formatMoney(def.price)})`);
         pulseAction("playing");
         return { ok: true, message: "구입 완료" };
+      },
+
+      doLeisure: (key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
+        const t = now();
+        const gate = canDoLeisure(c, key, t);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "지금은 할 수 없어요." };
+        const def = leisureDef(key)!;
+        let next = applyEffect(c, def.effect);
+        next = {
+          ...next,
+          savings: c.savings - def.cost,
+          happiness: Math.min(100, c.happiness + def.happinessDelta),
+          cooldowns: setCooldown(next, leisureCooldownKey(key), t, cd(def.cooldownMs)),
+        };
+        set({ character: next });
+        pushToast(
+          `${def.emoji} ${def.effect.message ?? `${def.label} 완료!`} (-${formatMoney(def.cost)})` +
+            levelUpSuffix(c, next),
+        );
+        pulseAction("playing");
+        return { ok: true, message: "여가 완료" };
       },
 
       buyAsset: (key) => {
