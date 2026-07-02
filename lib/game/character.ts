@@ -64,6 +64,7 @@ export function createCharacter(
       interviewScore: 0,
       certificateScore: 0,
       performance: 0,
+      luck: 5,
     },
     bornAt: now,
     createdAt: now,

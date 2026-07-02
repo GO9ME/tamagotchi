@@ -42,7 +42,7 @@ export type RoomTheme =
   | "seniorOffice";
 
 interface Outfit {
-  base: "F" | "S"; // 몸통 기본 톤
+  base: "F" | "S" | "K"; // 몸통 기본 톤(K = 어두운 가죽/블랙)
   collar?: boolean; // 어두운 깃(교복/정장)
   tie?: boolean; // 넥타이
   blazer?: boolean; // 재킷(양 옆 S, 가운데 셔츠)
@@ -52,6 +52,8 @@ interface Outfit {
   diaper?: boolean; // 아기 기저귀
   stripe?: boolean; // 가로 줄무늬(옷장: 줄무늬 티)
   zip?: boolean; // 지퍼 세로줄(옷장: 집업 재킷)
+  skirt?: boolean; // 치마 플레어(옷장: 원피스)
+  quilt?: boolean; // 누빔 가로선(옷장: 패딩 점퍼)
 }
 
 /** 옷장 의상 → 스프라이트 복장 정의(착용 시 단계 기본 복장·직업 악센트를 대체) */
@@ -60,6 +62,10 @@ const WARDROBE_OUTFITS: Partial<Record<WardrobeItemKey, Outfit>> = {
   hoodie: { base: "S", hood: true },
   jacket: { base: "S", collar: true, zip: true },
   suit: { base: "F", blazer: true, collar: true, tie: true },
+  training: { base: "S", zip: true, stripe: true },
+  dress: { base: "F", skirt: true },
+  padding: { base: "S", quilt: true },
+  leather: { base: "K", zip: true },
 };
 
 export interface StageVisualConfig {
@@ -272,6 +278,31 @@ function drawAccessory(g: Grid, A: Anchor, key: WardrobeItemKey) {
       set(g, 10, 0, "W");
       set(g, 11, 1, "S");
       break;
+    case "sunglasses": // 선글라스 — 안경보다 넓고 두꺼운 렌즈
+      for (let x = 4; x <= 11; x++) set(g, x, A.eyesRow, "K");
+      set(g, 5, A.eyesRow + 1, "K");
+      set(g, 6, A.eyesRow + 1, "K");
+      set(g, 9, A.eyesRow + 1, "K");
+      set(g, 10, A.eyesRow + 1, "K");
+      break;
+    case "headphones": // 헤드폰 — 머리 위 밴드 + 양쪽 이어패드
+      for (let x = 5; x <= 10; x++) set(g, x, 0, "K");
+      set(g, 4, A.eyesRow - 1, "K");
+      set(g, 4, A.eyesRow, "K");
+      set(g, 11, A.eyesRow - 1, "K");
+      set(g, 11, A.eyesRow, "K");
+      break;
+    case "necklace": // 목걸이 — 쇄골 라인 반짝임 + 펜던트
+      set(g, 6, A.torsoTop, "W");
+      set(g, 9, A.torsoTop, "W");
+      set(g, 7, A.torsoTop + 1, "W");
+      set(g, 8, A.torsoTop + 1, "W");
+      break;
+    case "crown": // 왕관 — 머리 위 반짝이 밴드
+      for (let x = 5; x <= 10; x++) set(g, x, 0, "W");
+      set(g, 5, 1, "W");
+      set(g, 10, 1, "W");
+      break;
     default:
       break;
   }
@@ -420,10 +451,11 @@ function drawBody(
     set(g, 7, torsoTop + 1, "K");
     set(g, 8, torsoTop + 2, "K");
   }
-  // 지퍼 세로줄(옷장: 집업 재킷) — 지퍼 손잡이는 반짝임
+  // 지퍼 세로줄(옷장: 집업 재킷) — 지퍼 손잡이는 반짝임. 어두운 몸통(K)엔 밝은 스티치
   if (o.zip) {
+    const stitch = o.base === "K" ? "S" : "K";
     set(g, 7, torsoTop, "W");
-    for (let y = torsoTop + 1; y <= torsoBot - 1; y++) set(g, 7, y, "K");
+    for (let y = torsoTop + 1; y <= torsoBot - 1; y++) set(g, 7, y, stitch);
   }
   // 책가방 끈(어깨)
   if (o.straps) {
@@ -441,6 +473,17 @@ function drawBody(
   // 기저귀(아기는 별도 처리되지만 안전망)
   if (o.diaper) {
     fillRect(g, tl, tr, torsoBot, torsoBot, "F");
+  }
+  // 치마 플레어(옷장: 원피스) — 허리 벨트 + 플레어 + 밑단 라인으로 실루엣이 읽히게
+  if (o.skirt) {
+    fillRect(g, tl, tr, torsoBot, torsoBot, "S"); // 허리 라인
+    fillRect(g, tl - 1, tr + 1, A.legTop, A.legTop, o.base);
+    fillRect(g, tl - 1, tr + 1, A.legTop + 1, A.legTop + 1, "S"); // 밑단 라인
+  }
+  // 누빔 가로선(옷장: 패딩 점퍼) — 밝은 몸통에 진한 스티치 2줄
+  if (o.quilt) {
+    fillRect(g, tl, tr, torsoTop + 1, torsoTop + 1, "K");
+    fillRect(g, tl, tr, torsoTop + 3, torsoTop + 3, "K");
   }
 
   // 팔(포즈별)

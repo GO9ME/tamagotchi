@@ -297,6 +297,16 @@ export const PIXEL_ICONS: Record<string, string[]> = {
     "...x....",
     "........",
   ],
+  praise: [
+    "......x.",
+    ".xx.xx..",
+    "xxxxxxx.",
+    "xxxxxxxx",
+    ".xxxxx..",
+    "..xxx.x.",
+    "...x....",
+    "........",
+  ],
   bolt: [
     "...xx...",
     "..xx....",

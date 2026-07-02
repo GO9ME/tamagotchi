@@ -14,6 +14,7 @@ import {
 } from "@/lib/game/housing";
 import { formatMoney } from "@/lib/game/ending";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { CollapsibleCard } from "@/components/common/CollapsibleCard";
 
 export function HousingPanel({ character }: { character: Character }) {
   const moveHousing = useGameStore((s) => s.moveHousing);
@@ -22,14 +23,14 @@ export function HousingPanel({ character }: { character: Character }) {
   const equity = housingEquity(h);
 
   return (
-    <div className="card p-4">
-      <div className="mb-1 flex items-center justify-between">
-        <h3 className="font-pixel text-sm font-bold text-ink/80">주거</h3>
+    <CollapsibleCard
+      title="주거"
+      badge={
         <span className="pill bg-grape/20 text-ink/70">
           {cur.emoji} {cur.label}
         </span>
-      </div>
-
+      }
+    >
       {/* 현재 주거 요약 — 보증금/시세/대출 */}
       {(h.deposit > 0 || h.homeValue > 0 || h.loanBalance > 0) && (
         <div className="mb-2 rounded-xl bg-black/[0.03] px-3 py-2 text-[11px] text-ink/60">
@@ -103,6 +104,6 @@ export function HousingPanel({ character }: { character: Character }) {
           );
         })}
       </ul>
-    </div>
+    </CollapsibleCard>
   );
 }

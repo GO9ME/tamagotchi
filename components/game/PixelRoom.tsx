@@ -544,6 +544,57 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
           <span className="absolute" style={{ right: "14%", top: "18%", width: "22%", height: "22%", background: prop, borderRadius: "50%" }} />
         </div>
       )}
+      {has("poster") && (
+        <div
+          className="absolute"
+          style={{ left: "2%", top: "8%", width: "9%", height: "13%", background: prop, border: `2px solid ${ink}`, zIndex: 0 }}
+        >
+          {/* 행성 + 고리 */}
+          <span className="absolute" style={{ left: "26%", top: "26%", width: "48%", height: "38%", background: propHi, borderRadius: "50%" }} />
+          <span className="absolute" style={{ left: "8%", top: "44%", width: "84%", height: 2, background: ink, transform: "rotate(-18deg)" }} />
+        </div>
+      )}
+      {has("sofa") && (
+        <div className="absolute" style={{ left: "46%", bottom: "5%", width: "13%", height: "11%", zIndex: 1 }}>
+          {/* 등받이 + 시트 + 팔걸이 */}
+          <span className="absolute inset-x-0 top-0" style={{ height: "55%", background: propHi, border: `2px solid ${ink}` }} />
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "52%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute" style={{ left: "-6%", bottom: 0, width: "14%", height: "78%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute" style={{ right: "-6%", bottom: 0, width: "14%", height: "78%", background: prop, border: `2px solid ${ink}` }} />
+        </div>
+      )}
+      {has("wallTv") && (
+        <div
+          className="absolute"
+          style={{ left: "68%", top: "36%", width: "15%", height: "11%", background: ink, border: `2px solid ${ink}`, zIndex: 0 }}
+        >
+          <span className="absolute inset-[12%]" style={{ background: propHi }} />
+          <span className="absolute" style={{ left: "20%", top: "30%", width: "26%", height: "22%", background: prop }} />
+        </div>
+      )}
+      {has("catTower") && (
+        <div className="absolute" style={{ left: "89.5%", bottom: "6%", width: "9%", height: "24%", zIndex: 1 }}>
+          {/* 기둥 + 하단/상단 플랫폼 + 꼭대기 박스 */}
+          <span className="absolute left-1/2 bottom-0 w-[3px] -translate-x-1/2" style={{ height: "88%", background: ink }} />
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "14%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute inset-x-[6%]" style={{ bottom: "44%", height: "12%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute inset-x-[14%] top-0" style={{ height: "30%", background: propHi, border: `2px solid ${ink}` }} />
+        </div>
+      )}
+      {has("chandelier") && (
+        <div className="absolute" style={{ left: "44%", top: "0%", width: "12%", height: "8%", zIndex: 0 }}>
+          {/* 천장 스템 + 가로 암 + 전구 3개 */}
+          <span className="absolute left-1/2 top-0 w-[2px] -translate-x-1/2" style={{ height: "42%", background: ink }} />
+          <span className="absolute" style={{ left: "8%", top: "42%", width: "84%", height: 2, background: ink }} />
+          {["6%", "44%", "82%"].map((l) => (
+            <span
+              key={l}
+              className="absolute"
+              style={{ left: l, top: "52%", width: "14%", height: "38%", background: propHi, border: `2px solid ${ink}`, borderRadius: "0 0 50% 50%" }}
+            />
+          ))}
+        </div>
+      )}
     </>
   );
 }
@@ -661,8 +712,9 @@ export function PixelRoom({
   return (
     <div
       className={`lcd relative overflow-hidden ${className ?? ""}`}
-      // 초소형 화면에서도 카드 밖으로 넘치지 않도록 컨테이너 기준 축소(비율 유지)
-      style={{ width: "100%", maxWidth: width, aspectRatio: "100 / 82", background: pal.wall }}
+      // 확정 폭(px) + max-width 로 축소만 허용 — width:100% 는 items-center 같은
+      // shrink-to-fit 부모에서 0으로 붕괴해 방/캐릭터가 안 보이는 버그가 있었다
+      style={{ width, maxWidth: "100%", aspectRatio: "100 / 82", background: pal.wall }}
       role="img"
       aria-label={ariaParts.join(" · ")}
     >

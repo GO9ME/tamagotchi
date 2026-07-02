@@ -11,11 +11,12 @@ export interface ActionOutcome {
   label: string;
 }
 
-/** 대성공 확률(%) — 집중력/기분이 높을수록 ↑ */
+/** 대성공 확률(%) — 집중력/기분이 높을수록 ↑, 행운 스탯 보너스(최대 +8) */
 export function greatChance(c: Character): number {
   let p = 12;
   if (c.status.focus > 70) p += 8;
   if (c.status.mood > 70) p += 5;
+  p += clamp(((c.stats.luck ?? 5) - 5) * 0.2, 0, 8);
   return clamp(p, 0, 35);
 }
 

@@ -7,6 +7,8 @@ interface CooldownButtonProps {
   icon: string; // 픽셀 아이콘 이름
   label: string;
   desc?: string;
+  /** 효과 미리보기 (예: "기분 +8 · 배고픔 +10") */
+  effects?: string;
   /** 쿨타임 종료 시각 (epoch ms). 0/과거면 사용 가능 */
   readyAt: number;
   now: number;
@@ -20,6 +22,7 @@ export function CooldownButton({
   icon,
   label,
   desc,
+  effects,
   readyAt,
   now,
   accent = "bg-white",
@@ -61,6 +64,11 @@ export function CooldownButton({
       <span className="font-sans text-[11px] font-medium leading-tight text-ink/55">
         {locked ? lockLabel ?? "잠김" : desc}
       </span>
+      {!locked && effects && (
+        <span className="font-sans text-[10px] font-semibold leading-tight text-ink/40">
+          {effects}
+        </span>
+      )}
 
       {onCooldown && !locked && (
         <div className="pointer-events-none absolute inset-0 rounded-xl bg-white/45" />

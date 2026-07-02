@@ -5,13 +5,11 @@
 
 import type { Character, WardrobeItemKey } from "@/types/character";
 import { cn } from "@/lib/utils";
-import {
-  WARDROBE_ITEMS,
-  canBuyWardrobe,
-  type WardrobeKind,
-} from "@/lib/game/wardrobe";
+import { WARDROBE_ITEMS, type WardrobeKind } from "@/lib/game/wardrobe";
 import { formatMoney } from "@/lib/game/ending";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { CollapsibleCard } from "@/components/common/CollapsibleCard";
+import { GachaPullButton } from "@/components/common/GachaPullButton";
 
 const KIND_LABEL: Record<WardrobeKind, string> = {
   outfit: "의상",
@@ -19,23 +17,24 @@ const KIND_LABEL: Record<WardrobeKind, string> = {
 };
 
 export function WardrobePanel({ character }: { character: Character }) {
-  const buyWardrobe = useGameStore((s) => s.buyWardrobe);
   const equipWardrobe = useGameStore((s) => s.equipWardrobe);
 
   const equippedFor = (kind: WardrobeKind): WardrobeItemKey | null | undefined =>
     kind === "outfit" ? character.equippedOutfit : character.equippedAccessory;
 
   return (
-    <div className="card p-4">
-      <div className="mb-1 flex items-center justify-between">
-        <h3 className="font-pixel text-sm font-bold text-ink/80">옷장</h3>
+    <CollapsibleCard
+      title="옷장"
+      badge={
         <span className="pill bg-butter/40 text-ink/70">
           {character.wardrobe.length}/{WARDROBE_ITEMS.length} 소장
         </span>
-      </div>
+      }
+    >
       <p className="mb-3 text-xs text-ink/55">
-        입히면 캐릭터 복장이 바로 바뀌어요. 의상 1벌 + 액세서리 1개 착용.
+        옷은 뽑기로 획득해요. 입히면 캐릭터 복장이 바로 바뀌어요. 의상 1벌 + 액세서리 1개 착용.
       </p>
+      <GachaPullButton character={character} category="wardrobe" />
 
       {(["outfit", "accessory"] as WardrobeKind[]).map((kind) => {
         const items = WARDROBE_ITEMS.filter((w) => w.kind === kind);
@@ -60,7 +59,6 @@ export function WardrobePanel({ character }: { character: Character }) {
               {items.map((w) => {
                 const owned = character.wardrobe.includes(w.key);
                 const isOn = equipped === w.key;
-                const gate = canBuyWardrobe(character, w.key);
                 return (
                   <li
                     key={w.key}
@@ -76,13 +74,6 @@ export function WardrobePanel({ character }: { character: Character }) {
                           {w.label}
                         </div>
                         <div className="truncate text-[11px] text-ink/50">{w.desc}</div>
-                        {!owned && !gate.ok && (
-                          <div className="font-pixel text-[10px] font-bold text-coral">
-                            {character.savings < w.price && character.ageYears >= w.minAge
-                              ? `${formatMoney(w.price - character.savings)} 부족`
-                              : gate.reason}
-                          </div>
-                        )}
                       </div>
                     </div>
                     {owned ? (
@@ -99,19 +90,11 @@ export function WardrobePanel({ character }: { character: Character }) {
                         {isOn ? "착용 중" : "입기"}
                       </button>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => buyWardrobe(w.key)}
-                        disabled={!gate.ok}
-                        className={cn(
-                          "pill shrink-0 font-bold transition-colors",
-                          gate.ok
-                            ? "bg-coral text-white hover:brightness-105"
-                            : "cursor-not-allowed bg-black/10 text-ink/40",
-                        )}
-                      >
-                        {formatMoney(w.price)}
-                      </button>
+                      <span className="pill shrink-0 bg-black/10 text-ink/45">
+                        {character.ageYears < w.minAge
+                          ? `${w.minAge}살부터 뽑혀요`
+                          : `미소장 · 정가 ${formatMoney(w.price)}`}
+                      </span>
                     )}
                   </li>
                 );
@@ -120,6 +103,6 @@ export function WardrobePanel({ character }: { character: Character }) {
           </div>
         );
       })}
-    </div>
+    </CollapsibleCard>
   );
 }

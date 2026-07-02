@@ -2,6 +2,7 @@
 
 import type { Character } from "@/types/character";
 import { ACTIONS, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
+import { formatEffect } from "@/lib/game/effectLabel";
 import { isActionUnlocked, unlockStageLabel } from "@/lib/game/gating";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { CooldownButton } from "./CooldownButton";
@@ -42,6 +43,11 @@ export function ActionGrid({
               icon={a.key}
               label={a.label}
               desc={a.desc}
+              effects={
+                a.effect
+                  ? formatEffect(a.effect(character), { exp: false })
+                  : undefined
+              }
               now={now}
               readyAt={character.cooldowns[a.key] ?? 0}
               accent={ACCENT[a.category] ?? "bg-white"}
@@ -52,6 +58,9 @@ export function ActionGrid({
           );
         })}
       </div>
+      <p className="mt-2 font-sans text-[11px] font-medium text-ink/45">
+        표시된 수치는 기본 효과예요. 컨디션에 따라 대성공(↑)·부진(↓)으로 달라져요.
+      </p>
     </div>
   );
 }

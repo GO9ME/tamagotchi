@@ -171,4 +171,40 @@ describe("characterStageConfig: buildCharacterMatrix 불변식", () => {
     expect(cells).toHaveLength(nonDot);
     for (const cell of cells) expect(m[cell.y][cell.x]).toBe(cell.code);
   });
+
+  it("옷장 의상은 각각 기본 복장·서로와 다른 매트릭스를 만든다", () => {
+    const outfits = [
+      "stripeTee", "hoodie", "jacket", "suit",
+      "training", "dress", "padding", "leather",
+    ] as const;
+    // high 단계: 기본 복장(교복 깃+넥타이)이 어떤 옷장 의상과도 겹치지 않는다
+    const bare = buildCharacterMatrix(normalVs, "high", "none", "male");
+    const seen = new Set<string>([bare.join("\n")]);
+    for (const outfit of outfits) {
+      const m = buildCharacterMatrix(
+        normalVs, "high", "none", "male", DEFAULT_APPEARANCE, "normal",
+        { outfit, accessory: null },
+      );
+      const key = m.join("\n");
+      expect(seen.has(key), `${outfit} 가 다른 복장과 구분되지 않음`).toBe(false);
+      seen.add(key);
+      for (const row of m) expect(row).toMatch(/^[.KSFW]+$/);
+    }
+  });
+
+  it("옷장 액세서리는 각각 미착용과 다른 매트릭스를 만든다", () => {
+    const accessories = [
+      "ribbon", "cap", "beanie", "scarf",
+      "sunglasses", "headphones", "necklace", "crown",
+    ] as const;
+    const bare = buildCharacterMatrix(normalVs, "university", "none", "male");
+    for (const accessory of accessories) {
+      const m = buildCharacterMatrix(
+        normalVs, "university", "none", "male", DEFAULT_APPEARANCE, "normal",
+        { outfit: null, accessory },
+      );
+      expect(m, `${accessory} 가 외형을 바꾸지 않음`).not.toEqual(bare);
+      for (const row of m) expect(row).toMatch(/^[.KSFW]+$/);
+    }
+  });
 });

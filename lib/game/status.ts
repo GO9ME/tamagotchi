@@ -35,6 +35,7 @@ export function applyDecay(c: Character, now: number): Character {
     s.cleanliness += DECAY_PER_HOUR.cleanliness * dh;
     s.sleepQuality += DECAY_PER_HOUR.sleepQuality * dh;
     s.stress += DECAY_PER_HOUR.stress * dh;
+    s.confidence += DECAY_PER_HOUR.confidence * dh;
 
     // 배고픔이 바닥이면 건강/기분이 추가로 나빠진다.
     if (s.hunger < 10) {

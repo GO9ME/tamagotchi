@@ -159,6 +159,20 @@ export const ACTIONS: ActionDef[] = [
     }),
   },
   {
+    key: "praise",
+    label: "칭찬하기",
+    emoji: "💖",
+    desc: "듬뿍 칭찬해 자신감을 키워요.",
+    kind: "instant",
+    cooldownMs: 1 * HOUR,
+    category: "care",
+    effect: () => ({
+      status: { confidence: 6, mood: 5, stress: -2 },
+      exp: 4,
+      message: "칭찬을 듬뿍 받아 자신감이 자랐어요!",
+    }),
+  },
+  {
     key: "bath",
     label: "씻기",
     emoji: "🛁",

@@ -44,6 +44,7 @@ export interface CharacterStats {
   interviewScore: number; // 취업 준비: 면접
   certificateScore: number; // 취업 준비: 자격증
   performance: number; // 업무 성과(직장인) 누적
+  luck: number; // 행운(미니게임으로 성장, 당첨·대성공 확률에 보너스)
 }
 
 /** 캐릭터 성별 (게임 내 가상 속성 — 신장 분포·외형에만 영향) */
@@ -57,7 +58,7 @@ export interface CharacterAppearance {
   faceAccent?: "none" | "freckles" | "blush"; // 볼 포인트(주근깨/볼터치) — 구버전 저장분은 undefined(=none)
 }
 
-/** 방 꾸미기 아이템 키 — 저축으로 구매해 방에 영구 배치 */
+/** 방 꾸미기 아이템 키 — 뽑기로 획득해 방에 영구 배치 */
 export type RoomItemKey =
   | "rug" // 러그
   | "lamp" // 스탠드 조명
@@ -67,7 +68,12 @@ export type RoomItemKey =
   | "console" // 게임기(TV)
   | "puppy" // 강아지
   | "robotVacuum" // 로봇청소기
-  | "artFrame"; // 명화 액자
+  | "artFrame" // 명화 액자
+  | "poster" // 우주 포스터
+  | "sofa" // 소파
+  | "wallTv" // 벽걸이 TV
+  | "catTower" // 캣타워
+  | "chandelier"; // 샹들리에
 
 /** 옷장 아이템 키 — 의상(몸통 교체) 또는 액세서리(머리/목 덧그리기) */
 export type WardrobeItemKey =
@@ -76,11 +82,19 @@ export type WardrobeItemKey =
   | "hoodie" // 후드티
   | "jacket" // 집업 재킷
   | "suit" // 정장
+  | "training" // 트레이닝복
+  | "dress" // 원피스
+  | "padding" // 패딩 점퍼
+  | "leather" // 가죽 재킷
   // 액세서리 — 복장과 별개로 1개 착용
   | "ribbon" // 리본핀
   | "cap" // 캡모자
   | "beanie" // 비니
-  | "scarf"; // 목도리
+  | "scarf" // 목도리
+  | "sunglasses" // 선글라스
+  | "headphones" // 헤드폰
+  | "necklace" // 목걸이
+  | "crown"; // 왕관
 
 /** 대형 자산 키(자동차) — 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
 export type AssetKey =

@@ -25,13 +25,21 @@ export interface WardrobeDef {
 /** kind별 가격 오름차순 — 실제 물가 기준(만원) */
 export const WARDROBE_ITEMS: WardrobeDef[] = [
   { key: "stripeTee", kind: "outfit", label: "줄무늬 티", emoji: "👕", price: 2, minAge: 8, desc: "만만하게 손이 가는 데일리룩" },
+  { key: "training", kind: "outfit", label: "트레이닝복", emoji: "🎽", price: 5, minAge: 8, desc: "운동할 맛 나는 셋업" },
   { key: "hoodie", kind: "outfit", label: "후드티", emoji: "🧥", price: 6, minAge: 8, desc: "편안함의 정점" },
+  { key: "dress", kind: "outfit", label: "원피스", emoji: "👗", price: 8, minAge: 8, desc: "빙글 돌면 살랑, 나들이룩" },
   { key: "jacket", kind: "outfit", label: "집업 재킷", emoji: "🧷", price: 12, minAge: 13, desc: "각 잡힌 어깨 라인" },
+  { key: "padding", kind: "outfit", label: "패딩 점퍼", emoji: "❄️", price: 15, minAge: 8, desc: "한겨울에도 뽀송뽀송" },
+  { key: "leather", kind: "outfit", label: "가죽 재킷", emoji: "🖤", price: 25, minAge: 17, desc: "락스피릿 충전" },
   { key: "suit", kind: "outfit", label: "정장", emoji: "🤵", price: 40, minAge: 17, desc: "중요한 날의 승부복" },
   { key: "ribbon", kind: "accessory", label: "리본핀", emoji: "🎀", price: 1, minAge: 4, desc: "머리에 포인트 하나" },
   { key: "beanie", kind: "accessory", label: "비니", emoji: "🧶", price: 2, minAge: 8, desc: "겨울 필수템" },
   { key: "cap", kind: "accessory", label: "캡모자", emoji: "🧢", price: 3, minAge: 8, desc: "눌러쓰면 스트릿 무드" },
   { key: "scarf", kind: "accessory", label: "목도리", emoji: "🧣", price: 4, minAge: 8, desc: "포근하게 목을 감싸요" },
+  { key: "sunglasses", kind: "accessory", label: "선글라스", emoji: "🕶️", price: 5, minAge: 8, desc: "간지 +100" },
+  { key: "headphones", kind: "accessory", label: "헤드폰", emoji: "🎧", price: 7, minAge: 8, desc: "음악과 함께라면" },
+  { key: "necklace", kind: "accessory", label: "목걸이", emoji: "📿", price: 10, minAge: 13, desc: "은은한 반짝임 포인트" },
+  { key: "crown", kind: "accessory", label: "왕관", emoji: "👑", price: 50, minAge: 4, desc: "오늘의 주인공은 나야 나" },
 ];
 
 export function wardrobeDef(key: WardrobeItemKey): WardrobeDef | undefined {

@@ -18,13 +18,18 @@ export interface RoomItemDef {
 /** 가격 오름차순 — 상점 목록 순서 그대로 사용 */
 export const ROOM_ITEMS: RoomItemDef[] = [
   { key: "rug", label: "러그", emoji: "🟫", price: 50, desc: "방 한가운데 포근한 러그" },
+  { key: "poster", label: "우주 포스터", emoji: "🪐", price: 60, desc: "벽에 붙인 낭만 한 장" },
   { key: "lamp", label: "스탠드 조명", emoji: "💡", price: 80, desc: "아늑한 코너 조명" },
   { key: "bigPlant", label: "대형 화분", emoji: "🪴", price: 100, desc: "침대 옆 초록 식물" },
   { key: "curtain", label: "커튼", emoji: "🪟", price: 120, desc: "창문 양옆 커튼" },
   { key: "fishbowl", label: "어항", emoji: "🐟", price: 150, desc: "물고기 한 마리" },
   { key: "console", label: "게임기", emoji: "🎮", price: 200, desc: "작은 TV + 게임기" },
+  { key: "sofa", label: "소파", emoji: "🛋️", price: 300, desc: "푹 꺼지는 1인용 소파" },
+  { key: "wallTv", label: "벽걸이 TV", emoji: "📺", price: 400, desc: "벽에 딱 붙는 대화면" },
   { key: "puppy", label: "강아지", emoji: "🐶", price: 500, desc: "꼬리 흔드는 가족" },
+  { key: "catTower", label: "캣타워", emoji: "🐈", price: 600, desc: "고양이 전용 전망대" },
   { key: "robotVacuum", label: "로봇청소기", emoji: "🤖", price: 800, desc: "알아서 청소해줘요" },
+  { key: "chandelier", label: "샹들리에", emoji: "✨", price: 1000, desc: "천장에서 쏟아지는 럭셔리" },
   { key: "artFrame", label: "명화 액자", emoji: "🖼️", price: 1200, desc: "거장의 작품(느낌)" },
 ];
 

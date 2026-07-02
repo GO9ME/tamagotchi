@@ -48,6 +48,8 @@ export const DECAY_PER_HOUR = {
   cleanliness: -4,
   sleepQuality: -3,
   stress: +2,
+  // 자신감도 서서히 줄어 칭찬/성취로 관리하는 스탯이 되게 한다(다른 감소보다 완만)
+  confidence: -0.8,
 } as const;
 
 /** 마지막 운동 후 이 시간이 지나면 시간당 체중이 조금씩 증가 */
