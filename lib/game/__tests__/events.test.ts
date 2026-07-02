@@ -91,14 +91,21 @@ describe("rollYearlyEvent", () => {
     expect(rich.has("stockLoss")).toBe(true);
   });
 
-  it("투자 이득/손실의 savingsDelta 부호와 500 상한", () => {
+  it("투자 이득/손실의 savingsDelta 부호와 5,000 상한", () => {
     const c = makeChar({ savings: 1000 });
     expect(pickByKey(c, 30, "stockGain")?.savingsDelta).toBe(80); // round(1000*0.08)
     expect(pickByKey(c, 30, "stockLoss")?.savingsDelta).toBe(-80);
-    // 저축이 커도 ±500 으로 캡
+    // 저축이 아주 커도 ±5,000 으로 캡 (후반에도 체감되도록 상한 확대)
     const rich = makeChar({ savings: 100_000 });
-    expect(pickByKey(rich, 30, "stockGain")?.savingsDelta).toBe(500);
-    expect(pickByKey(rich, 30, "stockLoss")?.savingsDelta).toBe(-500);
+    expect(pickByKey(rich, 30, "stockGain")?.savingsDelta).toBe(5000);
+    expect(pickByKey(rich, 30, "stockLoss")?.savingsDelta).toBe(-5000);
+  });
+
+  it("복권/휴대폰 파손 금액은 연봉에 비례해 커진다(무직은 기본값)", () => {
+    expect(pickByKey(makeChar(), 30, "lottery")?.savingsDelta).toBe(300);
+    const salaried = makeChar({ job: JOB }); // 연봉 4000
+    expect(pickByKey(salaried, 30, "lottery")?.savingsDelta).toBe(300 + 1200);
+    expect(pickByKey(salaried, 30, "phoneBroken")?.savingsDelta).toBe(-(80 + 80));
   });
 
   it("savingsDelta 가 0이면 record.savingsDelta 는 undefined", () => {

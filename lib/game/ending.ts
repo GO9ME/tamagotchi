@@ -1,4 +1,5 @@
 import type { Character, ReviewGrade } from "@/types/character";
+import { netWorth } from "./assets";
 import { clamp } from "./clamp";
 import { GRADE_ORDER, JOB_FAMILIES } from "./jobs";
 import { INCIDENT_CAUSES } from "./life";
@@ -20,7 +21,7 @@ export function computeLifeScore(c: Character): number {
   const careerScore = c.job
     ? (GRADE_ORDER.indexOf(c.job.grade) / (GRADE_ORDER.length - 1)) * 100
     : 0;
-  const savingsScore = clamp((c.savings / 50000) * 100, 0, 100); // 5억=100
+  const savingsScore = clamp((netWorth(c) / 50000) * 100, 0, 100); // 순자산 5억=100
   const happinessScore = c.happiness;
   const healthScore = c.status.health;
   const consistencyScore = avgReviewScore(c);
@@ -59,7 +60,7 @@ const FATAL_INCIDENTS = INCIDENT_CAUSES;
 export function lifeEnding(c: Character): LifeEnding {
   const age = c.deathAge ?? c.ageYears;
   const cause = c.deathCause ?? "노환";
-  const s = c.savings;
+  const s = netWorth(c); // 부자 판정은 저축 + 자산(차/집) 순자산 기준
   const h = c.happiness;
   const rarity = c.job ? JOB_FAMILIES[c.job.family].rarity : null;
   const isCeo = c.job?.grade === "ceo";

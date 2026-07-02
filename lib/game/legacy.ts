@@ -5,12 +5,13 @@
 // ---------------------------------------------------------------------------
 
 import type { Character, CharacterStats } from "@/types/character";
+import { netWorth } from "./assets";
 
-/** 유산 상속률 — 부모 최종 저축의 20% (빚은 물려주지 않음) */
+/** 유산 상속률 — 부모 최종 순자산(저축+차/집 처분)의 20% (빚은 물려주지 않음) */
 export const INHERITANCE_RATE = 0.2;
 
 export function inheritanceAmount(c: Character): number {
-  return Math.max(0, Math.round(c.savings * INHERITANCE_RATE));
+  return Math.max(0, Math.round(netWorth(c) * INHERITANCE_RATE));
 }
 
 /** "철수" → "철수 2세", "철수 2세" → "철수 3세" */

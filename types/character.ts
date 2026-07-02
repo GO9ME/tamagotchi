@@ -69,6 +69,15 @@ export type RoomItemKey =
   | "robotVacuum" // 로봇청소기
   | "artFrame"; // 명화 액자
 
+/** 대형 자산 키 — 카테고리(차/집)별 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
+export type AssetKey =
+  | "carCompact" // 경차
+  | "carSedan" // 중형 세단
+  | "carImport" // 수입차
+  | "homeJeonse" // 전세 보증금
+  | "homeOwned" // 내 집 마련
+  | "homeRiver"; // 한강뷰 아파트
+
 /** 최종 학위 — 높을수록 취업률·초봉 보너스(대신 대학원은 시간·등록금·스트레스 비용) */
 export type Degree = "highschool" | "bachelor" | "master" | "phd";
 
@@ -259,6 +268,7 @@ export interface Character {
   jobApplications: number; // 누적 지원 횟수
   savings: number; // 누적 저축(만원, 음수=빚)
   roomItems: RoomItemKey[]; // 구매한 방 꾸미기 아이템(영구)
+  assets: AssetKey[]; // 대형 자산(차/집) — 순자산·엔딩·유산에 반영
   happiness: number; // 행복도(평생 평균, 0~100)
   marriedAtAge?: number; // 결혼한 나이(미혼이면 없음) — 인생 이벤트로 발생
   childrenBornAges?: number[]; // 자녀 출생 시 부모 나이 목록(최대 2명)

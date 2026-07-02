@@ -8,6 +8,7 @@ import {
 } from "zustand/middleware";
 
 import type {
+  AssetKey,
   Character,
   CharacterAppearance,
   CharacterStats,
@@ -72,6 +73,7 @@ import {
   isStudyReady,
 } from "@/lib/game/study";
 import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
+import { assetDef, canBuyAsset } from "@/lib/game/assets";
 import {
   canStartSecondGen,
   inheritanceAmount,
@@ -128,6 +130,7 @@ interface GameState {
   allocateStat: (statKey: keyof CharacterStats) => ActionResult;
   chooseUniversity: (tier: UniversityTierKey) => ActionResult;
   buyRoomItem: (key: RoomItemKey) => ActionResult;
+  buyAsset: (key: AssetKey) => ActionResult;
   startSecondGeneration: () => ActionResult;
 }
 
@@ -669,6 +672,28 @@ export const useGameStore = create<GameState>()(
         return { ok: true, message: "구입 완료" };
       },
 
+      buyAsset: (key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
+        const gate = canBuyAsset(key, c.assets, c.savings);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
+        const def = assetDef(key)!;
+        let next = applyEffect(c, { status: { mood: 8, confidence: 4 } });
+        next = {
+          ...next,
+          savings: c.savings - gate.cost,
+          assets: [...c.assets, key],
+          happiness: Math.min(100, c.happiness + 2),
+        };
+        set({ character: next });
+        pushToast(
+          `${def.emoji} ${def.label} 마련! 인생의 큰 산 하나를 넘었어요. (-${formatMoney(gate.cost)})`,
+        );
+        pulseAction("playing");
+        return { ok: true, message: "구입 완료" };
+      },
+
       startSecondGeneration: () => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
@@ -702,7 +727,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 15,
+      version: 16,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -745,6 +770,7 @@ export const useGameStore = create<GameState>()(
           jobApplications: c.jobApplications ?? 0,
           savings: c.savings ?? 0,
           roomItems: c.roomItems ?? [],
+          assets: c.assets ?? [],
           happiness: c.happiness ?? 50,
           negotiateBackfire: c.negotiateBackfire ?? false,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋

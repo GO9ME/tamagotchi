@@ -54,9 +54,10 @@ const EVENTS: EventDef[] = [
     label: "복권 3등 당첨",
     weight: 0.6,
     when: (_c, age) => age >= 19,
-    make: () => ({
+    make: (c) => ({
       detail: "재미로 산 복권이 3등에 당첨됐어요!",
-      savingsDelta: 300,
+      // 자산 규모에 맞춰 체감 유지 — 기본 300 + 연봉의 30%
+      savingsDelta: 300 + Math.round((c.job?.salaryManwon ?? 0) * 0.3),
       happinessDelta: 3,
       effect: { status: { mood: 12 } },
     }),
@@ -67,9 +68,9 @@ const EVENTS: EventDef[] = [
     label: "휴대폰 파손",
     weight: 1.5,
     when: (_c, age) => age >= 13,
-    make: () => ({
+    make: (c) => ({
       detail: "휴대폰 액정이 깨져서 수리비가 나갔어요…",
-      savingsDelta: -80,
+      savingsDelta: -(80 + Math.round((c.job?.salaryManwon ?? 0) * 0.02)),
       happinessDelta: -1,
       effect: { status: { mood: -5, stress: 4 } },
     }),
@@ -108,7 +109,8 @@ const EVENTS: EventDef[] = [
     when: (c, age) => age >= 20 && c.savings >= 500,
     make: (c) => ({
       detail: "소액 투자가 수익을 냈어요!",
-      savingsDelta: Math.min(500, Math.round(c.savings * 0.08)),
+      // 저축의 8%, 상한 5,000만원 — 후반에도 체감되도록
+      savingsDelta: Math.min(5000, Math.round(c.savings * 0.08)),
       happinessDelta: 1,
       effect: { status: { mood: 6, confidence: 2 } },
     }),
@@ -121,7 +123,7 @@ const EVENTS: EventDef[] = [
     when: (c, age) => age >= 20 && c.savings >= 500,
     make: (c) => ({
       detail: "투자가 물렸어요… 다음엔 신중하게.",
-      savingsDelta: -Math.min(500, Math.round(c.savings * 0.08)),
+      savingsDelta: -Math.min(5000, Math.round(c.savings * 0.08)),
       happinessDelta: -1,
       effect: { status: { mood: -6, stress: 6 } },
     }),

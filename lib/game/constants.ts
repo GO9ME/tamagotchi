@@ -75,7 +75,8 @@ export const LIFE_STAGES: StageInfo[] = [
   { stage: "jobseeker", label: "취준생", minAge: 25, emoji: "💼" },
   { stage: "employee", label: "직장인", minAge: 26, emoji: "🧑‍💻" },
   { stage: "senior", label: "경력직", minAge: 38, emoji: "🧑‍💼" },
-  { stage: "retirement", label: "은퇴 준비", minAge: 60, emoji: "🌅" },
+  // MAX_AGE(60)=사망이므로 60이면 도달 불가 — 55로 낮춰 말년 5년을 실제로 플레이
+  { stage: "retirement", label: "은퇴 준비", minAge: 55, emoji: "🌅" },
 ];
 
 // ---------------------------------------------------------------------------

@@ -90,7 +90,7 @@ describe("nextStageInfo", () => {
   it("현재 나이보다 큰 첫 minAge 단계의 라벨과 남은 년수 반환", () => {
     expect(nextStageInfo(0)).toEqual({ label: "유아", inYears: 4 });
     expect(nextStageInfo(25)).toEqual({ label: "직장인", inYears: 1 });
-    expect(nextStageInfo(59)).toEqual({ label: "은퇴 준비", inYears: 1 });
+    expect(nextStageInfo(54)).toEqual({ label: "은퇴 준비", inYears: 1 });
   });
 
   it("단계 minAge와 같은 나이면 그 단계는 건너뛰고 다음 단계", () => {

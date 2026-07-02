@@ -9,6 +9,7 @@ import { StatusPanel } from "@/components/character/StatusPanel";
 import { StatsPanel } from "@/components/character/StatsPanel";
 import { WeightCard } from "@/components/character/WeightCard";
 import { RoomShopPanel } from "@/components/room/RoomShopPanel";
+import { AssetPanel } from "@/components/room/AssetPanel";
 import { ActionGrid } from "@/components/actions/ActionGrid";
 import { FoodSelector } from "@/components/actions/FoodSelector";
 import { StudyCard } from "@/components/actions/StudyCard";
@@ -114,6 +115,7 @@ export default function DashboardPage() {
           <StatusPanel character={character} />
           <WeightCard character={character} />
           <RoomShopPanel character={character} />
+          <AssetPanel character={character} />
         </div>
 
         {/* 오른쪽: 액션 + 스탯 */}
