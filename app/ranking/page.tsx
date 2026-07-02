@@ -7,13 +7,16 @@ import { useEffect } from "react";
 import { RankingPanel } from "@/components/ranking/RankingPanel";
 import { BottomNav } from "@/components/common/BottomNav";
 import { Toast } from "@/components/common/Toast";
+import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { useGameTick } from "@/lib/hooks/useGameTick";
 
 export default function RankingPage() {
   const router = useRouter();
   const hydrated = useGameStore((s) => s.hydrated);
   const character = useGameStore((s) => s.character);
+  useGameTick();
 
   useEffect(() => {
     if (hydrated && !character) router.replace("/create");
@@ -44,6 +47,7 @@ export default function RankingPage() {
 
       <RankingPanel character={character} />
 
+      <YearlyReviewModal />
       <Toast />
       <BottomNav />
     </main>

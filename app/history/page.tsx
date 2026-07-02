@@ -6,13 +6,17 @@ import { useEffect } from "react";
 
 import { ReviewTimeline } from "@/components/review/ReviewTimeline";
 import { BottomNav } from "@/components/common/BottomNav";
+import { Toast } from "@/components/common/Toast";
+import { YearlyReviewModal } from "@/components/review/YearlyReviewModal";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { useGameStore } from "@/lib/store/useGameStore";
+import { useGameTick } from "@/lib/hooks/useGameTick";
 
 export default function HistoryPage() {
   const router = useRouter();
   const hydrated = useGameStore((s) => s.hydrated);
   const character = useGameStore((s) => s.character);
+  useGameTick();
 
   useEffect(() => {
     if (hydrated && !character) router.replace("/create");
@@ -41,6 +45,8 @@ export default function HistoryPage() {
         {character.name}의 해마다 결산이 쌓여요.
       </p>
       <ReviewTimeline reviews={character.reviews ?? []} />
+      <YearlyReviewModal />
+      <Toast />
       <BottomNav />
     </main>
   );

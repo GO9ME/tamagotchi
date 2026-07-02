@@ -1,5 +1,8 @@
 import type { YearlyReview } from "@/types/character";
 import { stageLabel } from "@/lib/game/growth";
+import { DEGREE_LABEL } from "@/lib/game/degree";
+import { formatMoney } from "@/lib/game/ending";
+import { GRADE_LABEL } from "@/lib/game/jobs";
 import { PixelIcon } from "@/components/pixel/PixelIcon";
 import { gradeMeta } from "./gradeMeta";
 
@@ -81,6 +84,50 @@ function ReviewRow({ review }: { review: YearlyReview }) {
         <div className="mt-2 rounded-xl bg-butter/25 px-3 py-1.5 text-[12px] text-ink/70">
           {review.event.emoji} <b className="font-pixel text-[11px]">{review.event.label}</b>{" "}
           — {review.event.detail}
+        </div>
+      )}
+
+      {/* 그 해의 마일스톤/변동 — 모달에서만 보이고 사라지던 기록을 연대기에 남긴다 */}
+      {(review.work || review.incident || review.death || review.degreeChange ||
+        review.savingsDelta !== 0) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {review.work && (
+            <span className="pill bg-mint/25 text-[10px] text-ink/70">
+              💼 평가 {review.work.grade}
+              {review.work.raisePct !== 0 &&
+                ` · 연봉 ${review.work.raisePct > 0 ? "+" : ""}${review.work.raisePct}%`}
+            </span>
+          )}
+          {review.work?.promoted && review.work.gradeTo && (
+            <span className="pill bg-grape/25 text-[10px] font-bold text-ink/80">
+              🎉 {GRADE_LABEL[review.work.gradeTo]} 승진
+            </span>
+          )}
+          {review.degreeChange && (
+            <span className="pill bg-grape/20 text-[10px] text-ink/70">
+              🎓 {DEGREE_LABEL[review.degreeChange.to]} 취득
+            </span>
+          )}
+          {review.incident && (
+            <span className="pill bg-coral/20 text-[10px] text-coral">
+              🤕 {review.incident.cause} (건강 -{review.incident.healthHit})
+            </span>
+          )}
+          {review.death && (
+            <span className="pill bg-ink/15 text-[10px] font-bold text-ink/70">
+              🕊️ {review.death.cause}으로 영면
+            </span>
+          )}
+          {review.savingsDelta !== 0 && (
+            <span
+              className={`pill text-[10px] tabular-nums ${
+                review.savingsDelta > 0 ? "bg-butter/40 text-ink/70" : "bg-coral/15 text-coral"
+              }`}
+            >
+              💰 {review.savingsDelta > 0 ? "+" : ""}
+              {formatMoney(review.savingsDelta)}
+            </span>
+          )}
         </div>
       )}
     </div>

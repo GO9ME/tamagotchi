@@ -44,6 +44,14 @@ export function RoomShopPanel({ character }: { character: Character }) {
                     {item.label}
                   </div>
                   <div className="truncate text-[11px] text-ink/50">{item.desc}</div>
+                  {/* 구매 불가 사유를 인라인으로 — 모바일엔 hover 툴팁이 없다 */}
+                  {!owned && !gate.ok && (
+                    <div className="font-pixel text-[10px] font-bold text-coral">
+                      {character.savings < item.price
+                        ? `${formatMoney(item.price - character.savings)} 부족`
+                        : gate.reason}
+                    </div>
+                  )}
                 </div>
               </div>
               {owned ? (
@@ -59,7 +67,6 @@ export function RoomShopPanel({ character }: { character: Character }) {
                       ? "bg-coral text-white hover:brightness-105"
                       : "cursor-not-allowed bg-black/10 text-ink/40",
                   )}
-                  title={gate.ok ? undefined : gate.reason}
                 >
                   {formatMoney(item.price)}
                 </button>

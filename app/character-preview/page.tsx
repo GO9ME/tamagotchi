@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import type { LifeStage } from "@/types/character";
 import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { PixelRoom } from "@/components/game/PixelRoom";
@@ -46,6 +47,8 @@ function Tile({ children, label }: { children: React.ReactNode; label: string })
 }
 
 export default function CharacterPreviewPage() {
+  // 개발용 QA 갤러리 — 프로덕션 배포에서는 숨긴다
+  if (process.env.NODE_ENV === "production") notFound();
   return (
     <main className="mx-auto max-w-6xl px-4 py-8">
       <h1 className="font-pixel text-xl font-bold">픽셀 캐릭터 미리보기</h1>

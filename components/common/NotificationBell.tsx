@@ -1,8 +1,10 @@
 "use client";
 
 // 돌봄 알림 토글 — 대시보드 헤더의 작은 버튼.
-// 권한 미허용이면 클릭으로 요청, 허용되면 상태 표시만 한다(브라우저 설정에서만 해제 가능).
+// 권한 미허용이면 클릭으로 요청, 차단됐으면 탭 시 재허용 방법을 안내한다
+// (모바일엔 hover 툴팁이 없어 인라인 안내가 필요).
 
+import { useState } from "react";
 import type { NotifyPermission } from "@/lib/hooks/useCareNotifications";
 
 export function NotificationBell({
@@ -12,6 +14,7 @@ export function NotificationBell({
   permission: NotifyPermission;
   onRequest: () => void;
 }) {
+  const [showHelp, setShowHelp] = useState(false);
   if (permission === "unsupported") return null;
 
   if (permission === "granted") {
@@ -23,8 +26,21 @@ export function NotificationBell({
   }
   if (permission === "denied") {
     return (
-      <span className="pill bg-black/10 text-ink/40" title="브라우저 설정에서 알림 권한을 허용해 주세요">
-        🔕 알림 차단됨
+      <span className="relative">
+        <button
+          type="button"
+          onClick={() => setShowHelp((v) => !v)}
+          className="pill bg-black/10 text-ink/40 transition-colors hover:bg-black/15"
+        >
+          🔕 알림 차단됨
+        </button>
+        {showHelp && (
+          <span className="absolute right-0 top-full z-50 mt-1 block w-56 rounded-xl border-2 border-ink/20 bg-white p-2.5 text-left text-[11px] leading-relaxed text-ink/70 shadow-lg">
+            알림이 브라우저에서 차단됐어요. 주소창의 자물쇠(사이트 설정) →
+            알림을 <b>허용</b>으로 바꾸면 캐릭터가 배고프거나 아플 때
+            알려드릴 수 있어요.
+          </span>
+        )}
       </span>
     );
   }

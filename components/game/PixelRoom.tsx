@@ -21,6 +21,7 @@ import {
   type RoomPalette,
 } from "@/lib/game/sprite/characterPalettes";
 import { roomThemeForStage, type RoomTheme } from "@/lib/game/sprite/characterStageConfig";
+import { stageLabel } from "@/lib/game/growth";
 import type { JobType } from "@/lib/game/sprite/characterVisualState";
 import {
   SEASON_PARTICLE,
@@ -620,14 +621,21 @@ export function PixelRoom({
   const pal: RoomPalette = night
     ? LCD_ROOM_NIGHT_PALETTE
     : { ...LCD_ROOM_PALETTE, ...THEME_TINT[theme] };
-  const height = Math.round(width * 0.82);
+
+  // 스크린리더용 한국어 설명(내부 stage 키 노출 방지) + 방 상태 요약
+  const ariaParts = [`${stageLabel(stage)} 캐릭터의 방`];
+  if (night) ariaParts.push("잠든 밤");
+  if (pet === "cat") ariaParts.push("고양이가 있어요");
+  if (family?.spouse) ariaParts.push("배우자와 함께");
+  if ((family?.children ?? 0) > 0) ariaParts.push(`자녀 ${family!.children}명`);
 
   return (
     <div
       className={`lcd relative overflow-hidden ${className ?? ""}`}
-      style={{ width, height, background: pal.wall }}
+      // 초소형 화면에서도 카드 밖으로 넘치지 않도록 컨테이너 기준 축소(비율 유지)
+      style={{ width: "100%", maxWidth: width, aspectRatio: "100 / 82", background: pal.wall }}
       role="img"
-      aria-label={`${stage} 단계 캐릭터의 방`}
+      aria-label={ariaParts.join(" · ")}
     >
       {/* 바닥 */}
       <div
