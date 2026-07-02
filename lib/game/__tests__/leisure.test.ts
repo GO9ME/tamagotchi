@@ -47,8 +47,8 @@ describe("canDoLeisure — 실행 게이트", () => {
   });
 
   it("저축 부족이면 불가(경계: cost-1 불가, cost 가능)", () => {
-    expect(canDoLeisure(withAgeSavings(30, 49), "shopping", 0).ok).toBe(false);
-    expect(canDoLeisure(withAgeSavings(30, 50), "shopping", 0).ok).toBe(true);
+    expect(canDoLeisure(withAgeSavings(30, 14), "shopping", 0).ok).toBe(false);
+    expect(canDoLeisure(withAgeSavings(30, 15), "shopping", 0).ok).toBe(true);
   });
 
   it("쿨타임 중이면 불가, 지나면 가능", () => {
@@ -62,9 +62,9 @@ describe("canDoLeisure — 실행 게이트", () => {
     expect(canDoLeisure(withAgeSavings(30, 9999), "nope", 0).ok).toBe(false);
   });
 
-  it("해외여행은 25살+저축 400 필요", () => {
+  it("해외여행은 25살+저축 250 필요", () => {
     expect(canDoLeisure(withAgeSavings(24, 9999), "overseasTrip", 0).ok).toBe(false);
-    expect(canDoLeisure(withAgeSavings(25, 399), "overseasTrip", 0).ok).toBe(false);
-    expect(canDoLeisure(withAgeSavings(25, 400), "overseasTrip", 0).ok).toBe(true);
+    expect(canDoLeisure(withAgeSavings(25, 249), "overseasTrip", 0).ok).toBe(false);
+    expect(canDoLeisure(withAgeSavings(25, 250), "overseasTrip", 0).ok).toBe(true);
   });
 });

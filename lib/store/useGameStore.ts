@@ -17,6 +17,7 @@ import type {
   JobFamilyKey,
   JobOutcome,
   JobState,
+  HousingOptionKey,
   NegotiationResult,
   RoomItemKey,
   UniversityTierKey,
@@ -77,6 +78,7 @@ import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
 import { assetDef, canBuyAsset } from "@/lib/game/assets";
 import { canDoLeisure, leisureCooldownKey, leisureDef } from "@/lib/game/leisure";
 import { canBuyWardrobe, wardrobeDef } from "@/lib/game/wardrobe";
+import { applyMove, housingDef, planMove } from "@/lib/game/housing";
 import {
   canStartSecondGen,
   inheritanceAmount,
@@ -137,6 +139,7 @@ interface GameState {
   doLeisure: (key: string) => ActionResult;
   buyWardrobe: (key: WardrobeItemKey) => ActionResult;
   equipWardrobe: (kind: "outfit" | "accessory", key: WardrobeItemKey | null) => ActionResult;
+  moveHousing: (key: HousingOptionKey) => ActionResult;
   startSecondGeneration: () => ActionResult;
 }
 
@@ -772,6 +775,26 @@ export const useGameStore = create<GameState>()(
         return { ok: true, message: "착용 변경" };
       },
 
+      moveHousing: (key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
+        const plan = planMove(c, key);
+        if (!plan.ok) return { ok: false, message: plan.reason ?? "이사할 수 없어요." };
+        const def = housingDef(key);
+        let next = applyMove(c, key);
+        next = applyEffect(next, { status: { mood: 8, energy: -5 } }); // 이사는 설레지만 힘들다
+        next = { ...next, happiness: Math.min(100, next.happiness + 2) };
+        set({ character: next });
+        pushToast(
+          plan.loan > 0
+            ? `${def.emoji} ${def.label}(으)로 이사! 대출 ${formatMoney(plan.loan)}과 함께 새 출발.`
+            : `${def.emoji} ${def.label}(으)로 이사 완료! 내 돈으로 당당하게.`,
+        );
+        pulseAction("playing");
+        return { ok: true, message: "이사 완료" };
+      },
+
       startSecondGeneration: () => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
@@ -805,7 +828,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 17,
+      version: 18,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -848,7 +871,23 @@ export const useGameStore = create<GameState>()(
           jobApplications: c.jobApplications ?? 0,
           savings: c.savings ?? 0,
           roomItems: c.roomItems ?? [],
-          assets: c.assets ?? [],
+          // v18: 구버전 home 자산 → 주거 시스템으로 이관, assets 는 자동차만 유지
+          assets: ((c.assets ?? []) as string[]).filter((a) =>
+            a.startsWith("car"),
+          ) as Character["assets"],
+          housing:
+            c.housing ??
+            (() => {
+              const old = (c.assets ?? []) as string[];
+              if (old.includes("homeRiver"))
+                return { option: "aptRiver" as const, deposit: 0, loanBalance: 0, homeValue: 200000 };
+              if (old.includes("homeOwned"))
+                // 구버전 매입가(8억)를 시세로 보존 — 현행 정가(6억)로 낮추면 마이그레이션만으로 순자산이 깎임
+                return { option: "aptOwned" as const, deposit: 0, loanBalance: 0, homeValue: 80000 };
+              if (old.includes("homeJeonse"))
+                return { option: "jeonseOfficetel" as const, deposit: 30000, loanBalance: 0, homeValue: 0 };
+              return { option: "parents" as const, deposit: 0, loanBalance: 0, homeValue: 0 };
+            })(),
           wardrobe: c.wardrobe ?? [],
           equippedOutfit: c.equippedOutfit ?? null,
           equippedAccessory: c.equippedAccessory ?? null,

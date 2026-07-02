@@ -59,8 +59,8 @@ describe("canBuyWardrobe — 구매 게이트", () => {
   it("나이/저축 경계", () => {
     expect(canBuyWardrobe(withAgeSavings(16, 9999), "suit").ok).toBe(false); // 정장 17살부터
     expect(canBuyWardrobe(withAgeSavings(17, 9999), "suit").ok).toBe(true);
-    expect(canBuyWardrobe(withAgeSavings(20, 29), "stripeTee").ok).toBe(false);
-    expect(canBuyWardrobe(withAgeSavings(20, 30), "stripeTee").ok).toBe(true);
+    expect(canBuyWardrobe(withAgeSavings(20, 1), "stripeTee").ok).toBe(false);
+    expect(canBuyWardrobe(withAgeSavings(20, 2), "stripeTee").ok).toBe(true);
   });
 });
 

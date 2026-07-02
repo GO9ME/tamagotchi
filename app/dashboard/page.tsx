@@ -10,6 +10,7 @@ import { StatsPanel } from "@/components/character/StatsPanel";
 import { WeightCard } from "@/components/character/WeightCard";
 import { RoomShopPanel } from "@/components/room/RoomShopPanel";
 import { AssetPanel } from "@/components/room/AssetPanel";
+import { HousingPanel } from "@/components/room/HousingPanel";
 import { WardrobePanel } from "@/components/wardrobe/WardrobePanel";
 import { ActionGrid } from "@/components/actions/ActionGrid";
 import { LeisurePanel } from "@/components/leisure/LeisurePanel";
@@ -120,6 +121,7 @@ export default function DashboardPage() {
           <WeightCard character={character} />
           <WardrobePanel character={character} />
           <RoomShopPanel character={character} />
+          <HousingPanel character={character} />
           <AssetPanel character={character} />
         </div>
 

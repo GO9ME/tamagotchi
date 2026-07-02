@@ -82,14 +82,27 @@ export type WardrobeItemKey =
   | "beanie" // 비니
   | "scarf"; // 목도리
 
-/** 대형 자산 키 — 카테고리(차/집)별 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
+/** 대형 자산 키(자동차) — 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
 export type AssetKey =
   | "carCompact" // 경차
   | "carSedan" // 중형 세단
-  | "carImport" // 수입차
-  | "homeJeonse" // 전세 보증금
-  | "homeOwned" // 내 집 마련
-  | "homeRiver"; // 한강뷰 아파트
+  | "carImport"; // 수입차
+
+/** 주거 옵션 — 본가 → 월세 → 전세 → 매매(대출·이자·집값 상승 포함) */
+export type HousingOptionKey =
+  | "parents" // 본가(주거비 0)
+  | "monthlyOneRoom" // 원룸 월세
+  | "jeonseOfficetel" // 오피스텔 전세(전세자금대출)
+  | "aptOwned" // 아파트 매매(주택담보대출)
+  | "aptRiver"; // 한강뷰 아파트 매매
+
+/** 현재 주거 상태 — 보증금/집값은 순자산, 대출은 부채로 계산 */
+export interface HousingState {
+  option: HousingOptionKey;
+  deposit: number; // 보증금(만원, 월세/전세) — 이사 시 회수
+  loanBalance: number; // 대출 잔액(만원) — 매년 이자 + 원리금 자동 상환
+  homeValue: number; // 자가 현재 시세(만원) — 매년 상승, 매각 시 회수
+}
 
 /** 최종 학위 — 높을수록 취업률·초봉 보너스(대신 대학원은 시간·등록금·스트레스 비용) */
 export type Degree = "highschool" | "bachelor" | "master" | "phd";
@@ -281,7 +294,8 @@ export interface Character {
   jobApplications: number; // 누적 지원 횟수
   savings: number; // 누적 저축(만원, 음수=빚)
   roomItems: RoomItemKey[]; // 구매한 방 꾸미기 아이템(영구)
-  assets: AssetKey[]; // 대형 자산(차/집) — 순자산·엔딩·유산에 반영
+  assets: AssetKey[]; // 대형 자산(자동차) — 순자산·엔딩·유산에 반영
+  housing: HousingState; // 주거(본가/월세/전세/자가 + 대출) — 순자산·행복에 반영
   wardrobe: WardrobeItemKey[]; // 소장한 옷/액세서리
   equippedOutfit?: WardrobeItemKey | null; // 착용 중인 의상(null/미설정 = 단계 기본 복장)
   equippedAccessory?: WardrobeItemKey | null; // 착용 중인 액세서리

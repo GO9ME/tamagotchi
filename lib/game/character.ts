@@ -79,6 +79,7 @@ export function createCharacter(
     savings: 0,
     roomItems: [],
     assets: [],
+    housing: { option: "parents", deposit: 0, loanBalance: 0, homeValue: 0 },
     wardrobe: [],
     equippedOutfit: null,
     equippedAccessory: null,

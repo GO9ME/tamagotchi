@@ -36,6 +36,7 @@ import {
   GRAD_TUITION,
   gradYearEffect,
 } from "./degree";
+import { processHousingYear, housingHappiness } from "./housing";
 import { processUniversityYear } from "./university";
 import { weightVerdict } from "./weight";
 
@@ -280,19 +281,27 @@ export function runDueReviews(
     ch = applyEffect(ch, effect);
   }
 
-  // 저축·행복 갱신(직전 1년) — 가족(배우자/자녀)이 있으면 행복이 소폭 추가
+  // 저축·행복 갱신(직전 1년) — 가족(배우자/자녀)·주거 안정감(전세/자가)이 행복에 소폭 추가
   let yearSavingsDelta = yearlyNet(ch);
   const familyWarmth =
     (ch.marriedAtAge != null ? 1 : 0) + Math.min(2, (ch.childrenBornAges ?? []).length);
   ch = {
     ...ch,
     savings: ch.savings + yearSavingsDelta,
-    happiness: clamp(updateHappiness(ch.happiness, ch.status) + familyWarmth, 0, 100),
+    happiness: clamp(
+      updateHappiness(ch.happiness, ch.status) + familyWarmth + housingHappiness(ch.housing),
+      0,
+      100,
+    ),
   };
   // 대학 등록금/학자금대출 처리(재학 중이면 등록금 청구, 취업 후면 대출 자동 상환)
   const uni = processUniversityYear(ch, reviewAge);
   ch = uni.character;
   yearSavingsDelta += uni.savingsDelta;
+  // 주거비 처리(월세/대출이자/원금상환/집값상승)
+  const hy = processHousingYear(ch);
+  ch = hy.character;
+  yearSavingsDelta += hy.savingsDelta;
   // 위험 이벤트: 대부분 회복 가능한 사고/병, 드물게 사망
   let incident: { cause: string; healthHit: number } | undefined;
   let death: { cause: string } | undefined;
@@ -420,6 +429,9 @@ export function runDueReviews(
       const uniGap = processUniversityYear(ch, y);
       ch = uniGap.character;
       gapSavingsDelta += uniGap.savingsDelta;
+      const hyGap = processHousingYear(ch);
+      ch = hyGap.character;
+      gapSavingsDelta += hyGap.savingsDelta;
       const gr = rollLifeRisk(ch, y, Math.random(), Math.random(), Math.random(), true);
       if (gr.kind === "death") {
         ch = { ...ch, deathAge: Math.min(y, MAX_AGE), deathCause: gr.cause };

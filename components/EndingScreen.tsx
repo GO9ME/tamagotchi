@@ -19,6 +19,7 @@ import {
 import { getHall, saveHall } from "@/lib/storage/hall";
 import { shareEndingCard } from "@/lib/share/endingCard";
 import { canStartSecondGen, inheritanceAmount } from "@/lib/game/legacy";
+import { housingLabel } from "@/lib/game/housing";
 import { useGameStore } from "@/lib/store/useGameStore";
 
 export function EndingScreen({ character }: { character: Character }) {
@@ -129,6 +130,7 @@ export function EndingScreen({ character }: { character: Character }) {
                 : "미혼 (자유로운 영혼)"
             }
           />
+          <Row label="주거" value={housingLabel(character.housing)} />
           <Row label="저축" value={formatMoney(character.savings)} strong />
           <Row label="행복도" value={`${character.happiness} / 100`} />
           <Row label="인생 점수" value={`${score} / 100`} />

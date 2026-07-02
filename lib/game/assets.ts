@@ -1,13 +1,15 @@
 // ---------------------------------------------------------------------------
 // assets.ts
-// 대형 자산(자동차/주거) — 인생 후반 저축 소비처.
-// 카테고리별 티어 업그레이드 방식: 상위 티어 구매 시 이전 자산을 판다고 가정하고
+// 대형 자산(자동차) — 인생 후반 저축 소비처.
+// 티어 업그레이드 방식: 상위 티어 구매 시 이전 자산을 판다고 가정하고
 // 차액만 지불한다. 자산 가치는 순자산(엔딩 점수·유산)에 포함된다.
+// 주거(월세/전세/매매+대출)는 lib/game/housing.ts 로 분리.
 // ---------------------------------------------------------------------------
 
 import type { AssetKey, Character } from "@/types/character";
+import { housingEquity } from "./housing";
 
-export type AssetCategory = "car" | "home";
+export type AssetCategory = "car";
 
 export interface AssetDef {
   key: AssetKey;
@@ -24,9 +26,6 @@ export const ASSETS: AssetDef[] = [
   { key: "carCompact", category: "car", tier: 1, label: "경차", emoji: "🚗", price: 2000, desc: "나의 첫 차" },
   { key: "carSedan", category: "car", tier: 2, label: "중형 세단", emoji: "🚙", price: 6000, desc: "묵직한 승차감" },
   { key: "carImport", category: "car", tier: 3, label: "수입차", emoji: "🏎️", price: 15000, desc: "드디어 드림카" },
-  { key: "homeJeonse", category: "home", tier: 1, label: "전세 보증금", emoji: "🏠", price: 30000, desc: "월세 탈출!" },
-  { key: "homeOwned", category: "home", tier: 2, label: "내 집 마련", emoji: "🏡", price: 80000, desc: "등기 치던 날의 감격" },
-  { key: "homeRiver", category: "home", tier: 3, label: "한강뷰 아파트", emoji: "🌉", price: 200000, desc: "인생 최종 목표" },
 ];
 
 export function assetDef(key: AssetKey): AssetDef | undefined {
@@ -43,7 +42,7 @@ export function ownedTier(assets: AssetKey[], category: AssetCategory): number {
 
 /** 순자산에 더할 자산 가치 = 카테고리별 최고 티어 가격의 합(하위 티어는 매각됨) */
 export function assetValue(assets: AssetKey[]): number {
-  const cats: AssetCategory[] = ["car", "home"];
+  const cats: AssetCategory[] = ["car"];
   return cats.reduce((sum, cat) => {
     const tier = ownedTier(assets, cat);
     const def = ASSETS.find((a) => a.category === cat && a.tier === tier);
@@ -51,9 +50,9 @@ export function assetValue(assets: AssetKey[]): number {
   }, 0);
 }
 
-/** 순자산(만원) = 저축 + 자산 가치 */
+/** 순자산(만원) = 저축 + 자동차 가치 + 주거 순자산(보증금/집값 − 대출) */
 export function netWorth(c: Character): number {
-  return c.savings + assetValue(c.assets ?? []);
+  return c.savings + assetValue(c.assets ?? []) + housingEquity(c.housing);
 }
 
 /**

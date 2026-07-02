@@ -1,8 +1,9 @@
 "use client";
 
-// 대형 자산(자동차/주거) 패널 — 인생 후반 저축 소비처.
-// 카테고리별 티어 업그레이드 방식: 상위 티어는 차액만 지불(이전 자산 매각 가정).
+// 대형 자산(자동차) 패널 — 인생 후반 저축 소비처.
+// 티어 업그레이드 방식: 상위 티어는 차액만 지불(이전 자산 매각 가정).
 // 자산 가치는 순자산으로 엔딩 점수·부자 판정·2세대 유산에 반영된다.
+// 주거(월세/전세/매매+대출)는 HousingPanel 로 분리.
 
 import type { Character } from "@/types/character";
 import { cn } from "@/lib/utils";
@@ -10,7 +11,7 @@ import { ASSETS, assetValue, canBuyAsset, ownedTier, type AssetCategory } from "
 import { formatMoney } from "@/lib/game/ending";
 import { useGameStore } from "@/lib/store/useGameStore";
 
-const CATEGORY_LABEL: Record<AssetCategory, string> = { car: "자동차", home: "주거" };
+const CATEGORY_LABEL: Record<AssetCategory, string> = { car: "자동차" };
 
 export function AssetPanel({ character }: { character: Character }) {
   const buyAsset = useGameStore((s) => s.buyAsset);
@@ -19,16 +20,16 @@ export function AssetPanel({ character }: { character: Character }) {
   return (
     <div className="card p-4">
       <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-pixel text-sm font-bold text-ink/80">대형 자산</h3>
+        <h3 className="font-pixel text-sm font-bold text-ink/80">자동차</h3>
         {totalValue > 0 && (
           <span className="pill bg-grape/20 text-ink/70">자산 {formatMoney(totalValue)}</span>
         )}
       </div>
       <p className="mb-3 text-xs text-ink/55">
-        차·집은 순자산으로 남아 엔딩 점수와 2세대 유산에 반영돼요. 업그레이드는 차액만 내요.
+        차는 순자산으로 남아 엔딩 점수와 2세대 유산에 반영돼요. 업그레이드는 차액만 내요.
       </p>
 
-      {(["car", "home"] as AssetCategory[]).map((cat) => {
+      {(["car"] as AssetCategory[]).map((cat) => {
         const tiers = ASSETS.filter((a) => a.category === cat);
         const current = ownedTier(character.assets, cat);
         return (

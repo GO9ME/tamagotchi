@@ -237,7 +237,10 @@ const EVENTS: EventDef[] = [
     emoji: "🎉",
     label: "집들이",
     weight: 1,
-    when: (c) => (c.assets ?? []).some((a) => a.startsWith("home")),
+    when: (c) => {
+      const o = c.housing?.option;
+      return o === "jeonseOfficetel" || o === "aptOwned" || o === "aptRiver";
+    },
     make: () => ({
       detail: "내 공간에 사람들을 초대했어요. 뿌듯한 하루!",
       savingsDelta: -50,
