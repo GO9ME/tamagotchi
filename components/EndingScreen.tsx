@@ -86,6 +86,7 @@ export function EndingScreen({ character }: { character: Character }) {
             status={character.status}
             gender={character.gender}
             jobFamily={character.job?.family}
+            appearance={character.appearance}
             width={200}
           />
         </div>

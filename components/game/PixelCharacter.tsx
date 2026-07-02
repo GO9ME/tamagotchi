@@ -7,7 +7,7 @@
 // 이 분리 덕분에 렌더 방식이 바뀌어도 상태 해석/호출부는 그대로다.
 // ---------------------------------------------------------------------------
 
-import type { Gender, LifeStage } from "@/types/character";
+import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import {
   getCharacterVisualState,
   type ActionState,
@@ -30,6 +30,7 @@ export interface PixelCharacterProps {
   actionState?: ActionState;
   jobType?: JobType;
   gender?: Gender;
+  appearance?: CharacterAppearance;
   size?: number;
   /** "css"(기본) | "sprite" */
   renderer?: "css" | "sprite";
@@ -48,6 +49,7 @@ export function PixelCharacter({
   actionState,
   jobType = "none",
   gender,
+  appearance,
   size = 144,
   renderer = "css",
   sheet,
@@ -72,6 +74,7 @@ export function PixelCharacter({
         lifeStage={lifeStage}
         jobType={jobType}
         gender={gender}
+        appearance={appearance}
         size={size}
         sheet={sheet}
         className={className}
@@ -85,6 +88,7 @@ export function PixelCharacter({
       lifeStage={lifeStage}
       jobType={jobType}
       gender={gender}
+      appearance={appearance}
       size={size}
       palette={palette}
       className={className}

@@ -1,15 +1,21 @@
-import type { Character, Gender } from "@/types/character";
+import type { Character, CharacterAppearance, Gender } from "@/types/character";
 import { rollHeightPotential } from "./body";
 import { expForLevel } from "./constants";
 import { ageFromBornAt, stageForAge } from "./growth";
+import { rollAppearance } from "./sprite/characterAppearance";
 
-/** 새 아기 캐릭터 생성 */
+/**
+ * 새 아기 캐릭터 생성.
+ * appearance 를 안 넘기면 새로 랜덤 결정한다 — 생성 화면에서 미리보기와 실제
+ * 생성 결과가 똑같도록, 미리 뽑아둔 appearance 를 그대로 넘기는 걸 권장.
+ */
 export function createCharacter(
   userId: string,
   name: string,
   color: string,
   gender: Gender,
   now: number,
+  appearance: CharacterAppearance = rollAppearance(),
 ): Character {
   const age = ageFromBornAt(now, now); // = 0
   return {
@@ -19,6 +25,7 @@ export function createCharacter(
     color: color || "blush",
     gender,
     heightPotential: rollHeightPotential(gender, Math.random(), Math.random()),
+    appearance,
     degree: "highschool",
     gradEnroll: null,
     university: null,

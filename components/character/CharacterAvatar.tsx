@@ -85,6 +85,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
             actionState={actionState}
             jobType={jobType}
             gender={character.gender}
+            appearance={character.appearance}
             size={128}
           />
         </PixelRoom>

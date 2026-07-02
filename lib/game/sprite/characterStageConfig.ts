@@ -10,13 +10,20 @@
 // 순서대로 스탬핑해 조합하므로, 단계×상태 조합을 일일이 그리지 않아도 된다.
 // ---------------------------------------------------------------------------
 
-import type { Gender, LifeStage } from "@/types/character";
+import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import type {
   CharacterVisualState,
   ExpressionKey,
   JobType,
   PoseKey,
 } from "./characterVisualState";
+
+/** 기본(외형 미지정) 캐릭터용 — 미리보기 갤러리 등에서 사용 */
+export const DEFAULT_APPEARANCE: CharacterAppearance = {
+  hairVariant: 0,
+  hairTone: "dark",
+  glasses: false,
+};
 
 export const GRID_W = 16;
 export const GRID_H = 20;
@@ -197,11 +204,42 @@ function drawFace(g: Grid, expr: ExpressionKey, A: Anchor) {
   }
 }
 
+/** 안경 — drawFace 이후(눈 위에 덧그림)에 호출해야 함 */
+function drawGlasses(g: Grid, A: Anchor) {
+  for (let x = 5; x <= 10; x++) set(g, x, A.eyesRow, "K");
+}
+
 // ---------------------------------------------------------------------------
-// 머리 + 머리카락
+// 머리 + 머리카락 (스타일 3종 × 톤 2종으로 캐릭터마다 다르게 보이도록)
 // ---------------------------------------------------------------------------
 
-function drawHead(g: Grid, A: Anchor, cfg: StageVisualConfig, gender?: Gender) {
+/** 앞머리 스타일 템플릿(가운데 가르마/사이드/스파이키) — "K" 자리에 실제 톤 색을 채운다 */
+function hairTopTemplate(variant: 0 | 1 | 2): string {
+  switch (variant) {
+    case 1:
+      return "KKKKK."; // 사이드(비대칭 앞머리)
+    case 2:
+      return ".K.K.K"; // 스파이키(텍스처)
+    default:
+      return ".KKKK."; // 가운데 가르마(기본)
+  }
+}
+
+/** 템플릿의 "K" 자리를 실제 톤 색으로 치환 */
+function tonedRow(template: string, tone: string): string {
+  return template
+    .split("")
+    .map((c) => (c === "K" ? tone : c))
+    .join("");
+}
+
+function drawHead(
+  g: Grid,
+  A: Anchor,
+  cfg: StageVisualConfig,
+  gender?: Gender,
+  appearance: CharacterAppearance = DEFAULT_APPEARANCE,
+) {
   // 피부(머리 윤곽) cols 5-10, rows headTop..chin
   stamp(g, 5, A.headTop, [
     ".FFFF.",
@@ -212,25 +250,25 @@ function drawHead(g: Grid, A: Anchor, cfg: StageVisualConfig, gender?: Gender) {
     ".FFFF.",
   ]);
 
-  // 머리카락
+  // 머리카락 — senior 는 항상 흰머리(S), 그 외는 캐릭터별 톤(K 진함/S 밝음)
+  const tone = cfg.hair === "senior" ? "S" : appearance.hairTone === "light" ? "S" : "K";
   const female = gender === "female";
   switch (cfg.hair) {
     case "tuft": // 아기: 정수리 한 줌
-      set(g, 7, 0, "K");
-      set(g, 8, 0, "K");
-      set(g, 8, 1, "K");
+      set(g, 7, 0, tone);
+      set(g, 8, 0, tone);
+      set(g, 8, 1, tone);
       break;
     case "short":
-      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
-      break;
     case "mid":
-      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
-      set(g, 5, 2, "K");
-      set(g, 10, 2, "K");
-      break;
     case "neat":
-      stamp(g, 5, 0, [".KKKK.", "KKKKKK"]);
-      set(g, 7, 1, "F"); // 가르마 하이라이트
+      stamp(g, 5, 0, [tonedRow(hairTopTemplate(appearance.hairVariant), tone), `${tone.repeat(6)}`]);
+      if (cfg.hair === "mid") {
+        set(g, 5, 2, tone);
+        set(g, 10, 2, tone);
+      } else if (cfg.hair === "neat") {
+        set(g, 7, 1, "F"); // 가르마 하이라이트
+      }
       break;
     case "senior": // 희끗(S 톤) + 살짝 벗겨진 정수리
       stamp(g, 5, 0, [".SSSS.", "S.SS.S"]);
@@ -240,7 +278,7 @@ function drawHead(g: Grid, A: Anchor, cfg: StageVisualConfig, gender?: Gender) {
   }
   // 여성: 옆머리를 볼까지 길게
   if (female && cfg.hair !== "tuft") {
-    const side = cfg.hair === "senior" ? "S" : "K";
+    const side = cfg.hair === "senior" ? "S" : tone;
     set(g, 5, 2, side);
     set(g, 10, 2, side);
     set(g, 5, 3, side);
@@ -497,7 +535,11 @@ function drawOverlays(g: Grid, vs: CharacterVisualState) {
 // 아기(별도 컴팩트 조립)
 // ---------------------------------------------------------------------------
 
-function drawBaby(g: Grid, vs: CharacterVisualState) {
+function drawBaby(
+  g: Grid,
+  vs: CharacterVisualState,
+  appearance: CharacterAppearance = DEFAULT_APPEARANCE,
+) {
   // 큰 머리 cols 4-11, rows 2-8
   stamp(g, 4, 2, [
     "..FFFF..",
@@ -508,9 +550,10 @@ function drawBaby(g: Grid, vs: CharacterVisualState) {
     ".FFFFFF.",
     "..FFFF..",
   ]);
-  // 머리 한 줌
-  set(g, 7, 1, "K");
-  set(g, 8, 1, "K");
+  // 머리 한 줌(캐릭터별 톤)
+  const tone = appearance.hairTone === "light" ? "S" : "K";
+  set(g, 7, 1, tone);
+  set(g, 8, 1, tone);
   // 얼굴: 눈 rows 5, 입 rows 7
   const A: Anchor = {
     headTop: 2,
@@ -555,6 +598,7 @@ function drawBaby(g: Grid, vs: CharacterVisualState) {
   // 짧은 팔
   set(g, 4, 10, "F");
   set(g, 11, 10, "F");
+  if (appearance.glasses) drawGlasses(g, A);
   drawProps(g, vs, A, STAGE_CONFIG.baby);
   drawOverlays(g, vs);
 }
@@ -563,15 +607,21 @@ function drawBaby(g: Grid, vs: CharacterVisualState) {
 // 누운 자세(수면)
 // ---------------------------------------------------------------------------
 
-function drawLying(g: Grid, vs: CharacterVisualState, cfg: StageVisualConfig) {
+function drawLying(
+  g: Grid,
+  vs: CharacterVisualState,
+  cfg: StageVisualConfig,
+  appearance: CharacterAppearance = DEFAULT_APPEARANCE,
+) {
   const baseY = 13;
   // 베개
   fillRect(g, 1, 3, baseY, baseY + 2, "F");
   set(g, 1, baseY - 1, "S");
   // 머리(왼쪽)
   stamp(g, 3, baseY - 1, [".FFF.", "FFFFF", "FFFFF", ".FFF."]);
-  // 머리카락
-  const hair = cfg.hair === "senior" ? "S" : "K";
+  // 머리카락(캐릭터별 톤, senior 는 항상 흰머리)
+  const hair =
+    cfg.hair === "senior" ? "S" : appearance.hairTone === "light" ? "S" : "K";
   set(g, 3, baseY - 1, hair);
   set(g, 4, baseY - 1, hair);
   // 감은 눈 + 작은 입
@@ -598,26 +648,28 @@ export function buildCharacterMatrix(
   lifeStage: LifeStage,
   jobType: JobType = "none",
   gender?: Gender,
+  appearance: CharacterAppearance = DEFAULT_APPEARANCE,
 ): string[] {
   const cfg = STAGE_CONFIG[lifeStage];
   const g = blank();
 
   if (cfg.tier === "tiny") {
-    drawBaby(g, vs);
+    drawBaby(g, vs, appearance);
     return g.map((r) => r.join(""));
   }
 
   if (vs.pose === "lie") {
-    drawLying(g, vs, cfg);
+    drawLying(g, vs, cfg, appearance);
     return g.map((r) => r.join(""));
   }
 
   const A = anchorFor(cfg.tier);
-  // 순서: 다리 → 몸통/팔 → 머리/표정 → 소품 → 오버레이
+  // 순서: 다리 → 몸통/팔 → 머리/표정 → 안경(눈 위 덧그림) → 소품 → 오버레이
   drawLegs(g, A, vs.pose, cfg);
   drawBody(g, A, cfg, vs.pose, jobType);
-  drawHead(g, A, cfg, gender);
+  drawHead(g, A, cfg, gender, appearance);
   drawFace(g, vs.expression, A);
+  if (appearance.glasses) drawGlasses(g, A);
   drawProps(g, vs, A, cfg);
   drawOverlays(g, vs);
 

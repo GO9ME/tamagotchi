@@ -1,6 +1,12 @@
 "use client";
 
-import type { Gender, JobFamilyKey, LifeStage, CharacterStatus } from "@/types/character";
+import type {
+  CharacterAppearance,
+  Gender,
+  JobFamilyKey,
+  LifeStage,
+  CharacterStatus,
+} from "@/types/character";
 import { PixelRoom } from "@/components/game/PixelRoom";
 import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { jobTypeFromFamily } from "@/lib/game/sprite/characterVisualState";
@@ -11,6 +17,7 @@ export function CharacterPreviewCard({
   status,
   gender,
   jobFamily,
+  appearance,
   width = 220,
   charSize,
   className,
@@ -19,6 +26,7 @@ export function CharacterPreviewCard({
   status: CharacterStatus;
   gender?: Gender;
   jobFamily?: JobFamilyKey;
+  appearance?: CharacterAppearance;
   width?: number;
   charSize?: number;
   className?: string;
@@ -34,6 +42,7 @@ export function CharacterPreviewCard({
         burnout={status.burnout}
         jobType={jobTypeFromFamily(jobFamily)}
         gender={gender}
+        appearance={appearance}
         size={charSize ?? Math.round(width * 0.52)}
       />
     </PixelRoom>

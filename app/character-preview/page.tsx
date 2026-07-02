@@ -3,6 +3,7 @@ import { PixelCharacter } from "@/components/game/PixelCharacter";
 import { PixelRoom } from "@/components/game/PixelRoom";
 import type { ActionState } from "@/lib/game/sprite/characterVisualState";
 import { STAGE_CONFIG } from "@/lib/game/sprite/characterStageConfig";
+import { rollAppearance } from "@/lib/game/sprite/characterAppearance";
 
 // 미리보기/QA 갤러리: 모든 성장 단계 × 모든 상태가 시각적으로 구분되는지 한눈에 확인.
 
@@ -51,6 +52,22 @@ export default function CharacterPreviewPage() {
       <p className="mt-1 font-pixel text-xs text-ink/55">
         단색 LCD 잉크 · CSS 도트 · 외부 이미지 없음
       </p>
+
+      {/* 랜덤 외형 다양성 데모 — 같은 조건, 다른 캐릭터마다 다른 헤어스타일/톤/안경 */}
+      <h2 className="mt-8 font-pixel text-sm font-bold">랜덤 외형 다양성 (동일 조건, 8명)</h2>
+      <div className="mt-3 flex flex-wrap gap-3">
+        {Array.from({ length: 8 }, (_, i) => (
+          <Tile key={i} label={`#${i + 1}`}>
+            <PixelCharacter
+              lifeStage="employee"
+              {...M}
+              gender={i % 2 === 0 ? "male" : "female"}
+              appearance={rollAppearance()}
+              size={80}
+            />
+          </Tile>
+        ))}
+      </div>
 
       {/* 단계별 방 */}
       <h2 className="mt-8 font-pixel text-sm font-bold">성장 단계별 방 (PixelRoom)</h2>

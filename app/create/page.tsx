@@ -2,11 +2,13 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import type { CharacterStatus, Gender } from "@/types/character";
+import type { CharacterAppearance, CharacterStatus, Gender } from "@/types/character";
 import { CharacterPreviewCard } from "@/components/character/CharacterPreviewCard";
 import { MASCOT_COLORS } from "@/lib/game/constants";
+import { DEFAULT_APPEARANCE } from "@/lib/game/sprite/characterStageConfig";
+import { rollAppearance } from "@/lib/game/sprite/characterAppearance";
 import { useGameStore } from "@/lib/store/useGameStore";
 import { cn } from "@/lib/utils";
 
@@ -35,9 +37,16 @@ export default function CreatePage() {
   const [name, setName] = useState("");
   const [color, setColor] = useState(MASCOT_COLORS[0].key);
   const [gender, setGender] = useState<Gender>("male");
+  // 미리보기와 실제 생성 결과가 똑같도록, 화면에 보여준 뽑기 결과를 그대로 생성에 사용.
+  // 초기값은 서버/클라이언트가 항상 같은 DEFAULT_APPEARANCE로 시작(하이드레이션 불일치 방지)
+  // 하고, 마운트 후(클라이언트 전용) useEffect 에서 실제로 랜덤 뽑기를 한다.
+  const [appearance, setAppearance] = useState<CharacterAppearance>(DEFAULT_APPEARANCE);
+  useEffect(() => {
+    setAppearance(rollAppearance());
+  }, []);
 
   const handleStart = () => {
-    createNew(name, color, gender);
+    createNew(name, color, gender, appearance);
     router.push("/dashboard");
   };
 
@@ -52,6 +61,7 @@ export default function CreatePage() {
               status={existing.status}
               gender={existing.gender}
               jobFamily={existing.job?.family}
+              appearance={existing.appearance}
               width={180}
             />
           </div>
@@ -94,8 +104,21 @@ export default function CreatePage() {
 
         {/* 미리보기 */}
         <div className="my-5 max-w-[220px] mx-auto">
-          <CharacterPreviewCard lifeStage="baby" status={PREVIEW_STATUS} gender={gender} width={220} />
+          <CharacterPreviewCard
+            lifeStage="baby"
+            status={PREVIEW_STATUS}
+            gender={gender}
+            appearance={appearance}
+            width={220}
+          />
         </div>
+        <button
+          type="button"
+          onClick={() => setAppearance(rollAppearance())}
+          className="mx-auto mb-1 flex items-center gap-1.5 rounded-full border-2 border-ink/15 bg-white px-3 py-1.5 font-pixel text-[11px] font-bold text-ink/60 hover:border-ink/40"
+        >
+          🎲 다른 스타일 뽑기
+        </button>
 
         <label className="block font-pixel text-sm font-bold text-ink/70">이름</label>
         <input

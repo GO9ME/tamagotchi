@@ -10,7 +10,7 @@
 // ※ 외부 이미지 에셋은 라이선스 확인 후 docs/ASSET_LICENSES.md 기록 전에는 쓰지 않는다.
 // ---------------------------------------------------------------------------
 
-import type { Gender, LifeStage } from "@/types/character";
+import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import type { CharacterVisualState, JobType } from "@/lib/game/sprite/characterVisualState";
 import { CSSPixelCharacter } from "./CSSPixelCharacter";
 
@@ -32,6 +32,7 @@ export interface SpriteSheetCharacterProps {
   lifeStage: LifeStage;
   jobType?: JobType;
   gender?: Gender;
+  appearance?: CharacterAppearance;
   size?: number;
   /** 없으면 CSS 렌더러로 자동 폴백 */
   sheet?: SpriteSheetConfig;

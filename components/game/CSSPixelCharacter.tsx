@@ -5,10 +5,11 @@
 // 애니메이션은 래퍼 클래스(.pxc-*)로만 적용(과한 연출 금지, reduced-motion 대응).
 // ---------------------------------------------------------------------------
 
-import type { Gender, LifeStage } from "@/types/character";
+import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import type { CharacterVisualState, JobType } from "@/lib/game/sprite/characterVisualState";
 import {
   buildCharacterMatrix,
+  DEFAULT_APPEARANCE,
   GRID_H,
   GRID_W,
 } from "@/lib/game/sprite/characterStageConfig";
@@ -35,6 +36,7 @@ export interface CSSPixelCharacterProps {
   lifeStage: LifeStage;
   jobType?: JobType;
   gender?: Gender;
+  appearance?: CharacterAppearance;
   /** 캐릭터 폭(px). 높이는 16:20 비율로 자동 */
   size?: number;
   palette?: PixelPalette;
@@ -46,12 +48,13 @@ export function CSSPixelCharacter({
   lifeStage,
   jobType = "none",
   gender,
+  appearance = DEFAULT_APPEARANCE,
   size = 144,
   palette,
   className,
 }: CSSPixelCharacterProps) {
   const pal = palette ?? paletteForTone(visualState.tone);
-  const matrix = buildCharacterMatrix(visualState, lifeStage, jobType, gender);
+  const matrix = buildCharacterMatrix(visualState, lifeStage, jobType, gender, appearance);
   const cellPx = size / GRID_W;
 
   const cells: React.ReactNode[] = [];

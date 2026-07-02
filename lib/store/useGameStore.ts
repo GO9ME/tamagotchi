@@ -9,6 +9,7 @@ import {
 
 import type {
   Character,
+  CharacterAppearance,
   CharacterStats,
   CompanyTypeKey,
   Gender,
@@ -59,6 +60,7 @@ import {
   UNIVERSITY_TIERS,
   universitySalaryMult,
 } from "@/lib/game/university";
+import { rollAppearance } from "@/lib/game/sprite/characterAppearance";
 import { degreeSalaryMult, gradAdmission } from "@/lib/game/degree";
 import { gradeForScore, jobTitle, startingSalary } from "@/lib/game/jobs";
 import { applyDecay } from "@/lib/game/status";
@@ -92,7 +94,12 @@ interface GameState {
   charAction: { state: ActionState; token: number } | null;
 
   setHydrated: () => void;
-  createNew: (name: string, color: string, gender: Gender) => void;
+  createNew: (
+    name: string,
+    color: string,
+    gender: Gender,
+    appearance?: CharacterAppearance,
+  ) => void;
   reset: () => void;
 
   tick: () => void;
@@ -191,10 +198,13 @@ export const useGameStore = create<GameState>()(
 
         setHydrated: () => set({ hydrated: true }),
 
-      createNew: (name, color, gender) => {
+      createNew: (name, color, gender, appearance) => {
         const userId = getOrCreateUserId();
         set({
-          character: createCharacter(userId, name, color, gender, now()),
+          character:
+            appearance !== undefined
+              ? createCharacter(userId, name, color, gender, now(), appearance)
+              : createCharacter(userId, name, color, gender, now()),
           pendingReviews: [],
           jobResult: null,
           negotiationResult: null,
@@ -631,7 +641,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 13,
+      version: 14,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -654,6 +664,7 @@ export const useGameStore = create<GameState>()(
           gradEnroll: c.gradEnroll ?? null,
           university: c.university ?? null,
           avatar: c.avatar || "🐣",
+          appearance: c.appearance ?? rollAppearance(),
           statPoints: c.statPoints ?? 0,
           stats: {
             ...c.stats,

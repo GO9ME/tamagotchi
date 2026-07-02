@@ -49,6 +49,13 @@ export interface CharacterStats {
 /** 캐릭터 성별 (게임 내 가상 속성 — 신장 분포·외형에만 영향) */
 export type Gender = "male" | "female";
 
+/** 픽셀 캐릭터 외형 — 생성 시 1회 랜덤 결정되어 평생 유지(머리 스타일 다양화) */
+export interface CharacterAppearance {
+  hairVariant: 0 | 1 | 2; // 앞머리 스타일(가르마/사이드/스파이키)
+  hairTone: "dark" | "light"; // 머리 톤(단색 램프 내 진하게/밝게)
+  glasses: boolean; // 안경 착용 여부
+}
+
 /** 최종 학위 — 높을수록 취업률·초봉 보너스(대신 대학원은 시간·등록금·스트레스 비용) */
 export type Degree = "highschool" | "bachelor" | "master" | "phd";
 
@@ -204,6 +211,7 @@ export interface Character {
   color: string; // 마스코트 색상 팔레트 키 (blush/mint/sky/butter/grape/coral ...)
   gender: Gender; // 가상 성별 — 신장 분포·외형에만 영향
   heightPotential: number; // 성인 목표 키(cm). 출생 시 성별 기반 결정, 현재 키는 나이로 파생
+  appearance: CharacterAppearance; // 픽셀 캐릭터 외형(머리 스타일/톤/안경) — 생성 시 1회 랜덤
   degree: Degree; // 최종 학위(취업률·초봉 보너스)
   gradEnroll: GradEnroll | null; // 대학원 재학 중이면 설정
   university: UniversityChoice | null; // 학부 선택(대학생 단계~) — 등록금/학자금대출 추적
