@@ -77,6 +77,12 @@ function ReviewRow({ review }: { review: YearlyReview }) {
           </span>
         </div>
       </div>
+      {review.event && (
+        <div className="mt-2 rounded-xl bg-butter/25 px-3 py-1.5 text-[12px] text-ink/70">
+          {review.event.emoji} <b className="font-pixel text-[11px]">{review.event.label}</b>{" "}
+          — {review.event.detail}
+        </div>
+      )}
     </div>
   );
 }

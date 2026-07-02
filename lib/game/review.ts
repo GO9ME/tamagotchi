@@ -3,12 +3,20 @@ import type {
   Character,
   CharacterStatus,
   Degree,
+  LifeEventRecord,
   LifeStage,
   ReviewGrade,
   WorkReview,
   YearCounters,
   YearlyReview,
 } from "@/types/character";
+import {
+  CHILDBIRTH_COST,
+  MARRIAGE_COST,
+  rollChildbirth,
+  rollMarriage,
+  rollYearlyEvent,
+} from "./events";
 import { clamp, round2 } from "./clamp";
 import {
   EDU_STAGES,
@@ -311,6 +319,57 @@ export function runDueReviews(
     degreeChange = deg.change;
   }
 
+  // 인생 이벤트: 결혼/출산(마일스톤 우선) 또는 랜덤 이벤트 최대 1건
+  let lifeEvent: LifeEventRecord | undefined;
+  if (ch.deathAge == null) {
+    if (rollMarriage(ch, reviewAge, Math.random())) {
+      ch = applyEffect(ch, { status: { mood: 12, confidence: 4, stress: -5 } });
+      ch = {
+        ...ch,
+        marriedAtAge: reviewAge,
+        savings: ch.savings - MARRIAGE_COST,
+        happiness: clamp(ch.happiness + 4, 0, 100),
+      };
+      yearSavingsDelta -= MARRIAGE_COST;
+      lifeEvent = {
+        key: "marriage",
+        emoji: "💍",
+        label: "결혼",
+        detail: `${reviewAge}살, 평생을 함께할 사람과 결혼식을 올렸어요!`,
+        savingsDelta: -MARRIAGE_COST,
+      };
+    } else if (rollChildbirth(ch, reviewAge, Math.random())) {
+      const nth = (ch.childrenBornAges ?? []).length + 1;
+      ch = applyEffect(ch, { status: { mood: 10, energy: -8 } });
+      ch = {
+        ...ch,
+        childrenBornAges: [...(ch.childrenBornAges ?? []), reviewAge],
+        savings: ch.savings - CHILDBIRTH_COST,
+        happiness: clamp(ch.happiness + 5, 0, 100),
+      };
+      yearSavingsDelta -= CHILDBIRTH_COST;
+      lifeEvent = {
+        key: "childbirth",
+        emoji: "👶",
+        label: nth === 1 ? "첫 아이 탄생" : "둘째 탄생",
+        detail: `${reviewAge}살, ${nth === 1 ? "첫" : "둘째"} 아이가 태어났어요!`,
+        savingsDelta: -CHILDBIRTH_COST,
+      };
+    } else {
+      const ev = rollYearlyEvent(ch, reviewAge, Math.random(), Math.random());
+      if (ev) {
+        if (ev.effect) ch = applyEffect(ch, ev.effect);
+        ch = {
+          ...ch,
+          savings: ch.savings + ev.savingsDelta,
+          happiness: clamp(ch.happiness + ev.happinessDelta, 0, 100),
+        };
+        yearSavingsDelta += ev.savingsDelta;
+        lifeEvent = ev.record;
+      }
+    }
+  }
+
   reviews.push({
     id: `${c.id}:${reviewAge}`,
     age: reviewAge,
@@ -321,6 +380,7 @@ export function runDueReviews(
     grade,
     exam,
     work,
+    event: lifeEvent,
     incident,
     death,
     degreeChange,

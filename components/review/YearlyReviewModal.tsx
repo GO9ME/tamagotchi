@@ -151,6 +151,25 @@ function NormalBody({ review }: { review: YearlyReview }) {
         </div>
       )}
 
+      {review.event && (
+        <div className="mt-3 rounded-xl border-2 border-ink/15 bg-butter/30 px-4 py-2.5">
+          <div className="font-pixel text-sm font-bold text-ink">
+            {review.event.emoji} {review.event.label}
+          </div>
+          <p className="mt-0.5 text-[12px] text-ink/60">{review.event.detail}</p>
+          {review.event.savingsDelta != null && (
+            <p
+              className={`mt-0.5 font-pixel text-[11px] font-bold tabular-nums ${
+                review.event.savingsDelta > 0 ? "text-ink/70" : "text-coral"
+              }`}
+            >
+              저축 {review.event.savingsDelta > 0 ? "+" : ""}
+              {formatMoney(review.event.savingsDelta)}
+            </p>
+          )}
+        </div>
+      )}
+
       {review.incident && (
         <p className="mt-3 rounded-xl border-2 border-coral/40 bg-coral/15 px-4 py-2.5 text-center text-[12px] font-semibold text-coral">
           {review.incident.cause}! 건강이 {review.incident.healthHit} 깎였어요.
