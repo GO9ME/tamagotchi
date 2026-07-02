@@ -41,6 +41,8 @@ export interface PixelRoomProps {
   season?: Season;
   /** 반려동물 — 행복도가 높으면 고양이가 놀러온다 */
   pet?: "cat";
+  /** 가족 — 결혼하면 배우자, 출산하면 자녀가 방에 함께 산다 */
+  family?: { spouse: boolean; children: number };
   /** 상점에서 구매한 방 꾸미기 아이템(영구 배치) */
   items?: RoomItemKey[];
   /** 방 전체 폭(px) */
@@ -516,6 +518,67 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
   );
 }
 
+/** 미니 픽셀 사람 — 배우자/자녀 공용(크기·위치만 다름) */
+function MiniPerson({
+  left,
+  width,
+  height,
+  pal,
+  label,
+}: {
+  left: string;
+  width: string;
+  height: string;
+  pal: RoomPalette;
+  label: string;
+}) {
+  const { ink, prop, propHi } = pal;
+  return (
+    <div
+      className="absolute"
+      style={{ left, bottom: "6%", width, height, zIndex: 2 }}
+      aria-label={label}
+    >
+      {/* 머리 */}
+      <span
+        className="absolute"
+        style={{ left: "18%", top: 0, width: "64%", height: "38%", background: propHi, border: `2px solid ${ink}` }}
+      />
+      {/* 몸통 */}
+      <span
+        className="absolute"
+        style={{ left: "8%", top: "36%", width: "84%", height: "40%", background: prop, border: `2px solid ${ink}` }}
+      />
+      {/* 다리 */}
+      <span className="absolute" style={{ left: "22%", bottom: 0, width: "18%", height: "26%", background: ink }} />
+      <span className="absolute" style={{ right: "22%", bottom: 0, width: "18%", height: "26%", background: ink }} />
+    </div>
+  );
+}
+
+/** 가족 렌더 — 배우자(캐릭터 옆) + 자녀(오른쪽에 작게 최대 2명) */
+function Family({
+  family,
+  pal,
+}: {
+  family: { spouse: boolean; children: number };
+  pal: RoomPalette;
+}) {
+  return (
+    <>
+      {family.spouse && (
+        <MiniPerson left="27%" width="9%" height="24%" pal={pal} label="배우자" />
+      )}
+      {family.children >= 1 && (
+        <MiniPerson left="64%" width="6.5%" height="15%" pal={pal} label="첫째 아이" />
+      )}
+      {family.children >= 2 && (
+        <MiniPerson left="72%" width="6.5%" height="13%" pal={pal} label="둘째 아이" />
+      )}
+    </>
+  );
+}
+
 /** 픽셀 고양이 — 침대 위에 앉아 있는 실루엣(행복도 70+ 보상) */
 function PixelCat({ pal }: { pal: RoomPalette }) {
   const { ink, prop } = pal;
@@ -545,6 +608,7 @@ export function PixelRoom({
   sky,
   season,
   pet,
+  family,
   items = [],
   width = 260,
   children,
@@ -598,6 +662,11 @@ export function PixelRoom({
 
       {/* 반려동물 */}
       {pet === "cat" && <PixelCat pal={pal} />}
+
+      {/* 가족(배우자/자녀) */}
+      {family && (family.spouse || family.children > 0) && (
+        <Family family={family} pal={pal} />
+      )}
 
       {/* 캐릭터 (바닥 중앙) */}
       <div className="absolute bottom-[7%] left-1/2 -translate-x-1/2" style={{ zIndex: 3 }}>

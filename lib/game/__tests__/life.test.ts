@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCharacter } from "@/lib/game/character";
 import { LIVING_COST, MAX_AGE } from "@/lib/game/constants";
 import {
+  CHILD_COST,
   INCIDENT_CAUSES,
   ageRiskPct,
   riskPct,
@@ -101,11 +102,20 @@ describe("rollLifeRisk — 사고/사망 굴림", () => {
   });
 
   it("rTrigger=0 + rFatal=0.99 이면 회복 가능한 사건 (사인은 INCIDENT_CAUSES 중 하나)", () => {
+    // 기본 캐릭터(지구력/근력 5) → 단련 경감 2% → 30×0.98=29.4 → 반올림 29
     const ev = rollLifeRisk(base(), 30, 0, 0.99, 0);
-    expect(ev).toEqual({ kind: "incident", cause: "교통사고", healthHit: 30 });
+    expect(ev).toEqual({ kind: "incident", cause: "교통사고", healthHit: 29 });
     const last = rollLifeRisk(base(), 30, 0, 0.99, 0.99); // rPick 끝 → 마지막 항목
-    expect(last).toEqual({ kind: "incident", cause: "부상", healthHit: 20 });
+    expect(last).toEqual({ kind: "incident", cause: "부상", healthHit: 20 }); // 19.6 → 20
     if (ev.kind === "incident") expect(INCIDENT_CAUSES).toContain(ev.cause);
+  });
+
+  it("지구력·근력이 높으면 사고 피해가 최대 40%까지 줄어든다", () => {
+    const tough = base();
+    tough.stats = { ...tough.stats, stamina: 100, strength: 100 };
+    const ev = rollLifeRisk(tough, 30, 0, 0.99, 0);
+    // 30 × (1 - 0.4) = 18
+    expect(ev).toEqual({ kind: "incident", cause: "교통사고", healthHit: 18 });
   });
 });
 
@@ -117,6 +127,11 @@ describe("yearlyNet — 연간 저축 변화", () => {
   it("취업 후에는 연봉 − LIVING_COST", () => {
     const c = { ...base(), job: devJob(5000) };
     expect(yearlyNet(c)).toBe(5000 - LIVING_COST);
+  });
+
+  it("자녀가 있으면 1명당 CHILD_COST 만큼 양육비가 추가된다", () => {
+    const c = { ...base(), job: devJob(5000), childrenBornAges: [30, 33] };
+    expect(yearlyNet(c)).toBe(5000 - LIVING_COST - 2 * CHILD_COST);
   });
 });
 

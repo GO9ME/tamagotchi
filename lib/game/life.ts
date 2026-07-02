@@ -70,13 +70,22 @@ export function rollLifeRisk(
   if (rFatal < fatalChance) {
     return { kind: "death", cause: age >= 52 ? "지병" : inc.cause };
   }
-  return { kind: "incident", cause: inc.cause, healthHit: inc.hit };
+  // 단련된 몸(지구력+근력 평균)은 사고 피해를 줄인다 — 최대 40% 경감
+  const toughness = Math.min(
+    0.4,
+    ((clamp(c.stats.stamina ?? 0, 0, 100) + clamp(c.stats.strength ?? 0, 0, 100)) / 2) * 0.004,
+  );
+  return { kind: "incident", cause: inc.cause, healthHit: Math.round(inc.hit * (1 - toughness)) };
 }
 
-/** 연간 저축 변화(만원) = 연봉 − 생활비. 취업 전(학생·취준생 포함)에는 생활비 면제(0). */
+/** 자녀 1명당 연간 양육비(만원) */
+export const CHILD_COST = 400;
+
+/** 연간 저축 변화(만원) = 연봉 − 생활비 − 양육비. 취업 전(학생·취준생 포함)에는 면제(0). */
 export function yearlyNet(c: Character): number {
   if (!c.job) return 0;
-  return c.job.salaryManwon - LIVING_COST;
+  const childCost = (c.childrenBornAges?.length ?? 0) * CHILD_COST;
+  return c.job.salaryManwon - LIVING_COST - childCost;
 }
 
 /** 행복도 갱신 — 그 해 컨디션으로 평생 평균을 갱신 */

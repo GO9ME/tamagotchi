@@ -57,6 +57,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
     energy: character.status.energy,
     health: character.status.health,
     burnout: character.status.burnout,
+    cleanliness: character.status.cleanliness,
     actionState,
     jobType,
   });
@@ -70,6 +71,10 @@ export function CharacterAvatar({ character }: { character: Character }) {
   const season = seasonAt(now);
   const bodyShape = bodyShapeForWeight(character.status.weight, character.ageYears);
   const pet = character.happiness >= 70 ? ("cat" as const) : undefined;
+  const family = {
+    spouse: character.marriedAtAge != null,
+    children: character.childrenBornAges?.length ?? 0,
+  };
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -89,6 +94,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
           sky={sky}
           season={season}
           pet={pet}
+          family={family}
           items={character.roomItems}
           width={250}
         >
@@ -99,6 +105,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
             energy={character.status.energy}
             health={character.status.health}
             burnout={character.status.burnout}
+            cleanliness={character.status.cleanliness}
             actionState={actionState}
             jobType={jobType}
             gender={character.gender}

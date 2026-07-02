@@ -280,12 +280,14 @@ export function runDueReviews(
     ch = applyEffect(ch, effect);
   }
 
-  // 저축·행복 갱신(직전 1년)
+  // 저축·행복 갱신(직전 1년) — 가족(배우자/자녀)이 있으면 행복이 소폭 추가
   let yearSavingsDelta = yearlyNet(ch);
+  const familyWarmth =
+    (ch.marriedAtAge != null ? 1 : 0) + Math.min(2, (ch.childrenBornAges ?? []).length);
   ch = {
     ...ch,
     savings: ch.savings + yearSavingsDelta,
-    happiness: updateHappiness(ch.happiness, ch.status),
+    happiness: clamp(updateHappiness(ch.happiness, ch.status) + familyWarmth, 0, 100),
   };
   // 대학 등록금/학자금대출 처리(재학 중이면 등록금 청구, 취업 후면 대출 자동 상환)
   const uni = processUniversityYear(ch, reviewAge);
