@@ -41,6 +41,7 @@ export function CharacterPreviewCard({
         energy={status.energy}
         health={status.health}
         burnout={status.burnout}
+        cleanliness={status.cleanliness}
         jobType={jobType}
         gender={gender}
         appearance={appearance}

@@ -51,7 +51,8 @@ export type OverlayKey =
   | "sweat" // 운동/아픔 땀
   | "hungerBubble" // 배고픔 말풍선
   | "sparkle" // 기분 최고 반짝임
-  | "bandage"; // 아픔 밴드(십자)
+  | "bandage" // 아픔 밴드(십자)
+  | "stink"; // 청결 바닥 — 냄새 아지랑이
 
 /** 손/책상에 놓이는 소품 */
 export type PropKey =
@@ -110,6 +111,8 @@ export interface VisualStateInput {
   energy: number;
   health: number;
   burnout: number;
+  /** 청결(0~100). 25 미만이면 냄새 오버레이가 붙는다. 미지정 시 무시. */
+  cleanliness?: number;
   actionState?: ActionState;
   jobType?: JobType;
 }
@@ -164,6 +167,16 @@ const STATE_LABEL: Record<VisualStateKey, string> = {
 export function getCharacterVisualState(
   input: VisualStateInput,
 ): CharacterVisualState {
+  const res = resolveVisualState(input);
+  // 청결 바닥이면 어떤 상태든 냄새 아지랑이를 덧붙인다(수면 중 제외 — 이불 속)
+  const dirty = (input.cleanliness ?? 100) < 25;
+  if (dirty && res.pose !== "lie") {
+    return { ...res, overlays: [...res.overlays, "stink"] };
+  }
+  return res;
+}
+
+function resolveVisualState(input: VisualStateInput): CharacterVisualState {
   const { mood, hunger, energy, health, burnout } = input;
   const action = input.actionState ?? "idle";
 

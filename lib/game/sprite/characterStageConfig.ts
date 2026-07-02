@@ -582,6 +582,13 @@ function drawOverlays(g: Grid, vs: CharacterVisualState) {
         set(g, 10, 4, "K"); // 볼 밴드
         set(g, 9, 4, "F");
         break;
+      case "stink": // 왼쪽 위 냄새 아지랑이(지그재그 2줄)
+        set(g, 2, 0, "S");
+        set(g, 1, 1, "S");
+        set(g, 2, 2, "S");
+        set(g, 3, 1, "S");
+        set(g, 3, 3, "S");
+        break;
     }
   }
 }

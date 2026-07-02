@@ -20,6 +20,7 @@ interface ScoreStatus {
   mood: number;
   stress: number;
   burnout: number;
+  sleepQuality: number;
 }
 
 /**
@@ -28,7 +29,16 @@ interface ScoreStatus {
  */
 function effStatus(c: Character, neutral: boolean): ScoreStatus {
   if (neutral) {
-    return { hunger: 50, energy: 50, focus: 50, health: 50, mood: 50, stress: 50, burnout: 30 };
+    return {
+      hunger: 50,
+      energy: 50,
+      focus: 50,
+      health: 50,
+      mood: 50,
+      stress: 50,
+      burnout: 30,
+      sleepQuality: 50,
+    };
   }
   const s = c.status;
   return {
@@ -39,6 +49,7 @@ function effStatus(c: Character, neutral: boolean): ScoreStatus {
     mood: s.mood,
     stress: s.stress,
     burnout: s.burnout,
+    sleepQuality: s.sleepQuality,
   };
 }
 
@@ -106,16 +117,21 @@ export function evaluationScore(
   const collab = ci(c.stats.communication);
   const growth = ci(c.stats.careerPotential);
   const rel = clamp(100 - s.burnout * 0.6, 0, 100);
-  const hmgmt = s.health;
+  // 건강관리 = 건강 상태 + 수면의 질 + 그 해 운동·식사 실천(케어 루프가 평가에 직결되도록)
+  const practice =
+    (Math.min(counters.exercise / YEARLY_TARGETS.exercise, 1) * 0.5 +
+      Math.min(counters.meals / YEARLY_TARGETS.meals, 1) * 0.5) *
+    100;
+  const hmgmt = s.health * 0.6 + s.sleepQuality * 0.2 + practice * 0.2;
   const sdev = Math.min(counters.selfDev / YEARLY_TARGETS.selfDev, 1) * 100;
   const raw =
-    perf * 0.3 +
+    perf * 0.25 +
     comp * 0.2 +
     att * 0.15 +
     collab * 0.1 +
     growth * 0.1 +
     rel * 0.05 +
-    hmgmt * 0.05 +
+    hmgmt * 0.1 +
     sdev * 0.05;
   return clamp(Math.round(raw), 0, 100);
 }

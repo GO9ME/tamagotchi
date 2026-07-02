@@ -28,6 +28,8 @@ export interface PixelCharacterProps {
   energy: number;
   health: number;
   burnout: number;
+  /** 청결(0~100) — 25 미만이면 냄새 연출 */
+  cleanliness?: number;
   actionState?: ActionState;
   jobType?: JobType;
   gender?: Gender;
@@ -49,6 +51,7 @@ export function PixelCharacter({
   energy,
   health,
   burnout,
+  cleanliness,
   actionState,
   jobType = "none",
   gender,
@@ -67,6 +70,7 @@ export function PixelCharacter({
     energy,
     health,
     burnout,
+    cleanliness,
     actionState,
     jobType,
   });

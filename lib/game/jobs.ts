@@ -35,11 +35,11 @@ export const JOB_FAMILIES: Record<JobFamilyKey, JobFamily> = {
   design: { label: "디자인", icon: "palette", coreStats: ["creativity", "intelligence"], statBar: 45, salaryMult: 1.05, rarity: "uncommon", riskLevel: 0.012, desc: "감각·UX·디테일" },
   hr: { label: "인사/총무", icon: "heart", coreStats: ["communication", "discipline"], statBar: 42, salaryMult: 1.0, rarity: "common", riskLevel: 0.01, desc: "인사·운영·공감" },
   // 진입 쉬움 (낮은 스탯도 도전 가능, 연봉 낮음, 일부 위험)
-  production: { label: "생산/품질/구매", icon: "exercise", coreStats: ["discipline", "fitness"], statBar: 35, salaryMult: 0.95, rarity: "common", riskLevel: 0.05, desc: "공정·품질·현장(위험)" },
+  production: { label: "생산/품질/구매", icon: "exercise", coreStats: ["discipline", "fitness", "strength"], statBar: 35, salaryMult: 0.95, rarity: "common", riskLevel: 0.05, desc: "공정·품질·현장(위험)" },
   sales: { label: "영업/영업관리", icon: "bolt", coreStats: ["communication", "careerPotential"], statBar: 35, salaryMult: 1.0, rarity: "common", riskLevel: 0.03, desc: "영업·협상·외근" },
   cs: { label: "고객지원/CS", icon: "speech", coreStats: ["communication"], statBar: 28, salaryMult: 0.9, rarity: "common", riskLevel: 0.016, desc: "응대·공감·감정노동" },
   // 피지컬 스포츠 — 키가 클수록 유리(농구·배구 등). 부상 위험 ↑
-  athlete: { label: "스포츠/운동선수", icon: "exercise", coreStats: ["fitness", "discipline"], statBar: 48, salaryMult: 1.2, rarity: "rare", riskLevel: 0.03, heightBar: 183, desc: "농구·배구 등 피지컬 스포츠 (키가 클수록 유리)" },
+  athlete: { label: "스포츠/운동선수", icon: "exercise", coreStats: ["fitness", "stamina", "strength", "discipline"], statBar: 48, salaryMult: 1.2, rarity: "rare", riskLevel: 0.03, heightBar: 183, desc: "농구·배구 등 피지컬 스포츠 (키·단련될수록 유리)" },
 };
 
 export const RARITY_META: Record<
