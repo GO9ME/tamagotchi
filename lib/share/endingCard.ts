@@ -9,7 +9,18 @@ import {
 } from "@/lib/game/ranking";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { getMascotColor } from "@/lib/game/constants";
-import { MASCOT_GRID, mascotCells } from "@/components/character/Mascot";
+import {
+  buildCharacterMatrix,
+  GRID_H,
+  GRID_W,
+  matrixToCells,
+} from "@/lib/game/sprite/characterStageConfig";
+import {
+  getCharacterVisualState,
+  jobTypeFromFamily,
+} from "@/lib/game/sprite/characterVisualState";
+import { colorForCode, LCD_INK_PALETTE } from "@/lib/game/sprite/characterPalettes";
+import { bodyShapeForWeight } from "@/lib/game/weight";
 
 const C = {
   cream: "#FFF8F0",
@@ -84,16 +95,31 @@ export function drawEndingCard(canvas: HTMLCanvasElement, c: Character) {
   ctx.fillStyle = C.lcd;
   rr(ctx, boxX + pad, boxY + pad, lcd, lcd, 14);
   ctx.fill();
-  const cells = mascotCells(c.status, "retirement", c.gender, {
-    color: C.lcdink,
-    fill: C.white,
-    blush: C.blush,
+  // 실제 게임과 동일한 픽셀 캐릭터(외형/직업/체형 반영) — 평온한 마지막 모습
+  const vs = getCharacterVisualState({
+    lifeStage: "retirement",
+    mood: 80,
+    hunger: 70,
+    energy: 70,
+    health: 80,
+    burnout: 10,
   });
-  const px = (lcd / MASCOT_GRID) * 0.82;
-  const gx = boxX + pad + (lcd - px * MASCOT_GRID) / 2;
-  const gy = boxY + pad + (lcd - px * MASCOT_GRID) / 2;
+  const matrix = buildCharacterMatrix(
+    vs,
+    "retirement",
+    jobTypeFromFamily(c.job?.family),
+    c.gender,
+    c.appearance,
+    bodyShapeForWeight(c.status.weight, age),
+  );
+  const cells = matrixToCells(matrix);
+  const px = (lcd / GRID_H) * 0.92; // 세로(20칸)에 맞춤
+  const gx = boxX + pad + (lcd - px * GRID_W) / 2;
+  const gy = boxY + pad + (lcd - px * GRID_H) / 2;
   cells.forEach((cell) => {
-    ctx.fillStyle = cell.fill;
+    const color = colorForCode(cell.code, LCD_INK_PALETTE);
+    if (!color) return;
+    ctx.fillStyle = color;
     ctx.fillRect(
       Math.floor(gx + cell.x * px),
       Math.floor(gy + cell.y * px),
@@ -109,7 +135,8 @@ export function drawEndingCard(canvas: HTMLCanvasElement, c: Character) {
   y += 28;
   ctx.font = `16px ${PIXEL}`;
   ctx.fillStyle = "rgba(46,39,34,0.6)";
-  ctx.fillText(`만 ${age}세 · ${c.deathCause ?? "노환"}`, W / 2, y);
+  const genSuffix = (c.generation ?? 1) >= 2 ? ` · ${c.generation}세대` : "";
+  ctx.fillText(`만 ${age}세 · ${c.deathCause ?? "노환"}${genSuffix}`, W / 2, y);
 
   // 엔딩 타이틀 박스
   y += 22;
@@ -164,8 +191,11 @@ export function drawEndingCard(canvas: HTMLCanvasElement, c: Character) {
   ctx.font = `15px ${PIXEL}`;
   ctx.fillStyle = "rgba(46,39,34,0.7)";
   const jobLabel = c.job ? c.job.title : "무직 (자유인)";
+  const kids = c.childrenBornAges?.length ?? 0;
+  const familyLabel =
+    c.marriedAtAge != null ? `기혼${kids > 0 ? `·자녀${kids}` : ""}` : "미혼";
   ctx.fillText(
-    `${DEGREE_LABEL[c.degree]} · ${jobLabel} · 저축 ${formatMoney(c.savings)}`,
+    `${DEGREE_LABEL[c.degree]} · ${jobLabel} · ${familyLabel} · 저축 ${formatMoney(c.savings)}`,
     W / 2,
     y,
   );

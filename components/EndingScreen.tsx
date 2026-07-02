@@ -18,11 +18,13 @@ import {
 } from "@/lib/game/ranking";
 import { getHall, saveHall } from "@/lib/storage/hall";
 import { shareEndingCard } from "@/lib/share/endingCard";
+import { canStartSecondGen, inheritanceAmount } from "@/lib/game/legacy";
 import { useGameStore } from "@/lib/store/useGameStore";
 
 export function EndingScreen({ character }: { character: Character }) {
   const router = useRouter();
   const reset = useGameStore((s) => s.reset);
+  const startSecondGeneration = useGameStore((s) => s.startSecondGeneration);
   const { title, subtitle } = lifeEnding(character);
   const score = computeLifeScore(character);
   const job = character.job;
@@ -75,6 +77,13 @@ export function EndingScreen({ character }: { character: Character }) {
     router.push("/create");
   };
 
+  const childCount = character.childrenBornAges?.length ?? 0;
+  const canSecondGen = canStartSecondGen(character);
+  const continueAsChild = () => {
+    const r = startSecondGeneration();
+    if (r.ok) router.push("/dashboard");
+  };
+
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-5 py-12">
       <div className="card p-7 text-center">
@@ -112,6 +121,14 @@ export function EndingScreen({ character }: { character: Character }) {
             }
           />
           <Row label="최종 학위" value={DEGREE_LABEL[character.degree]} />
+          <Row
+            label="가족"
+            value={
+              character.marriedAtAge != null
+                ? `${character.marriedAtAge}살 결혼${childCount > 0 ? ` · 자녀 ${childCount}명` : ""}`
+                : "미혼 (자유로운 영혼)"
+            }
+          />
           <Row label="저축" value={formatMoney(character.savings)} strong />
           <Row label="행복도" value={`${character.happiness} / 100`} />
           <Row label="인생 점수" value={`${score} / 100`} />
@@ -173,6 +190,16 @@ export function EndingScreen({ character }: { character: Character }) {
         >
           {sharing ? "카드 만드는 중…" : "📤 결과 카드 공유"}
         </button>
+
+        {canSecondGen && (
+          <button
+            type="button"
+            onClick={continueAsChild}
+            className="toy-btn mt-3 w-full bg-grape text-white"
+          >
+            👨‍👧 2세대로 이어가기 (유산 {formatMoney(inheritanceAmount(character))})
+          </button>
+        )}
 
         <button
           type="button"
