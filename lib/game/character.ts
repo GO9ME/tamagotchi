@@ -79,6 +79,9 @@ export function createCharacter(
     savings: 0,
     roomItems: [],
     assets: [],
+    wardrobe: [],
+    equippedOutfit: null,
+    equippedAccessory: null,
     happiness: 50,
   };
 }

@@ -8,6 +8,7 @@ import { currentHeight } from "@/lib/game/body";
 import { bodyShapeForWeight } from "@/lib/game/weight";
 import { seasonAt, skyPhaseAt } from "@/lib/game/sprite/roomAmbience";
 import { paletteForColor } from "@/lib/game/sprite/characterPalettes";
+import { equippedOf } from "@/lib/game/wardrobe";
 import { playActionBeep } from "@/lib/sound/beeps";
 import { DEGREE_LABEL } from "@/lib/game/degree";
 import { useGameStore } from "@/lib/store/useGameStore";
@@ -125,6 +126,7 @@ export function CharacterAvatar({ character }: { character: Character }) {
             gender={character.gender}
             appearance={character.appearance}
             bodyShape={bodyShape}
+            wardrobe={equippedOf(character)}
             palette={colorMode ? paletteForColor(character.color, vs.tone) : undefined}
             size={128}
           />

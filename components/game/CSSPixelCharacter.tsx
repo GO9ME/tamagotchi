@@ -7,6 +7,7 @@
 
 import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import type { BodyShape } from "@/lib/game/weight";
+import type { EquippedWardrobe } from "@/lib/game/wardrobe";
 import type { CharacterVisualState, JobType } from "@/lib/game/sprite/characterVisualState";
 import {
   buildCharacterMatrix,
@@ -40,6 +41,8 @@ export interface CSSPixelCharacterProps {
   appearance?: CharacterAppearance;
   /** 체형(체중 반영) — heavy/slim 이면 몸통 실루엣이 달라짐 */
   bodyShape?: BodyShape;
+  /** 착용 중인 옷/액세서리(옷장) */
+  wardrobe?: EquippedWardrobe;
   /** 캐릭터 폭(px). 높이는 16:20 비율로 자동 */
   size?: number;
   palette?: PixelPalette;
@@ -53,12 +56,21 @@ export function CSSPixelCharacter({
   gender,
   appearance = DEFAULT_APPEARANCE,
   bodyShape = "normal",
+  wardrobe,
   size = 144,
   palette,
   className,
 }: CSSPixelCharacterProps) {
   const pal = palette ?? paletteForTone(visualState.tone);
-  const matrix = buildCharacterMatrix(visualState, lifeStage, jobType, gender, appearance, bodyShape);
+  const matrix = buildCharacterMatrix(
+    visualState,
+    lifeStage,
+    jobType,
+    gender,
+    appearance,
+    bodyShape,
+    wardrobe,
+  );
   const cellPx = size / GRID_W;
 
   const cells: React.ReactNode[] = [];

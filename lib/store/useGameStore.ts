@@ -20,6 +20,7 @@ import type {
   NegotiationResult,
   RoomItemKey,
   UniversityTierKey,
+  WardrobeItemKey,
   YearlyReview,
 } from "@/types/character";
 import { getAction, PREP_KEYS, WORK_KEYS } from "@/lib/game/actions";
@@ -75,6 +76,7 @@ import {
 import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
 import { assetDef, canBuyAsset } from "@/lib/game/assets";
 import { canDoLeisure, leisureCooldownKey, leisureDef } from "@/lib/game/leisure";
+import { canBuyWardrobe, wardrobeDef } from "@/lib/game/wardrobe";
 import {
   canStartSecondGen,
   inheritanceAmount,
@@ -133,6 +135,8 @@ interface GameState {
   buyRoomItem: (key: RoomItemKey) => ActionResult;
   buyAsset: (key: AssetKey) => ActionResult;
   doLeisure: (key: string) => ActionResult;
+  buyWardrobe: (key: WardrobeItemKey) => ActionResult;
+  equipWardrobe: (kind: "outfit" | "accessory", key: WardrobeItemKey | null) => ActionResult;
   startSecondGeneration: () => ActionResult;
 }
 
@@ -720,6 +724,54 @@ export const useGameStore = create<GameState>()(
         return { ok: true, message: "구입 완료" };
       },
 
+      buyWardrobe: (key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
+        const gate = canBuyWardrobe(c, key);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
+        const def = wardrobeDef(key)!;
+        let next = applyEffect(c, { status: { mood: 4, confidence: 3 } });
+        next = {
+          ...next,
+          savings: c.savings - def.price,
+          wardrobe: [...c.wardrobe, key],
+          happiness: Math.min(100, c.happiness + 1),
+          // 새 옷은 바로 입어보는 게 국룰
+          ...(def.kind === "outfit"
+            ? { equippedOutfit: key }
+            : { equippedAccessory: key }),
+        };
+        set({ character: next });
+        pushToast(`${def.emoji} ${def.label} 겟! 바로 입어봤어요. (-${formatMoney(def.price)})`);
+        pulseAction("playing");
+        return { ok: true, message: "구입 완료" };
+      },
+
+      equipWardrobe: (kind, key) => {
+        const c = get().character;
+        if (!c) return { ok: false, message: "캐릭터가 없어요." };
+        if (key != null && !c.wardrobe.includes(key)) {
+          return { ok: false, message: "가지고 있지 않은 아이템이에요." };
+        }
+        if (key != null && wardrobeDef(key)?.kind !== kind) {
+          return { ok: false, message: "부위가 맞지 않아요." };
+        }
+        set({
+          character: {
+            ...c,
+            ...(kind === "outfit" ? { equippedOutfit: key } : { equippedAccessory: key }),
+          },
+        });
+        if (key != null) {
+          const def = wardrobeDef(key)!;
+          pushToast(`${def.emoji} ${def.label}${kind === "outfit" ? "을(를) 입었어요!" : " 착용!"}`);
+        } else {
+          pushToast(kind === "outfit" ? "기본 복장으로 돌아왔어요." : "액세서리를 뺐어요.");
+        }
+        return { ok: true, message: "착용 변경" };
+      },
+
       startSecondGeneration: () => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
@@ -753,7 +805,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 16,
+      version: 17,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -797,6 +849,9 @@ export const useGameStore = create<GameState>()(
           savings: c.savings ?? 0,
           roomItems: c.roomItems ?? [],
           assets: c.assets ?? [],
+          wardrobe: c.wardrobe ?? [],
+          equippedOutfit: c.equippedOutfit ?? null,
+          equippedAccessory: c.equippedAccessory ?? null,
           happiness: c.happiness ?? 50,
           negotiateBackfire: c.negotiateBackfire ?? false,
           // 시간 배율이 바뀌어도 현재 나이를 유지하도록 bornAt 재기준 + decay 시계 리셋

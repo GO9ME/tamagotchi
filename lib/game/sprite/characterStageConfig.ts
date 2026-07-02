@@ -10,8 +10,9 @@
 // 순서대로 스탬핑해 조합하므로, 단계×상태 조합을 일일이 그리지 않아도 된다.
 // ---------------------------------------------------------------------------
 
-import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
+import type { CharacterAppearance, Gender, LifeStage, WardrobeItemKey } from "@/types/character";
 import type { BodyShape } from "@/lib/game/weight";
+import type { EquippedWardrobe } from "@/lib/game/wardrobe";
 import type {
   CharacterVisualState,
   ExpressionKey,
@@ -49,7 +50,17 @@ interface Outfit {
   straps?: boolean; // 책가방 끈
   hood?: boolean; // 후드티 끈
   diaper?: boolean; // 아기 기저귀
+  stripe?: boolean; // 가로 줄무늬(옷장: 줄무늬 티)
+  zip?: boolean; // 지퍼 세로줄(옷장: 집업 재킷)
 }
+
+/** 옷장 의상 → 스프라이트 복장 정의(착용 시 단계 기본 복장·직업 악센트를 대체) */
+const WARDROBE_OUTFITS: Partial<Record<WardrobeItemKey, Outfit>> = {
+  stripeTee: { base: "F", stripe: true },
+  hoodie: { base: "S", hood: true },
+  jacket: { base: "S", collar: true, zip: true },
+  suit: { base: "F", blazer: true, collar: true, tie: true },
+};
 
 export interface StageVisualConfig {
   tier: SpriteTier;
@@ -237,6 +248,35 @@ function drawFaceAccent(
   }
 }
 
+/**
+ * 옷장 액세서리 — 머리(모자)/목(목도리) 부위에 덧그린다.
+ * 반드시 drawHead/drawFace 이후에 호출(모자가 머리카락을 덮어야 함).
+ */
+function drawAccessory(g: Grid, A: Anchor, key: WardrobeItemKey) {
+  switch (key) {
+    case "cap": // 캡모자 — 크라운 + 오른쪽 챙
+      for (let x = 5; x <= 10; x++) set(g, x, 0, "S");
+      set(g, 11, 1, "S");
+      set(g, 12, 1, "S");
+      break;
+    case "beanie": // 비니 — 진한 크라운 + 접힌 밴드
+      for (let x = 5; x <= 10; x++) set(g, x, 0, "K");
+      for (let x = 5; x <= 10; x++) set(g, x, 1, "S");
+      break;
+    case "scarf": // 목도리 — 목을 감싸고 한쪽 자락이 흘러내림
+      for (let x = 6; x <= 9; x++) set(g, x, A.chin + 1, "S");
+      set(g, 6, A.torsoTop, "S");
+      set(g, 6, A.torsoTop + 1, "S");
+      break;
+    case "ribbon": // 리본핀 — 머리 오른쪽 반짝이 포인트
+      set(g, 10, 0, "W");
+      set(g, 11, 1, "S");
+      break;
+    default:
+      break;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // 머리 + 머리카락 (스타일 5종 × 톤 2종으로 캐릭터마다 다르게 보이도록)
 // ---------------------------------------------------------------------------
@@ -334,8 +374,10 @@ function drawBody(
   pose: PoseKey,
   jobType: JobType,
   bodyShape: BodyShape = "normal",
+  outfitOverride?: Outfit,
 ) {
-  const o = applyJobOutfit(cfg.outfit, cfg, jobType);
+  // 옷장 의상을 입었으면 단계 기본 복장·직업 악센트보다 우선(플레이어 선택 존중)
+  const o = outfitOverride ?? applyJobOutfit(cfg.outfit, cfg, jobType);
   const { tl, tr, torsoTop, torsoBot } = A;
 
   // 목
@@ -344,6 +386,13 @@ function drawBody(
 
   // 몸통(셔츠/재킷 기본)
   fillRect(g, tl, tr, torsoTop, torsoBot, o.base);
+
+  // 가로 줄무늬(옷장: 줄무늬 티) — 몸통 중간에 2줄
+  if (o.stripe) {
+    const tone = o.base === "F" ? "S" : "F";
+    fillRect(g, tl, tr, torsoTop + 1, torsoTop + 1, tone);
+    fillRect(g, tl, tr, torsoTop + 3, torsoTop + 3, tone);
+  }
 
   // 재킷: 양 옆 S, 가운데 셔츠(F) 띠
   if (o.blazer) {
@@ -370,6 +419,11 @@ function drawBody(
     set(g, 9, torsoTop, "F");
     set(g, 7, torsoTop + 1, "K");
     set(g, 8, torsoTop + 2, "K");
+  }
+  // 지퍼 세로줄(옷장: 집업 재킷) — 지퍼 손잡이는 반짝임
+  if (o.zip) {
+    set(g, 7, torsoTop, "W");
+    for (let y = torsoTop + 1; y <= torsoBot - 1; y++) set(g, 7, y, "K");
   }
   // 책가방 끈(어깨)
   if (o.straps) {
@@ -714,6 +768,7 @@ export function buildCharacterMatrix(
   gender?: Gender,
   appearance: CharacterAppearance = DEFAULT_APPEARANCE,
   bodyShape: BodyShape = "normal",
+  wardrobe?: EquippedWardrobe,
 ): string[] {
   const cfg = STAGE_CONFIG[lifeStage];
   const g = blank();
@@ -728,10 +783,12 @@ export function buildCharacterMatrix(
     return g.map((r) => r.join(""));
   }
 
+  const outfitOverride = wardrobe?.outfit ? WARDROBE_OUTFITS[wardrobe.outfit] : undefined;
+
   const A = anchorFor(cfg.tier);
-  // 순서: 다리 → 몸통/팔 → 머리/표정 → 안경(눈 위 덧그림) → 볼 포인트 → 소품 → 오버레이
+  // 순서: 다리 → 몸통/팔 → 머리/표정 → 안경(눈 위 덧그림) → 볼 포인트 → 액세서리 → 소품 → 오버레이
   drawLegs(g, A, vs.pose, cfg);
-  drawBody(g, A, cfg, vs.pose, jobType, bodyShape);
+  drawBody(g, A, cfg, vs.pose, jobType, bodyShape, outfitOverride);
   drawHead(g, A, cfg, gender, appearance);
   if (bodyShape === "heavy") {
     set(g, 4, A.eyesRow + 1, "F"); // 통통한 볼(얼굴 폭 +1)
@@ -740,6 +797,7 @@ export function buildCharacterMatrix(
   drawFace(g, vs.expression, A);
   if (appearance.glasses) drawGlasses(g, A);
   drawFaceAccent(g, A, appearance.faceAccent);
+  if (wardrobe?.accessory) drawAccessory(g, A, wardrobe.accessory);
   drawProps(g, vs, A, cfg);
   drawOverlays(g, vs);
 

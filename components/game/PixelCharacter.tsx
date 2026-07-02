@@ -9,6 +9,7 @@
 
 import type { CharacterAppearance, Gender, LifeStage } from "@/types/character";
 import type { BodyShape } from "@/lib/game/weight";
+import type { EquippedWardrobe } from "@/lib/game/wardrobe";
 import {
   getCharacterVisualState,
   type ActionState,
@@ -36,6 +37,8 @@ export interface PixelCharacterProps {
   appearance?: CharacterAppearance;
   /** 체형(체중 반영) */
   bodyShape?: BodyShape;
+  /** 착용 중인 옷/액세서리(옷장) */
+  wardrobe?: EquippedWardrobe;
   size?: number;
   /** "css"(기본) | "sprite" */
   renderer?: "css" | "sprite";
@@ -57,6 +60,7 @@ export function PixelCharacter({
   gender,
   appearance,
   bodyShape = "normal",
+  wardrobe,
   size = 144,
   renderer = "css",
   sheet,
@@ -98,6 +102,7 @@ export function PixelCharacter({
       gender={gender}
       appearance={appearance}
       bodyShape={bodyShape}
+      wardrobe={wardrobe}
       size={size}
       palette={palette}
       className={className}

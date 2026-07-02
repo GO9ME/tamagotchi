@@ -69,6 +69,19 @@ export type RoomItemKey =
   | "robotVacuum" // 로봇청소기
   | "artFrame"; // 명화 액자
 
+/** 옷장 아이템 키 — 의상(몸통 교체) 또는 액세서리(머리/목 덧그리기) */
+export type WardrobeItemKey =
+  // 의상 — 착용 시 성장 단계 기본 복장을 대체(직업 악센트보다 우선)
+  | "stripeTee" // 줄무늬 티
+  | "hoodie" // 후드티
+  | "jacket" // 집업 재킷
+  | "suit" // 정장
+  // 액세서리 — 복장과 별개로 1개 착용
+  | "ribbon" // 리본핀
+  | "cap" // 캡모자
+  | "beanie" // 비니
+  | "scarf"; // 목도리
+
 /** 대형 자산 키 — 카테고리(차/집)별 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
 export type AssetKey =
   | "carCompact" // 경차
@@ -269,6 +282,9 @@ export interface Character {
   savings: number; // 누적 저축(만원, 음수=빚)
   roomItems: RoomItemKey[]; // 구매한 방 꾸미기 아이템(영구)
   assets: AssetKey[]; // 대형 자산(차/집) — 순자산·엔딩·유산에 반영
+  wardrobe: WardrobeItemKey[]; // 소장한 옷/액세서리
+  equippedOutfit?: WardrobeItemKey | null; // 착용 중인 의상(null/미설정 = 단계 기본 복장)
+  equippedAccessory?: WardrobeItemKey | null; // 착용 중인 액세서리
   happiness: number; // 행복도(평생 평균, 0~100)
   marriedAtAge?: number; // 결혼한 나이(미혼이면 없음) — 인생 이벤트로 발생
   childrenBornAges?: number[]; // 자녀 출생 시 부모 나이 목록(최대 2명)
