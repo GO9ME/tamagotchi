@@ -99,8 +99,14 @@ export type WardrobeItemKey =
 /** 대형 자산 키(자동차) — 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
 export type AssetKey =
   | "carCompact" // 경차
+  | "carCompactWagon" // 박스카 왜건
+  | "carCompactCoupe" // 미니 쿠페
   | "carSedan" // 중형 세단
-  | "carImport"; // 수입차
+  | "carHybrid" // 하이브리드 세단
+  | "carSuv" // SUV
+  | "carImport" // 수입차
+  | "carImportSuv" // 수입 SUV
+  | "carSupercar"; // 슈퍼카
 
 /** 주거 옵션 — 본가 → 월세 → 전세 → 매매(대출·이자·집값 상승 포함) */
 export type HousingOptionKey =
