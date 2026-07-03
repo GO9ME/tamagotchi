@@ -20,7 +20,16 @@ export const LUCK_CAP = 55;
 /** 미니게임 해금 나이 — 여가와 같은 결(도박 콘텐츠는 미취학 아동 제외) */
 export const MINIGAME_MIN_AGE = 6;
 
-export type MinigameKind = "slots" | "gacha";
+export type MinigameKind =
+  | "slots"
+  | "gacha"
+  | "roulette"
+  | "fishing"
+  | "darts"
+  | "rps"
+  | "timing";
+
+export type RpsChoice = "rock" | "paper" | "scissors";
 
 export interface MinigameResult {
   effect: ActionEffect; // 체력 소모 + 보상 (message 포함)
