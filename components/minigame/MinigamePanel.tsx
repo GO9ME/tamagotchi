@@ -92,6 +92,7 @@ export function MinigamePanel({ character }: { character: Character }) {
   const luckMaxed = character.stats.luck >= LUCK_CAP;
 
   const openGame = (kind: MinigameKind) => {
+    setExpanded(null);
     if (kind === "rps") {
       setExpanded("rps");
       return;
