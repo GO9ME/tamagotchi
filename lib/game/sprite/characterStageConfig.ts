@@ -319,6 +319,40 @@ function drawAccessory(g: Grid, A: Anchor, key: WardrobeItemKey) {
       set(g, 5, 1, "W");
       set(g, 10, 1, "W");
       break;
+    case "hairpin": // 헤어핀 세트 — 머리 왼쪽 반짝이(리본과 반대쪽)
+      set(g, 5, 0, "W");
+      set(g, 6, 1, "W");
+      break;
+    case "gloves": // 장갑 — 양손 색을 바꿔 착용감을 표현
+      set(g, A.tl - 1, A.torsoBot, "S");
+      set(g, A.tr + 1, A.torsoBot, "S");
+      break;
+    case "bowtie": // 나비넥타이 — 목 아래 작은 리본
+      set(g, 7, A.torsoTop, "K");
+      set(g, 8, A.torsoTop, "K");
+      set(g, 6, A.torsoTop, "S");
+      set(g, 9, A.torsoTop, "S");
+      break;
+    case "backpack": // 백팩 — 어깨 아래 사각 스트랩
+      set(g, A.tl, A.torsoTop + 1, "K");
+      set(g, A.tr, A.torsoTop + 1, "K");
+      set(g, A.tl, A.torsoTop + 2, "K");
+      set(g, A.tr, A.torsoTop + 2, "K");
+      break;
+    case "watch": // 손목시계 — 손목 포인트
+      set(g, A.tr + 1, A.torsoBot - 1, "W");
+      break;
+    case "earrings": // 귀걸이 — 얼굴 양옆 반짝임
+      set(g, 4, A.eyesRow + 1, "W");
+      set(g, 11, A.eyesRow + 1, "W");
+      break;
+    case "brooch": // 브로치 — 가슴팍 반짝이 포인트
+      set(g, 6, A.torsoTop + 1, "W");
+      break;
+    case "anklet": // 발찌 — 다리 아래쪽 반짝임
+      set(g, 7, A.legBot, "W");
+      set(g, 8, A.legBot, "W");
+      break;
     default:
       break;
   }
