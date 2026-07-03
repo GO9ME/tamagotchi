@@ -357,3 +357,53 @@ export function playDarts(c: Character, rand: number): MinigameResult {
     fx: null,
   };
 }
+
+/** 가위바위보 — 유저 선택 vs 랜덤 CPU. 순수 스킬 콘텐츠라 행운 보정이 없다 */
+export function playRps(c: Character, userChoice: RpsChoice, rand: number): MinigameResult {
+  const choices: RpsChoice[] = ["rock", "paper", "scissors"];
+  const cpuChoice = choices[Math.min(choices.length - 1, Math.floor(rand * choices.length))];
+  const beats: Record<RpsChoice, RpsChoice> = {
+    rock: "scissors",
+    paper: "rock",
+    scissors: "paper",
+  };
+  const cpuLabel = cpuChoice === "rock" ? "바위" : cpuChoice === "paper" ? "보" : "가위";
+
+  if (userChoice === cpuChoice) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 2 },
+        stats: gainStats(c),
+        exp: 4,
+        message: `✊ 무승부! 둘 다 ${cpuLabel}를 냈어요`,
+      },
+      savingsDelta: 0,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  if (beats[userChoice] === cpuChoice) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 10, confidence: 8 },
+        stats: gainStats(c),
+        exp: 10,
+        message: "✊ 승리! 짜릿한 한 판이었어요 (+5만원)",
+      },
+      savingsDelta: 5,
+      statPointsDelta: 0,
+      fx: { tier: "good", label: "✊ 승리!" },
+    };
+  }
+  return {
+    effect: {
+      status: { ...baseStatus, stress: 4, mood: -3 },
+      stats: gainStats(c),
+      exp: 2,
+      message: "✊ 패배… 다음엔 이길 거예요",
+    },
+    savingsDelta: 0,
+    statPointsDelta: 0,
+    fx: null,
+  };
+}

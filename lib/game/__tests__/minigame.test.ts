@@ -12,7 +12,9 @@ import {
   playFishing,
   playGacha,
   playRoulette,
+  playRps,
   playSlots,
+  type RpsChoice,
 } from "../minigame";
 
 const make = () => {
@@ -119,5 +121,27 @@ describe("다트", () => {
     const miss = playDarts(c, 0.999);
     expect(miss.statPointsDelta).toBe(0);
     expect(miss.effect.status?.stress).toBe(3);
+  });
+});
+
+describe("가위바위보", () => {
+  it("이기면 승리 보상, 같으면 무승부, 지면 스트레스", () => {
+    const c = make();
+    const win = playRps(c, "paper", 0); // rand=0 → CPU 바위 → 보로 승리
+    expect(win.fx?.tier).toBe("good");
+    expect(win.savingsDelta).toBe(5);
+    const draw = playRps(c, "rock", 0); // CPU 바위 → 무승부
+    expect(draw.fx).toBeNull();
+    expect(draw.savingsDelta).toBe(0);
+    expect(draw.effect.status?.mood).toBe(2);
+    const lose = playRps(c, "rock", 0.4); // rand=0.4 → CPU 보 → 패배
+    expect(lose.effect.status?.stress).toBe(4);
+  });
+
+  it("행운 스탯과 무관하게 순수 스킬 판정이다(승률 결정에 luckBonus 미사용)", () => {
+    const c = make();
+    c.stats.luck = 100; // 최대 행운이어도
+    const lose = playRps(c, "rock", 0.4); // CPU 보 → 여전히 패배
+    expect(lose.effect.status?.stress).toBe(4);
   });
 });
