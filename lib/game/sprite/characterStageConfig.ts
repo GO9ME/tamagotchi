@@ -333,11 +333,11 @@ function drawAccessory(g: Grid, A: Anchor, key: WardrobeItemKey) {
       set(g, 6, A.torsoTop, "S");
       set(g, 9, A.torsoTop, "S");
       break;
-    case "backpack": // 백팩 — 어깨 아래 사각 스트랩
-      set(g, A.tl, A.torsoTop + 1, "S");
-      set(g, A.tr, A.torsoTop + 1, "S");
-      set(g, A.tl, A.torsoTop + 2, "S");
-      set(g, A.tr, A.torsoTop + 2, "S");
+    case "backpack": // 백팩 — 어깨 아래 사각 스트랩(대학생 기본 복장 베이스가 S라 K로 대비를 준다)
+      set(g, A.tl, A.torsoTop + 1, "K");
+      set(g, A.tr, A.torsoTop + 1, "K");
+      set(g, A.tl, A.torsoTop + 2, "K");
+      set(g, A.tr, A.torsoTop + 2, "K");
       break;
     case "watch": // 손목시계 — 손목 포인트
       set(g, A.tr + 1, A.torsoBot - 1, "W");
