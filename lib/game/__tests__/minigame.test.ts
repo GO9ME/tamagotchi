@@ -14,6 +14,7 @@ import {
   playRoulette,
   playRps,
   playSlots,
+  playTiming,
   type RpsChoice,
 } from "../minigame";
 
@@ -143,5 +144,25 @@ describe("가위바위보", () => {
     c.stats.luck = 100; // 최대 행운이어도
     const lose = playRps(c, "rock", 0.4); // CPU 보 → 여전히 패배
     expect(lose.effect.status?.stress).toBe(4);
+  });
+});
+
+describe("타이밍 챌린지", () => {
+  it("정확도가 높으면 퍼펙트, 중간이면 굿, 낮으면 미스", () => {
+    const c = make();
+    const perfect = playTiming(c, 1);
+    expect(perfect.fx?.tier).toBe("great");
+    expect(perfect.savingsDelta).toBe(10);
+    const good = playTiming(c, 0.6);
+    expect(good.fx).toBeNull();
+    expect(good.effect.status?.focus).toBe(8);
+    const miss = playTiming(c, 0.3);
+    expect(miss.effect.status?.stress).toBe(3);
+  });
+
+  it("정확도와 무관하게 체력은 항상 소모된다", () => {
+    const c = make();
+    expect(playTiming(c, 1).effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
+    expect(playTiming(c, 0).effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
   });
 });

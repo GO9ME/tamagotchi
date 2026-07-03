@@ -407,3 +407,47 @@ export function playRps(c: Character, userChoice: RpsChoice, rand: number): Mini
     fx: null,
   };
 }
+
+/**
+ * 타이밍 챌린지 — UI가 계산한 정확도(0~1, 1이 정중앙 정지)를 그대로 받는 순수함수.
+ * Date.now()/타이머는 컴포넌트 레벨에만 존재하고 이 함수는 결정적이다. 스킬 콘텐츠라 행운 보정 없음.
+ */
+export function playTiming(c: Character, accuracy: number): MinigameResult {
+  if (accuracy >= 0.9) {
+    return {
+      effect: {
+        status: { ...baseStatus, focus: 15, confidence: 8 },
+        stats: gainStats(c),
+        exp: 15,
+        message: "⏱️ 퍼펙트! 완벽한 타이밍이에요 (+10만원)",
+      },
+      savingsDelta: 10,
+      statPointsDelta: 0,
+      fx: { tier: "great", label: "⏱️ 퍼펙트!" },
+    };
+  }
+  if (accuracy >= 0.6) {
+    return {
+      effect: {
+        status: { ...baseStatus, focus: 8 },
+        stats: gainStats(c),
+        exp: 8,
+        message: "⏱️ 굿! 타이밍이 좋아요",
+      },
+      savingsDelta: 0,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  return {
+    effect: {
+      status: { ...baseStatus, stress: 3 },
+      stats: gainStats(c),
+      exp: 2,
+      message: "⏱️ 아쉽게 놓쳤어요",
+    },
+    savingsDelta: 0,
+    statPointsDelta: 0,
+    fx: null,
+  };
+}
