@@ -73,7 +73,21 @@ export type RoomItemKey =
   | "sofa" // 소파
   | "wallTv" // 벽걸이 TV
   | "catTower" // 캣타워
-  | "chandelier"; // 샹들리에
+  | "chandelier" // 샹들리에
+  | "candleSet" // 캔들 세트
+  | "succulents" // 다육식물 화분
+  | "bookshelf" // 미니 책장
+  | "moodLamp" // 무드등
+  | "teddyBear" // 곰인형
+  | "dartboard" // 다트보드
+  | "turntable" // 턴테이블
+  | "vanity" // 화장대
+  | "miniFridge" // 미니 냉장고
+  | "airConditioner" // 에어컨
+  | "massageChair" // 안마의자
+  | "bigAquarium" // 대형 수족관
+  | "homeTheater" // 홈시어터
+  | "grandPiano"; // 그랜드 피아노
 
 /** 옷장 아이템 키 — 의상(몸통 교체) 또는 액세서리(머리/목 덧그리기) */
 export type WardrobeItemKey =
