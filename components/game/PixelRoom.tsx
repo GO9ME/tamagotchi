@@ -602,7 +602,7 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
         </div>
       )}
       {has("succulents") && (
-        <div className="absolute" style={{ left: "40%", top: "10%", width: "6%", height: "7%", zIndex: 1 }}>
+        <div className="absolute" style={{ left: "88%", top: "3%", width: "6%", height: "6%", zIndex: 1 }}>
           <span className="absolute inset-x-0 bottom-0" style={{ height: "45%", background: prop, border: `2px solid ${ink}` }} />
           <span className="absolute" style={{ left: "10%", right: "10%", bottom: "40%", height: "60%", background: propHi, borderRadius: "50% 50% 20% 20%" }} />
         </div>
@@ -639,7 +639,7 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
         </div>
       )}
       {has("vanity") && (
-        <div className="absolute" style={{ left: "1%", bottom: "6%", width: "9%", height: "13%", zIndex: 1 }}>
+        <div className="absolute" style={{ left: "1%", top: "45%", width: "9%", height: "12%", zIndex: 1 }}>
           <span className="absolute inset-x-0 bottom-0" style={{ height: "55%", background: prop, border: `2px solid ${ink}` }} />
           <span className="absolute" style={{ left: "20%", right: "20%", bottom: "50%", height: "50%", background: propHi, border: `2px solid ${ink}`, borderRadius: "50% 50% 0 0" }} />
         </div>
@@ -655,7 +655,7 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
         </div>
       )}
       {has("massageChair") && (
-        <div className="absolute" style={{ left: "24%", bottom: "6%", width: "11%", height: "15%", zIndex: 1 }}>
+        <div className="absolute" style={{ left: "16%", top: "38%", width: "11%", height: "15%", zIndex: 1 }}>
           <span className="absolute inset-x-0 bottom-0" style={{ height: "60%", background: prop, border: `2px solid ${ink}` }} />
           <span className="absolute inset-x-0 top-0" style={{ height: "50%", background: propHi, border: `2px solid ${ink}` }} />
         </div>
