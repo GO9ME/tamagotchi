@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createCharacter } from "../character";
+import { ROOM_ITEMS } from "../roomItems";
 import {
   canPullGacha,
   GACHA_CONFIG,
@@ -32,7 +33,11 @@ describe("shopGacha", () => {
   it("자동차 풀: 보유 티어보다 높은 차만, 최고 티어 보유 시 뽑기 불가", () => {
     const c = make();
     c.assets = ["carSedan"];
-    expect(gachaPool(c, "car").map((i) => i.key)).toEqual(["carImport"]);
+    expect(gachaPool(c, "car").map((i) => i.key)).toEqual([
+      "carImport",
+      "carImportSuv",
+      "carSupercar",
+    ]);
     c.assets = ["carImport"];
     expect(gachaPool(c, "car")).toHaveLength(0);
     expect(canPullGacha(c, "car").ok).toBe(false);
@@ -64,9 +69,9 @@ describe("shopGacha", () => {
 
   it("마지막 남은 아이템은 확정 지급이므로 레어 연출 없음", () => {
     const c = make();
-    c.assets = ["carSedan"]; // 수입차 1개만 남음
-    const pull = pullShopGacha(c, "car", 0.99, 0.5)!;
-    expect(pull.item.key).toBe("carImport");
+    c.roomItems = ROOM_ITEMS.filter((i) => i.key !== "artFrame").map((i) => i.key);
+    const pull = pullShopGacha(c, "room", 0.99, 0.5)!;
+    expect(pull.item.key).toBe("artFrame");
     expect(pull.rare).toBe(false);
   });
 });
