@@ -86,6 +86,14 @@ export type WardrobeItemKey =
   | "dress" // 원피스
   | "padding" // 패딩 점퍼
   | "leather" // 가죽 재킷
+  | "overalls" // 멜빵바지
+  | "swimsuit" // 수영복
+  | "baseballUniform" // 야구 유니폼
+  | "knitCardigan" // 니트 가디건
+  | "denimSet" // 청청 세트
+  | "trenchCoat" // 트렌치코트
+  | "hanbok" // 한복
+  | "tuxedo" // 턱시도
   // 액세서리 — 복장과 별개로 1개 착용
   | "ribbon" // 리본핀
   | "cap" // 캡모자
@@ -94,7 +102,15 @@ export type WardrobeItemKey =
   | "sunglasses" // 선글라스
   | "headphones" // 헤드폰
   | "necklace" // 목걸이
-  | "crown"; // 왕관
+  | "crown" // 왕관
+  | "hairpin" // 헤어핀 세트
+  | "gloves" // 장갑
+  | "bowtie" // 나비넥타이
+  | "backpack" // 백팩
+  | "watch" // 손목시계
+  | "earrings" // 귀걸이
+  | "brooch" // 브로치
+  | "anklet"; // 발찌
 
 /** 대형 자산 키(자동차) — 티어 업그레이드 방식(이전 자산 매각 가정, 차액만 지불) */
 export type AssetKey =
