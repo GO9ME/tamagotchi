@@ -8,8 +8,14 @@ import {
   luckBonus,
   MINIGAME_ENERGY_COST,
   MINIGAME_MIN_AGE,
+  playDarts,
+  playFishing,
   playGacha,
+  playRoulette,
+  playRps,
   playSlots,
+  playTiming,
+  type RpsChoice,
 } from "../minigame";
 
 const make = () => {
@@ -77,5 +83,86 @@ describe("minigame", () => {
       ([k, v]) => k !== "luck" && v === 1,
     );
     expect(gained.length).toBe(1);
+  });
+});
+
+describe("룰렛", () => {
+  it("rand 낮으면 대박(+80만원), 높으면 꽝 — 둘 다 체력 소모", () => {
+    const c = make();
+    const jackpot = playRoulette(c, 0);
+    expect(jackpot.fx?.tier).toBe("jackpot");
+    expect(jackpot.savingsDelta).toBe(80);
+    const miss = playRoulette(c, 0.999);
+    expect(miss.fx).toBeNull();
+    expect(miss.savingsDelta).toBe(0);
+    for (const r of [jackpot, miss]) {
+      expect(r.effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
+    }
+  });
+});
+
+describe("낚시", () => {
+  it("rand 낮으면 월척(+60만원), 높으면 헛탕", () => {
+    const c = make();
+    const big = playFishing(c, 0);
+    expect(big.fx?.tier).toBe("great");
+    expect(big.savingsDelta).toBe(60);
+    const miss = playFishing(c, 0.999);
+    expect(miss.fx).toBeNull();
+    expect(miss.savingsDelta).toBe(0);
+  });
+});
+
+describe("다트", () => {
+  it("rand 낮으면 불스아이(스탯 포인트 +1), 높으면 완전히 빗나감", () => {
+    const c = make();
+    const bullseye = playDarts(c, 0);
+    expect(bullseye.statPointsDelta).toBe(1);
+    expect(bullseye.fx?.tier).toBe("great");
+    const miss = playDarts(c, 0.999);
+    expect(miss.statPointsDelta).toBe(0);
+    expect(miss.effect.status?.stress).toBe(3);
+  });
+});
+
+describe("가위바위보", () => {
+  it("이기면 승리 보상, 같으면 무승부, 지면 스트레스", () => {
+    const c = make();
+    const win = playRps(c, "paper", 0); // rand=0 → CPU 바위 → 보로 승리
+    expect(win.fx?.tier).toBe("good");
+    expect(win.savingsDelta).toBe(5);
+    const draw = playRps(c, "rock", 0); // CPU 바위 → 무승부
+    expect(draw.fx).toBeNull();
+    expect(draw.savingsDelta).toBe(0);
+    expect(draw.effect.status?.mood).toBe(2);
+    const lose = playRps(c, "rock", 0.4); // rand=0.4 → CPU 보 → 패배
+    expect(lose.effect.status?.stress).toBe(4);
+  });
+
+  it("행운 스탯과 무관하게 순수 스킬 판정이다(승률 결정에 luckBonus 미사용)", () => {
+    const c = make();
+    c.stats.luck = 100; // 최대 행운이어도
+    const lose = playRps(c, "rock", 0.4); // CPU 보 → 여전히 패배
+    expect(lose.effect.status?.stress).toBe(4);
+  });
+});
+
+describe("타이밍 챌린지", () => {
+  it("정확도가 높으면 퍼펙트, 중간이면 굿, 낮으면 미스", () => {
+    const c = make();
+    const perfect = playTiming(c, 1);
+    expect(perfect.fx?.tier).toBe("great");
+    expect(perfect.savingsDelta).toBe(10);
+    const good = playTiming(c, 0.6);
+    expect(good.fx).toBeNull();
+    expect(good.effect.status?.focus).toBe(8);
+    const miss = playTiming(c, 0.3);
+    expect(miss.effect.status?.stress).toBe(3);
+  });
+
+  it("정확도와 무관하게 체력은 항상 소모된다", () => {
+    const c = make();
+    expect(playTiming(c, 1).effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
+    expect(playTiming(c, 0).effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
   });
 });

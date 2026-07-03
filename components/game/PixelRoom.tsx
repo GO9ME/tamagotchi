@@ -595,6 +595,91 @@ function OwnedItems({ items, pal }: { items: RoomItemKey[]; pal: RoomPalette }) 
           ))}
         </div>
       )}
+      {has("candleSet") && (
+        <div className="absolute" style={{ left: "76%", top: "3%", width: "10%", height: "5%", zIndex: 0 }}>
+          <span className="absolute" style={{ left: "10%", bottom: 0, width: "18%", height: "80%", background: propHi, border: `2px solid ${ink}` }} />
+          <span className="absolute" style={{ left: "55%", bottom: 0, width: "18%", height: "60%", background: propHi, border: `2px solid ${ink}` }} />
+        </div>
+      )}
+      {has("succulents") && (
+        <div className="absolute" style={{ left: "88%", top: "3%", width: "6%", height: "6%", zIndex: 1 }}>
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "45%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute" style={{ left: "10%", right: "10%", bottom: "40%", height: "60%", background: propHi, borderRadius: "50% 50% 20% 20%" }} />
+        </div>
+      )}
+      {has("bookshelf") && (
+        <div className="absolute" style={{ left: "1%", top: "24%", width: "10%", height: "18%", background: propHi, border: `2px solid ${ink}`, zIndex: 0 }}>
+          {[65, 30].map((b) => (
+            <span key={b} className="absolute" style={{ left: 0, right: 0, bottom: `${b}%`, height: 2, background: ink }} />
+          ))}
+        </div>
+      )}
+      {has("moodLamp") && (
+        <div className="absolute" style={{ left: "82%", top: "10%", width: "6%", height: "14%", zIndex: 1 }}>
+          <span className="absolute left-1/2 bottom-0 w-[2px] -translate-x-1/2" style={{ height: "70%", background: ink }} />
+          <span className="absolute inset-x-0 top-0" style={{ height: "35%", background: propHi, border: `2px solid ${ink}`, borderRadius: "50%" }} />
+        </div>
+      )}
+      {has("teddyBear") && (
+        <div className="absolute" style={{ left: "6%", bottom: "20%", width: "9%", height: "10%", zIndex: 2 }} aria-label="곰인형">
+          <span className="absolute" style={{ left: "10%", bottom: 0, width: "80%", height: "62%", background: prop, border: `2px solid ${ink}`, borderRadius: "30%" }} />
+          <span className="absolute" style={{ left: "18%", top: 0, width: "64%", height: "44%", background: prop, border: `2px solid ${ink}`, borderRadius: "50%" }} />
+          <span className="absolute" style={{ left: "6%", top: "-6%", width: "20%", height: "20%", background: prop, borderRadius: "50%" }} />
+          <span className="absolute" style={{ right: "6%", top: "-6%", width: "20%", height: "20%", background: prop, borderRadius: "50%" }} />
+        </div>
+      )}
+      {has("dartboard") && (
+        <div className="absolute" style={{ left: "91%", top: "26%", width: "7%", height: "10%", background: propHi, border: `2px solid ${ink}`, borderRadius: "50%", zIndex: 1 }}>
+          <span className="absolute inset-[28%] rounded-full" style={{ background: ink }} />
+        </div>
+      )}
+      {has("turntable") && (
+        <div className="absolute" style={{ left: "1%", top: "18%", width: "10%", height: "5%", background: prop, border: `2px solid ${ink}`, zIndex: 1 }}>
+          <span className="absolute" style={{ left: "60%", top: "15%", width: "30%", height: "70%", background: ink, borderRadius: "50%" }} />
+        </div>
+      )}
+      {has("vanity") && (
+        <div className="absolute" style={{ left: "1%", top: "45%", width: "9%", height: "12%", zIndex: 1 }}>
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "55%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute" style={{ left: "20%", right: "20%", bottom: "50%", height: "50%", background: propHi, border: `2px solid ${ink}`, borderRadius: "50% 50% 0 0" }} />
+        </div>
+      )}
+      {has("miniFridge") && (
+        <div className="absolute" style={{ left: "52%", bottom: "6%", width: "8%", height: "16%", background: propHi, border: `2px solid ${ink}`, zIndex: 1 }}>
+          <span className="absolute inset-x-0" style={{ top: "34%", height: 2, background: ink }} />
+        </div>
+      )}
+      {has("airConditioner") && (
+        <div className="absolute" style={{ left: "60%", top: "2%", width: "14%", height: "7%", background: propHi, border: `2px solid ${ink}`, zIndex: 0 }}>
+          <span className="absolute" style={{ left: "10%", right: "10%", bottom: "15%", height: "20%", background: ink }} />
+        </div>
+      )}
+      {has("massageChair") && (
+        <div className="absolute" style={{ left: "16%", top: "38%", width: "11%", height: "15%", zIndex: 1 }}>
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "60%", background: prop, border: `2px solid ${ink}` }} />
+          <span className="absolute inset-x-0 top-0" style={{ height: "50%", background: propHi, border: `2px solid ${ink}` }} />
+        </div>
+      )}
+      {has("bigAquarium") && (
+        <div className="absolute" style={{ left: "14%", top: "24%", width: "14%", height: "12%", background: propHi, border: `2px solid ${ink}`, zIndex: 1 }}>
+          <span className="absolute" style={{ left: "30%", top: "35%", width: "16%", height: "20%", background: ink, borderRadius: "50%" }} />
+          <span className="absolute" style={{ left: "58%", top: "50%", width: "12%", height: "16%", background: ink, borderRadius: "50%" }} />
+        </div>
+      )}
+      {has("homeTheater") && (
+        <div className="absolute" style={{ left: "68%", top: "48%", width: "15%", height: "5%", background: ink, zIndex: 0 }}>
+          <span className="absolute inset-[18%]" style={{ background: propHi }} />
+        </div>
+      )}
+      {has("grandPiano") && (
+        <div className="absolute" style={{ left: "36%", bottom: "6%", width: "18%", height: "13%", zIndex: 1 }} aria-label="그랜드 피아노">
+          <span className="absolute inset-x-0 bottom-0" style={{ height: "60%", background: ink, border: `2px solid ${ink}` }} />
+          <span
+            className="absolute"
+            style={{ left: 0, bottom: "55%", width: "70%", height: "45%", background: ink, border: `2px solid ${ink}`, clipPath: "polygon(0 100%, 100% 100%, 40% 0, 0 0)" }}
+          />
+        </div>
+      )}
     </>
   );
 }

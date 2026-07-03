@@ -42,14 +42,16 @@ export function AssetPanel({ character }: { character: Character }) {
             </div>
             <ul className="flex flex-col gap-1.5">
               {tiers.map((a) => {
-                const owned = a.tier <= current;
-                const isCurrent = a.tier === current;
+                const isOwned = character.assets.includes(a.key);
+                const isCurrent = isOwned && a.tier === current;
+                const wasSold = isOwned && a.tier < current;
+                const passedTierUnowned = !isOwned && a.tier <= current;
                 return (
                   <li
                     key={a.key}
                     className={cn(
                       "flex items-center justify-between gap-2 rounded-xl px-3 py-2",
-                      isCurrent ? "bg-grape/15" : owned ? "bg-black/[0.02]" : "bg-black/[0.03]",
+                      isCurrent ? "bg-grape/15" : isOwned || passedTierUnowned ? "bg-black/[0.02]" : "bg-black/[0.03]",
                     )}
                   >
                     <div className="flex min-w-0 items-center gap-2">
@@ -63,8 +65,10 @@ export function AssetPanel({ character }: { character: Character }) {
                     </div>
                     {isCurrent ? (
                       <span className="pill shrink-0 bg-grape/40 text-ink">보유 중</span>
-                    ) : owned ? (
+                    ) : wasSold ? (
                       <span className="pill shrink-0 bg-black/10 text-ink/40">매각함</span>
+                    ) : passedTierUnowned ? (
+                      <span className="pill shrink-0 bg-black/10 text-ink/40">미보유</span>
                     ) : (
                       <span className="pill shrink-0 bg-black/10 text-ink/45">
                         미보유 · 정가 {formatMoney(a.price)}

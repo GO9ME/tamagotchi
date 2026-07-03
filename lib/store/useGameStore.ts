@@ -80,9 +80,15 @@ import {
   canPlayMinigame,
   LUCK_CAP,
   LUCK_PER_PLAY,
+  playDarts,
+  playFishing,
   playGacha,
+  playRoulette,
+  playRps,
   playSlots,
+  playTiming,
   type MinigameKind,
+  type RpsChoice,
 } from "@/lib/game/minigame";
 import {
   canPullGacha,
@@ -148,7 +154,10 @@ interface GameState {
   allocateStat: (statKey: keyof CharacterStats) => ActionResult;
   chooseUniversity: (tier: UniversityTierKey) => ActionResult;
   doLeisure: (key: string) => ActionResult;
-  playMinigame: (kind: MinigameKind) => ActionResult;
+  playMinigame: (
+    kind: MinigameKind,
+    extra?: { choice?: RpsChoice; accuracy?: number },
+  ) => ActionResult;
   pullGacha: (category: GachaCategory) => ActionResult;
   equipWardrobe: (kind: "outfit" | "accessory", key: WardrobeItemKey | null) => ActionResult;
   moveHousing: (key: HousingOptionKey) => ActionResult;
@@ -765,16 +774,20 @@ export const useGameStore = create<GameState>()(
         return { ok: true, message: "여가 완료" };
       },
 
-      playMinigame: (kind) => {
+      playMinigame: (kind, extra) => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
         if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
         const gate = canPlayMinigame(c);
         if (!gate.ok) return { ok: false, message: gate.reason ?? "지금은 할 수 없어요." };
         const result =
-          kind === "slots"
-            ? playSlots(c, Math.random())
-            : playGacha(c, Math.random(), Math.random());
+          kind === "slots" ? playSlots(c, Math.random())
+          : kind === "gacha" ? playGacha(c, Math.random(), Math.random())
+          : kind === "roulette" ? playRoulette(c, Math.random())
+          : kind === "fishing" ? playFishing(c, Math.random())
+          : kind === "darts" ? playDarts(c, Math.random())
+          : kind === "rps" ? playRps(c, extra?.choice ?? "rock", Math.random())
+          : playTiming(c, extra?.accuracy ?? 0);
         let next = applyEffect(c, result.effect);
         next = {
           ...next,
