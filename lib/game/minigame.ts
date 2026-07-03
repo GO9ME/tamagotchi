@@ -177,3 +177,183 @@ export function playGacha(c: Character, rand: number, rand2: number): MinigameRe
     fx: null,
   };
 }
+
+/** 룰렛 — 저축금 + 스트레스 해소. 슬롯보다 칸이 많아 변동폭이 크다 */
+export function playRoulette(c: Character, rand: number): MinigameResult {
+  const b = luckBonus(c);
+  const r = rand * 100;
+  const jackpotP = 2 + b * 0.2;
+  const bigP = jackpotP + 10 + b * 0.5;
+  const smallP = bigP + 28 + b;
+
+  if (r < jackpotP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 15, stress: -20 },
+        stats: gainStats(c),
+        exp: 15,
+        message: "🎡 대박 칸! 스트레스가 확 풀려요 (+80만원)",
+      },
+      savingsDelta: 80,
+      statPointsDelta: 0,
+      fx: { tier: "jackpot", label: "🎡 대박!" },
+    };
+  }
+  if (r < bigP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 8, stress: -12 },
+        stats: gainStats(c),
+        exp: 8,
+        message: "🎡 좋은 칸! (+15만원)",
+      },
+      savingsDelta: 15,
+      statPointsDelta: 0,
+      fx: { tier: "great", label: "🎡 좋은 칸!" },
+    };
+  }
+  if (r < smallP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 3, stress: -6 },
+        stats: gainStats(c),
+        exp: 4,
+        message: "🎡 소소한 칸 — 기분은 조금 나아졌어요",
+      },
+      savingsDelta: 0,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  return {
+    effect: {
+      status: { ...baseStatus, mood: -2, stress: 2 },
+      stats: gainStats(c),
+      exp: 2,
+      message: "🎡 꽝… 그래도 한 바퀴 돌아서 상쾌해요",
+    },
+    savingsDelta: 0,
+    statPointsDelta: 0,
+    fx: null,
+  };
+}
+
+/** 낚시 — 저축금 + exp, "월척"이 최상위 등급 */
+export function playFishing(c: Character, rand: number): MinigameResult {
+  const b = luckBonus(c);
+  const r = rand * 100;
+  const bigCatchP = 3 + b * 0.3;
+  const midCatchP = bigCatchP + 15 + b * 0.6;
+  const smallCatchP = midCatchP + 35 + b;
+
+  if (r < bigCatchP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 10 },
+        stats: gainStats(c),
+        exp: 20,
+        message: "🎣 월척이다! 잉어 반, 사람 반 소동",
+      },
+      savingsDelta: 60,
+      statPointsDelta: 0,
+      fx: { tier: "great", label: "🎣 월척!" },
+    };
+  }
+  if (r < midCatchP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 5 },
+        stats: gainStats(c),
+        exp: 8,
+        message: "🎣 잉어 낚았어요!",
+      },
+      savingsDelta: 15,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  if (r < smallCatchP) {
+    return {
+      effect: {
+        status: { ...baseStatus, mood: 2 },
+        stats: gainStats(c),
+        exp: 4,
+        message: "🎣 손바닥만한 붕어",
+      },
+      savingsDelta: 3,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  return {
+    effect: {
+      status: { ...baseStatus, mood: -2, stress: 2 },
+      stats: gainStats(c),
+      exp: 2,
+      message: "🎣 헌 신발만 건졌어요…",
+    },
+    savingsDelta: 0,
+    statPointsDelta: 0,
+    fx: null,
+  };
+}
+
+/** 다트 — 스탯(집중력/자신감) 위주 보상. 돈은 걸리지 않는다 */
+export function playDarts(c: Character, rand: number): MinigameResult {
+  const b = luckBonus(c);
+  const r = rand * 100;
+  const bullseyeP = 3 + b * 0.3;
+  const innerP = bullseyeP + 15 + b * 0.6;
+  const outerP = innerP + 35 + b;
+
+  if (r < bullseyeP) {
+    return {
+      effect: {
+        status: { ...baseStatus, focus: 8, confidence: 6 },
+        stats: gainStats(c),
+        exp: 18,
+        message: "🎯 불스아이! 스탯 포인트 +1",
+      },
+      savingsDelta: 0,
+      statPointsDelta: 1,
+      fx: { tier: "great", label: "🎯 불스아이!" },
+    };
+  }
+  if (r < innerP) {
+    return {
+      effect: {
+        status: { ...baseStatus, focus: 10 },
+        stats: gainStats(c),
+        exp: 8,
+        message: "🎯 인링 명중! 집중력이 올라가요",
+      },
+      savingsDelta: 0,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  if (r < outerP) {
+    return {
+      effect: {
+        status: { ...baseStatus, confidence: 6 },
+        stats: gainStats(c),
+        exp: 4,
+        message: "🎯 아웃링, 그래도 나쁘지 않아요",
+      },
+      savingsDelta: 0,
+      statPointsDelta: 0,
+      fx: null,
+    };
+  }
+  return {
+    effect: {
+      status: { ...baseStatus, stress: 3, mood: -2 },
+      stats: gainStats(c),
+      exp: 2,
+      message: "🎯 완전히 빗나갔어요",
+    },
+    savingsDelta: 0,
+    statPointsDelta: 0,
+    fx: null,
+  };
+}

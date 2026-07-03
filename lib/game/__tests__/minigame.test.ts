@@ -8,7 +8,10 @@ import {
   luckBonus,
   MINIGAME_ENERGY_COST,
   MINIGAME_MIN_AGE,
+  playDarts,
+  playFishing,
   playGacha,
+  playRoulette,
   playSlots,
 } from "../minigame";
 
@@ -77,5 +80,44 @@ describe("minigame", () => {
       ([k, v]) => k !== "luck" && v === 1,
     );
     expect(gained.length).toBe(1);
+  });
+});
+
+describe("룰렛", () => {
+  it("rand 낮으면 대박(+80만원), 높으면 꽝 — 둘 다 체력 소모", () => {
+    const c = make();
+    const jackpot = playRoulette(c, 0);
+    expect(jackpot.fx?.tier).toBe("jackpot");
+    expect(jackpot.savingsDelta).toBe(80);
+    const miss = playRoulette(c, 0.999);
+    expect(miss.fx).toBeNull();
+    expect(miss.savingsDelta).toBe(0);
+    for (const r of [jackpot, miss]) {
+      expect(r.effect.status?.energy).toBe(-MINIGAME_ENERGY_COST);
+    }
+  });
+});
+
+describe("낚시", () => {
+  it("rand 낮으면 월척(+60만원), 높으면 헛탕", () => {
+    const c = make();
+    const big = playFishing(c, 0);
+    expect(big.fx?.tier).toBe("great");
+    expect(big.savingsDelta).toBe(60);
+    const miss = playFishing(c, 0.999);
+    expect(miss.fx).toBeNull();
+    expect(miss.savingsDelta).toBe(0);
+  });
+});
+
+describe("다트", () => {
+  it("rand 낮으면 불스아이(스탯 포인트 +1), 높으면 완전히 빗나감", () => {
+    const c = make();
+    const bullseye = playDarts(c, 0);
+    expect(bullseye.statPointsDelta).toBe(1);
+    expect(bullseye.fx?.tier).toBe("great");
+    const miss = playDarts(c, 0.999);
+    expect(miss.statPointsDelta).toBe(0);
+    expect(miss.effect.status?.stress).toBe(3);
   });
 });
