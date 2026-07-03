@@ -54,6 +54,14 @@ interface Outfit {
   zip?: boolean; // 지퍼 세로줄(옷장: 집업 재킷)
   skirt?: boolean; // 치마 플레어(옷장: 원피스)
   quilt?: boolean; // 누빔 가로선(옷장: 패딩 점퍼)
+  bib?: boolean; // 멜빵끈 + 가슴 패널(옷장: 멜빵바지)
+  sleeveless?: boolean; // 민소매(옷장: 수영복)
+  pinstripe?: boolean; // 세로 줄무늬(옷장: 야구 유니폼)
+  cardigan?: boolean; // 앞트임 세로 라인(옷장: 니트 가디건)
+  denimPatch?: boolean; // 가슴 패치 포켓(옷장: 청청 세트)
+  longCollar?: boolean; // 긴 깃 + 허리 벨트(옷장: 트렌치코트)
+  hanbokSash?: boolean; // 브이넥 옷고름(옷장: 한복)
+  lapel?: boolean; // 보타이 + 라펠(옷장: 턱시도)
 }
 
 /** 옷장 의상 → 스프라이트 복장 정의(착용 시 단계 기본 복장·직업 악센트를 대체) */
@@ -66,6 +74,14 @@ const WARDROBE_OUTFITS: Partial<Record<WardrobeItemKey, Outfit>> = {
   dress: { base: "F", skirt: true },
   padding: { base: "S", quilt: true },
   leather: { base: "K", zip: true },
+  overalls: { base: "S", bib: true },
+  swimsuit: { base: "K", sleeveless: true },
+  baseballUniform: { base: "F", pinstripe: true },
+  knitCardigan: { base: "S", cardigan: true },
+  denimSet: { base: "S", zip: true, denimPatch: true },
+  trenchCoat: { base: "K", longCollar: true },
+  hanbok: { base: "F", hanbokSash: true },
+  tuxedo: { base: "K", blazer: true, lapel: true },
 };
 
 export interface StageVisualConfig {
@@ -484,6 +500,53 @@ function drawBody(
   if (o.quilt) {
     fillRect(g, tl, tr, torsoTop + 1, torsoTop + 1, "K");
     fillRect(g, tl, tr, torsoTop + 3, torsoTop + 3, "K");
+  }
+  // 멜빵끈 + 가슴 패널(옷장: 멜빵바지)
+  if (o.bib) {
+    fillRect(g, 7, 8, torsoTop, torsoTop + 1, "S");
+    set(g, tl, torsoTop, "S");
+    set(g, tr, torsoTop, "S");
+  }
+  // 민소매(옷장: 수영복) — 어깨를 드러내고 목선 라인만 남긴다
+  if (o.sleeveless) {
+    clear(g, tl, torsoTop);
+    clear(g, tr, torsoTop);
+    fillRect(g, tl + 1, tr - 1, torsoTop, torsoTop, "K");
+  }
+  // 세로 줄무늬(옷장: 야구 유니폼)
+  if (o.pinstripe) {
+    const tone = o.base === "F" ? "K" : "F";
+    for (let y = torsoTop; y <= torsoBot; y++) set(g, 7, y, tone);
+  }
+  // 앞트임 세로 라인 + 단추(옷장: 니트 가디건)
+  if (o.cardigan) {
+    set(g, 7, torsoTop, "K");
+    for (let y = torsoTop + 1; y <= torsoBot; y++) set(g, 7, y, "S");
+    set(g, 8, torsoTop + 2, "K");
+  }
+  // 가슴 패치 포켓(옷장: 청청 세트)
+  if (o.denimPatch) {
+    set(g, 6, torsoTop + 1, "K");
+    fillRect(g, 6, 6, torsoTop + 1, torsoTop + 2, "S");
+  }
+  // 긴 깃 + 허리 벨트(옷장: 트렌치코트)
+  if (o.longCollar) {
+    set(g, 6, torsoTop, "K");
+    set(g, 9, torsoTop, "K");
+    fillRect(g, tl, tr, torsoBot, torsoBot, "K");
+  }
+  // 브이넥 옷고름(옷장: 한복)
+  if (o.hanbokSash) {
+    set(g, 7, torsoTop, "K");
+    set(g, 8, torsoTop + 1, "K");
+    set(g, 7, torsoTop + 2, "S");
+  }
+  // 보타이 + 라펠(옷장: 턱시도) — 정장의 깃(collar)과 다른 위치·범위라 실루엣이 갈린다
+  if (o.lapel) {
+    set(g, 6, torsoTop, "K");
+    set(g, 7, torsoTop, "K");
+    set(g, 8, torsoTop, "K");
+    set(g, 9, torsoTop, "K");
   }
 
   // 팔(포즈별)
