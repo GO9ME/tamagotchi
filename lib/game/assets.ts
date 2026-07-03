@@ -23,9 +23,15 @@ export interface AssetDef {
 }
 
 export const ASSETS: AssetDef[] = [
+  { key: "carCompactWagon", category: "car", tier: 1, label: "박스카 왜건", emoji: "🚐", price: 1900, desc: "짐 많이 실리는 든든한 왜건" },
   { key: "carCompact", category: "car", tier: 1, label: "경차", emoji: "🚗", price: 2000, desc: "나의 첫 차" },
+  { key: "carCompactCoupe", category: "car", tier: 1, label: "미니 쿠페", emoji: "🚕", price: 2100, desc: "아담하지만 스포티하게" },
+  { key: "carHybrid", category: "car", tier: 2, label: "하이브리드 세단", emoji: "🔋", price: 5800, desc: "연비 좋은 하이브리드 세단" },
   { key: "carSedan", category: "car", tier: 2, label: "중형 세단", emoji: "🚙", price: 6000, desc: "묵직한 승차감" },
+  { key: "carSuv", category: "car", tier: 2, label: "SUV", emoji: "🛻", price: 6200, desc: "가족과 함께, 넉넉한 SUV" },
   { key: "carImport", category: "car", tier: 3, label: "수입차", emoji: "🏎️", price: 15000, desc: "드디어 드림카" },
+  { key: "carImportSuv", category: "car", tier: 3, label: "수입 SUV", emoji: "🚙", price: 16000, desc: "수입 SUV, 가족과 함께 하는 럭셔리" },
+  { key: "carSupercar", category: "car", tier: 3, label: "슈퍼카", emoji: "🏁", price: 18000, desc: "레이스가 절로 떠오르는 슈퍼카" },
 ];
 
 export function assetDef(key: AssetKey): AssetDef | undefined {
