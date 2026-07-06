@@ -92,8 +92,9 @@ export function CharacterAvatar({ character }: { character: Character }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div className="relative">
+    <div className="flex w-full flex-col items-center gap-2 md:gap-3">
+      {/* 모바일은 한 화면 레이아웃에 맞춰 방을 조금 작게(높이 절약) */}
+      <div className="relative w-full max-w-[190px] md:max-w-[250px]">
         {showBubble && (
           <div className="absolute -top-2 left-1/2 z-10 -translate-x-1/2">
             <CharacterSpeechBubble

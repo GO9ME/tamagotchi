@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import type { CompanyTypeKey, JobFamilyKey } from "@/types/character";
 import { ACTIONS, PREP_KEYS } from "@/lib/game/actions";
+import { formatEffect } from "@/lib/game/effectLabel";
 import {
   COMPANY_TYPES,
   JOB_FAMILIES,
@@ -182,6 +183,11 @@ export default function CareerPage() {
               icon={PREP_ICON[a.key] ?? "star"}
               label={a.label}
               desc={a.desc}
+              effects={
+                a.effect
+                  ? formatEffect(a.effect(character), { exp: false })
+                  : undefined
+              }
               now={now}
               readyAt={character.cooldowns[a.key] ?? 0}
               accent="bg-grape/30"

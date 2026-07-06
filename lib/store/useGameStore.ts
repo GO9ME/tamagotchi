@@ -74,10 +74,29 @@ import {
   computeStudyResult,
   isStudyReady,
 } from "@/lib/game/study";
-import { canBuyRoomItem, roomItemDef } from "@/lib/game/roomItems";
-import { assetDef, canBuyAsset } from "@/lib/game/assets";
 import { canDoLeisure, leisureCooldownKey, leisureDef } from "@/lib/game/leisure";
-import { canBuyWardrobe, wardrobeDef } from "@/lib/game/wardrobe";
+import { formatEffect } from "@/lib/game/effectLabel";
+import {
+  canPlayMinigame,
+  LUCK_CAP,
+  LUCK_PER_PLAY,
+  playDarts,
+  playFishing,
+  playGacha,
+  playRoulette,
+  playRps,
+  playSlots,
+  playTiming,
+  type MinigameKind,
+  type RpsChoice,
+} from "@/lib/game/minigame";
+import {
+  canPullGacha,
+  GACHA_CONFIG,
+  pullShopGacha,
+  type GachaCategory,
+} from "@/lib/game/shopGacha";
+import { wardrobeDef } from "@/lib/game/wardrobe";
 import { applyMove, housingDef, planMove } from "@/lib/game/housing";
 import {
   canStartSecondGen,
@@ -134,10 +153,12 @@ interface GameState {
   dropGrad: () => ActionResult;
   allocateStat: (statKey: keyof CharacterStats) => ActionResult;
   chooseUniversity: (tier: UniversityTierKey) => ActionResult;
-  buyRoomItem: (key: RoomItemKey) => ActionResult;
-  buyAsset: (key: AssetKey) => ActionResult;
   doLeisure: (key: string) => ActionResult;
-  buyWardrobe: (key: WardrobeItemKey) => ActionResult;
+  playMinigame: (
+    kind: MinigameKind,
+    extra?: { choice?: RpsChoice; accuracy?: number },
+  ) => ActionResult;
+  pullGacha: (category: GachaCategory) => ActionResult;
   equipWardrobe: (kind: "outfit" | "accessory", key: WardrobeItemKey | null) => ActionResult;
   moveHousing: (key: HousingOptionKey) => ActionResult;
   startSecondGeneration: () => ActionResult;
@@ -304,18 +325,28 @@ export const useGameStore = create<GameState>()(
         if (!food) return { ok: false, message: "알 수 없는 음식이에요." };
 
         let next = applyEffect(c, food.effect);
+        let shownEffect = food.effect; // 토스트에 보여줄 실제 적용 효과
 
         // 과식 처리: 이미 배부른 상태에서 또 먹으면 체중 추가 증가(칼로리 등급이 높을수록 크게)
         let message = food.effect.message ?? "잘 먹었어요!";
         if (c.status.hunger >= OVEREAT_HUNGER_THRESHOLD) {
-          const extraWeight = OVEREAT_EXTRA_WEIGHT_BY_TIER[food.calorieTier];
-          next = applyEffect(next, {
-            status: {
-              weight: extraWeight,
-              mood: food.junk ? 1 : 2,
-              health: food.junk ? -1.5 : 0,
-            },
-          });
+          const extra = {
+            weight: OVEREAT_EXTRA_WEIGHT_BY_TIER[food.calorieTier],
+            mood: food.junk ? 1 : 2,
+            health: food.junk ? -1.5 : 0,
+          };
+          next = applyEffect(next, { status: extra });
+          // 과식 페널티까지 합산한 수치를 토스트에 표시
+          const merged: Record<string, number> = {
+            ...(food.effect.status as Record<string, number> | undefined),
+          };
+          for (const [k, v] of Object.entries(extra)) {
+            merged[k] = (merged[k] ?? 0) + v;
+          }
+          shownEffect = {
+            ...food.effect,
+            status: merged as typeof food.effect.status,
+          };
           message = food.junk
             ? "불량식품을 과식했어요! 살도 찌고 속도 안 좋아요…"
             : "과식했어요! 살이 조금 더 붙었어요.";
@@ -332,7 +363,10 @@ export const useGameStore = create<GameState>()(
         };
 
         set({ character: next });
-        pushToast(message + levelUpSuffix(c, next));
+        const feedDetail = formatEffect(shownEffect);
+        pushToast(
+          message + (feedDetail ? ` (${feedDetail})` : "") + levelUpSuffix(c, next),
+        );
         pulseAction("playing"); // 냠냠 반응
         return { ok: true, message };
       },
@@ -391,7 +425,9 @@ export const useGameStore = create<GameState>()(
         const baseMsg = baseEffect.message ?? `${def.label} 완료!`;
         const message =
           outcome && outcome.tier !== "good" ? `${outcome.label} ${baseMsg}` : baseMsg;
-        pushToast(message + levelUpSuffix(c, next));
+        // 실제 적용된 변화량(대성공 배수 반영)을 토스트에 함께 표시
+        const detail = formatEffect(effect);
+        pushToast(message + (detail ? ` (${detail})` : "") + levelUpSuffix(c, next));
         fireFx(outcome);
         pulseAction(actionStateForActionKey(key)); // 누른 행동에 맞는 포즈
         return { ok: true, message };
@@ -661,24 +697,56 @@ export const useGameStore = create<GameState>()(
         return { ok: true, message: "입학" };
       },
 
-      buyRoomItem: (key) => {
+      pullGacha: (category) => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
         if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
-        const gate = canBuyRoomItem(key, c.roomItems, c.savings);
-        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
-        const def = roomItemDef(key)!;
-        let next = applyEffect(c, { status: { mood: 4 } });
+        const gate = canPullGacha(c, category);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "지금은 뽑을 수 없어요." };
+        const conf = GACHA_CONFIG[category];
+        const pull = pullShopGacha(c, category, Math.random(), Math.random())!;
+
+        // 뽑기 설렘 + 행운 적립(미니게임과 동일 규칙)
+        let next = applyEffect(c, {
+          status:
+            category === "car"
+              ? { mood: 8, confidence: 4 }
+              : { mood: 4, confidence: 2 },
+          stats: { luck: c.stats.luck < LUCK_CAP ? LUCK_PER_PLAY : 0 },
+        });
         next = {
           ...next,
-          savings: c.savings - def.price,
-          roomItems: [...c.roomItems, key],
-          happiness: Math.min(100, c.happiness + 1),
+          savings: next.savings - conf.price,
+          happiness: Math.min(100, next.happiness + (category === "car" ? 2 : 1)),
         };
+        if (category === "wardrobe") {
+          const key = pull.item.key as WardrobeItemKey;
+          const def = wardrobeDef(key)!;
+          next = {
+            ...next,
+            wardrobe: [...next.wardrobe, key],
+            // 새 옷은 바로 입어보는 게 국룰
+            ...(def.kind === "outfit"
+              ? { equippedOutfit: key }
+              : { equippedAccessory: key }),
+          };
+        } else if (category === "room") {
+          next = { ...next, roomItems: [...next.roomItems, pull.item.key as RoomItemKey] };
+        } else {
+          next = { ...next, assets: [...next.assets, pull.item.key as AssetKey] };
+        }
         set({ character: next });
-        pushToast(`${def.emoji} ${def.label} 구입! 방이 아늑해졌어요. (-${formatMoney(def.price)})`);
+
+        const profit = pull.item.price > conf.price ? ` 정가 ${formatMoney(pull.item.price)} — 이득!` : "";
+        pushToast(
+          `${conf.emoji} 뽑기 결과: ${pull.item.emoji} ${pull.item.label} 당첨!${profit} (-${formatMoney(conf.price)})` +
+            levelUpSuffix(c, next),
+        );
+        if (pull.rare) {
+          fireFx({ tier: "great", mult: 1, label: `✨ ${pull.item.label}!` });
+        }
         pulseAction("playing");
-        return { ok: true, message: "구입 완료" };
+        return { ok: true, message: pull.item.label };
       },
 
       doLeisure: (key) => {
@@ -697,58 +765,50 @@ export const useGameStore = create<GameState>()(
           cooldowns: setCooldown(next, leisureCooldownKey(key), t, cd(def.cooldownMs)),
         };
         set({ character: next });
+        const leisureDetail = formatEffect(def.effect);
         pushToast(
-          `${def.emoji} ${def.effect.message ?? `${def.label} 완료!`} (-${formatMoney(def.cost)})` +
+          `${def.emoji} ${def.effect.message ?? `${def.label} 완료!`} (-${formatMoney(def.cost)}${leisureDetail ? ` · ${leisureDetail}` : ""})` +
             levelUpSuffix(c, next),
         );
         pulseAction("playing");
         return { ok: true, message: "여가 완료" };
       },
 
-      buyAsset: (key) => {
+      playMinigame: (kind, extra) => {
         const c = get().character;
         if (!c) return { ok: false, message: "캐릭터가 없어요." };
         if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
-        const gate = canBuyAsset(key, c.assets, c.savings);
-        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
-        const def = assetDef(key)!;
-        let next = applyEffect(c, { status: { mood: 8, confidence: 4 } });
+        const gate = canPlayMinigame(c);
+        if (!gate.ok) return { ok: false, message: gate.reason ?? "지금은 할 수 없어요." };
+        const result =
+          kind === "slots" ? playSlots(c, Math.random())
+          : kind === "gacha" ? playGacha(c, Math.random(), Math.random())
+          : kind === "roulette" ? playRoulette(c, Math.random())
+          : kind === "fishing" ? playFishing(c, Math.random())
+          : kind === "darts" ? playDarts(c, Math.random())
+          : kind === "rps" ? playRps(c, extra?.choice ?? "rock", Math.random())
+          : playTiming(c, extra?.accuracy ?? 0);
+        let next = applyEffect(c, result.effect);
         next = {
           ...next,
-          savings: c.savings - gate.cost,
-          assets: [...c.assets, key],
-          happiness: Math.min(100, c.happiness + 2),
+          savings: next.savings + result.savingsDelta,
+          statPoints: next.statPoints + result.statPointsDelta,
         };
         set({ character: next });
-        pushToast(
-          `${def.emoji} ${def.label} 마련! 인생의 큰 산 하나를 넘었어요. (-${formatMoney(gate.cost)})`,
-        );
+        const message = result.effect.message ?? "미니게임 완료!";
+        const detail = formatEffect(result.effect);
+        pushToast(message + (detail ? ` (${detail})` : "") + levelUpSuffix(c, next));
+        if (result.fx) {
+          set((s) => ({
+            outcomeFx: {
+              tier: result.fx!.tier,
+              label: result.fx!.label,
+              token: (s.outcomeFx?.token ?? 0) + 1,
+            },
+          }));
+        }
         pulseAction("playing");
-        return { ok: true, message: "구입 완료" };
-      },
-
-      buyWardrobe: (key) => {
-        const c = get().character;
-        if (!c) return { ok: false, message: "캐릭터가 없어요." };
-        if (c.deathAge != null) return { ok: false, message: "이미 생을 마쳤어요." };
-        const gate = canBuyWardrobe(c, key);
-        if (!gate.ok) return { ok: false, message: gate.reason ?? "구매할 수 없어요." };
-        const def = wardrobeDef(key)!;
-        let next = applyEffect(c, { status: { mood: 4, confidence: 3 } });
-        next = {
-          ...next,
-          savings: c.savings - def.price,
-          wardrobe: [...c.wardrobe, key],
-          happiness: Math.min(100, c.happiness + 1),
-          // 새 옷은 바로 입어보는 게 국룰
-          ...(def.kind === "outfit"
-            ? { equippedOutfit: key }
-            : { equippedAccessory: key }),
-        };
-        set({ character: next });
-        pushToast(`${def.emoji} ${def.label} 겟! 바로 입어봤어요. (-${formatMoney(def.price)})`);
-        pulseAction("playing");
-        return { ok: true, message: "구입 완료" };
+        return { ok: true, message };
       },
 
       equipWardrobe: (kind, key) => {
@@ -828,7 +888,7 @@ export const useGameStore = create<GameState>()(
     },
     {
       name: "lifegotchi:character",
-      version: 18,
+      version: 19,
       storage: browserStorage,
       // 첫 클라이언트 렌더가 서버 렌더와 일치하도록 자동 하이드레이션을 끄고
       // StoreHydrator 에서 마운트 후 수동으로 rehydrate 한다.
@@ -863,6 +923,8 @@ export const useGameStore = create<GameState>()(
             // 유산소/근력 분리(구버전은 fitness 값을 물려받아 시작, 없으면 5)
             stamina: c.stats?.stamina ?? c.stats?.fitness ?? 5,
             strength: c.stats?.strength ?? c.stats?.fitness ?? 5,
+            // v19: 행운 스탯(미니게임)
+            luck: c.stats?.luck ?? 5,
           },
           reviews: c.reviews ?? [],
           // 기존 값 보존(없는 구버전 세이브만 ageYears 로 폴백 → 리뷰 폭탄 방지)

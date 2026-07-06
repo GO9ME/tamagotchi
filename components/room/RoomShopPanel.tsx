@@ -5,30 +5,31 @@
 
 import type { Character } from "@/types/character";
 import { cn } from "@/lib/utils";
-import { ROOM_ITEMS, canBuyRoomItem } from "@/lib/game/roomItems";
+import { ROOM_ITEMS } from "@/lib/game/roomItems";
 import { formatMoney } from "@/lib/game/ending";
-import { useGameStore } from "@/lib/store/useGameStore";
+import { CollapsibleCard } from "@/components/common/CollapsibleCard";
+import { GachaPullButton } from "@/components/common/GachaPullButton";
 
 export function RoomShopPanel({ character }: { character: Character }) {
-  const buyRoomItem = useGameStore((s) => s.buyRoomItem);
   const ownedCount = character.roomItems.length;
 
   return (
-    <div className="card p-4">
-      <div className="mb-2 flex items-center justify-between">
-        <h3 className="font-pixel text-sm font-bold text-ink/80">방 꾸미기</h3>
+    <CollapsibleCard
+      title="방 꾸미기"
+      badge={
         <span className="pill bg-butter/40 text-ink/70">
           저축 {formatMoney(character.savings)}
         </span>
-      </div>
+      }
+    >
       <p className="mb-3 text-xs text-ink/55">
-        저축으로 가구를 사면 방에 바로 놓여요. ({ownedCount}/{ROOM_ITEMS.length} 보유)
+        인테리어 뽑기로 가구를 얻으면 방에 바로 놓여요. ({ownedCount}/{ROOM_ITEMS.length} 보유)
       </p>
+      <GachaPullButton character={character} category="room" />
 
       <ul className="flex flex-col gap-1.5">
         {ROOM_ITEMS.map((item) => {
           const owned = character.roomItems.includes(item.key);
-          const gate = canBuyRoomItem(item.key, character.roomItems, character.savings);
           return (
             <li
               key={item.key}
@@ -44,37 +45,19 @@ export function RoomShopPanel({ character }: { character: Character }) {
                     {item.label}
                   </div>
                   <div className="truncate text-[11px] text-ink/50">{item.desc}</div>
-                  {/* 구매 불가 사유를 인라인으로 — 모바일엔 hover 툴팁이 없다 */}
-                  {!owned && !gate.ok && (
-                    <div className="font-pixel text-[10px] font-bold text-coral">
-                      {character.savings < item.price
-                        ? `${formatMoney(item.price - character.savings)} 부족`
-                        : gate.reason}
-                    </div>
-                  )}
                 </div>
               </div>
               {owned ? (
                 <span className="pill shrink-0 bg-mint text-ink">보유 중</span>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => buyRoomItem(item.key)}
-                  disabled={!gate.ok}
-                  className={cn(
-                    "pill shrink-0 font-bold transition-colors",
-                    gate.ok
-                      ? "bg-coral text-white hover:brightness-105"
-                      : "cursor-not-allowed bg-black/10 text-ink/40",
-                  )}
-                >
-                  {formatMoney(item.price)}
-                </button>
+                <span className="pill shrink-0 bg-black/10 text-ink/45">
+                  미소장 · 정가 {formatMoney(item.price)}
+                </span>
               )}
             </li>
           );
         })}
       </ul>
-    </div>
+    </CollapsibleCard>
   );
 }

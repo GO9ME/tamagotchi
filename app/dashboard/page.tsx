@@ -5,17 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { CharacterAvatar } from "@/components/character/CharacterAvatar";
-import { StatusPanel } from "@/components/character/StatusPanel";
-import { StatsPanel } from "@/components/character/StatsPanel";
-import { WeightCard } from "@/components/character/WeightCard";
-import { RoomShopPanel } from "@/components/room/RoomShopPanel";
-import { AssetPanel } from "@/components/room/AssetPanel";
-import { HousingPanel } from "@/components/room/HousingPanel";
-import { WardrobePanel } from "@/components/wardrobe/WardrobePanel";
-import { ActionGrid } from "@/components/actions/ActionGrid";
-import { LeisurePanel } from "@/components/leisure/LeisurePanel";
-import { FoodSelector } from "@/components/actions/FoodSelector";
-import { StudyCard } from "@/components/actions/StudyCard";
+import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
+import { StatBar } from "@/components/common/StatBar";
 import { Toast } from "@/components/common/Toast";
 import { OutcomeBurst } from "@/components/common/OutcomeBurst";
 import { BottomNav } from "@/components/common/BottomNav";
@@ -84,9 +75,10 @@ export default function DashboardPage() {
   const next = nextStageInfo(character.ageYears);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+    // 다마고치처럼 한 화면 고정(h-dvh) — 페이지 스크롤 없이 탭 안에서만 스크롤
+    <main className="mx-auto flex h-dvh max-w-5xl flex-col gap-2.5 px-4 pb-[calc(4.25rem+env(safe-area-inset-bottom))] pt-3">
       {/* 상단 바 */}
-      <header className="mb-4 flex items-center justify-between gap-2">
+      <header className="flex shrink-0 items-center justify-between gap-2">
         <Link href="/" className="font-pixel text-sm font-bold text-ink/55">
           ← LifeGotchi
         </Link>
@@ -107,35 +99,37 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="mb-4">
+      <div className="shrink-0">
         <SaveNotice />
       </div>
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
-        {/* 왼쪽: 캐릭터 + 컨디션 */}
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          <div className="card flex flex-col items-center p-6">
+      {/* 위(모바일)/왼쪽(데스크톱): 캐릭터 방 — 아래/오른쪽: 탭 패널 */}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-2.5 md:grid-cols-5 md:gap-4">
+        <div className="flex min-h-0 shrink-0 flex-col md:col-span-2">
+          <div className="card flex min-h-0 flex-col items-center overflow-y-auto p-3 md:flex-1 md:p-5">
             <CharacterAvatar character={character} />
+            {/* 상시 컨디션 — 탭을 오가지 않아도 케어 판단이 가능하게, 전체 지표를 여기 한 곳에 */}
+            <div className="mt-2 grid w-full max-w-[300px] shrink-0 grid-cols-2 gap-x-4 gap-y-1.5">
+              <StatBar label="배고픔" value={character.status.hunger} />
+              <StatBar label="체력" value={character.status.energy} />
+              <StatBar label="기분" value={character.status.mood} />
+              <StatBar label="건강" value={character.status.health} />
+              <StatBar label="집중력" value={character.status.focus} />
+              <StatBar label="청결" value={character.status.cleanliness} />
+              <StatBar label="수면 질" value={character.status.sleepQuality} />
+              <StatBar label="자신감" value={character.status.confidence} />
+              <StatBar
+                label="스트레스"
+                value={character.status.stress}
+                higherIsBetter={false}
+              />
+              <StatBar label="번아웃" value={character.status.burnout} higherIsBetter={false} />
+            </div>
           </div>
-          <StatusPanel character={character} />
-          <WeightCard character={character} />
-          <WardrobePanel character={character} />
-          <RoomShopPanel character={character} />
-          <HousingPanel character={character} />
-          <AssetPanel character={character} />
         </div>
 
-        {/* 오른쪽: 액션 + 스탯 */}
-        <div className="flex flex-col gap-4 lg:col-span-3">
-          <StudyCard character={character} now={now} />
-          <CareerCard character={character} />
-          <div className="card p-4">
-            <h3 className="mb-3 font-pixel text-sm font-bold text-ink/80">식사</h3>
-            <FoodSelector character={character} now={now} />
-          </div>
-          <ActionGrid character={character} now={now} />
-          <LeisurePanel character={character} now={now} />
-          <StatsPanel character={character} />
+        <div className="flex min-h-0 flex-1 flex-col md:col-span-3">
+          <DashboardTabs character={character} now={now} />
         </div>
       </div>
 

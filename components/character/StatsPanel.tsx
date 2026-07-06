@@ -18,6 +18,7 @@ const STAT_META: { key: keyof Character["stats"]; label: string }[] = [
   { key: "careerPotential", label: "커리어" },
   { key: "employability", label: "취업력" },
   { key: "performance", label: "업무성과" },
+  { key: "luck", label: "행운" },
 ];
 
 const ALLOCATABLE_KEYS = new Set(ALLOCATABLE_STATS.map((s) => s.key));
