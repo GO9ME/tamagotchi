@@ -16,8 +16,8 @@ export const GAME_YEAR_MS: number = (() => {
   return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 9 * 60 * 1000;
 })();
 
-/** 연간 생활비(만원) — 저축 = 연봉 - 생활비 */
-export const LIVING_COST = 2000;
+/** 연간 생활비(만원) — 저축 = 연봉 - 생활비. 하위 직종도 의미있는 저축이 가능하도록 조정 */
+export const LIVING_COST = 1200;
 
 /** 자연사 한계 나이(이 나이엔 사망 확률 100%). 60세 = 9분/년 × 60 = 약 9시간 한 판 */
 export const MAX_AGE = 60;

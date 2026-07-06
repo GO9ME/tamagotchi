@@ -324,7 +324,7 @@ export const ACTIONS: ActionDef[] = [
     category: "selfdev",
     minStage: "employee",
     effect: () => ({
-      status: { energy: -6, mood: 2, stress: 1 },
+      status: { energy: -6, mood: 2, stress: 1, confidence: 2 },
       stats: { communication: 1, careerPotential: 0.3 },
       exp: 8,
       message: "회의에서 의견을 나눴어요.",
@@ -356,7 +356,7 @@ export const ACTIONS: ActionDef[] = [
     category: "selfdev",
     minStage: "employee",
     effect: () => ({
-      status: { energy: -5, stress: 2 },
+      status: { energy: -5, stress: 2, confidence: 2 },
       stats: { careerPotential: 2, discipline: 1 },
       exp: 10,
       message: "자기개발에 투자했어요.",

@@ -3,6 +3,7 @@ import { clamp, clampStatus, round2 } from "./clamp";
 import {
   DECAY_PER_HOUR,
   DECAY_SCALE,
+  HEALTHY_WEIGHT,
   MAX_AGE,
   NO_EXERCISE_THRESHOLD_MS,
   WEIGHT_GAIN_NO_EXERCISE_PER_HOUR,
@@ -77,6 +78,16 @@ export function applyDecay(c: Character, now: number): Character {
   const age = Math.min(ageFromBornAt(c.bornAt, now), MAX_AGE);
   next.ageYears = age;
   next.lifeStage = cappedStageForAge(age, c.job != null);
+
+  // 성장기 자연 체중 증가: 단계 최솟값 미만이면 성장 속도 5kg/h로 보정.
+  // 나이와 무관하게 키는 자동 성장하는데 체중은 먹기로만 오르는 불균형 해소.
+  // (전 단계 60게임년 × 9분/년 = 9h, 5kg/h → 아기 10kg→성인 55kg 자연 도달)
+  if (hours > 0) {
+    const [wMin] = HEALTHY_WEIGHT[next.lifeStage];
+    if (next.status.weight < wMin) {
+      next.status.weight = round2(Math.min(wMin, next.status.weight + 5.0 * hours));
+    }
+  }
 
   return next;
 }
