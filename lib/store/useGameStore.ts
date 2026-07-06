@@ -285,6 +285,19 @@ export const useGameStore = create<GameState>()(
         }
 
         const decayed = applyDecay(c, now());
+
+        // 굶주림 사망: 배고픔이 0 이하로 떨어지면 즉사
+        if (decayed.status.hunger <= 0) {
+          set({
+            character: {
+              ...decayed,
+              deathAge: decayed.ageYears,
+              deathCause: "굶주림",
+            },
+          });
+          return;
+        }
+
         const { character, reviews } = runDueReviews(decayed, now());
 
         // 레벨업/저축 변동 알림(한 tick 에 둘 다 나면 토스트 하나로 합침)
