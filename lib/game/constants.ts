@@ -317,8 +317,12 @@ export const YEARLY_TARGETS = {
 /** 오프라인 다년 방치 시 페널티 적용 상한 연수 */
 export const MAX_NEGLECT_YEARS_APPLIED = 3;
 
-/** 이 시간(ms) 이상 앱을 열지 않으면 방치 사망 처리 */
-export const NEGLECT_DEATH_MS = 8 * 60 * 60 * 1000; // 현실 8시간
+/**
+ * 이 시간(ms) 이상 앱을 열지 않으면 방치 사망 처리.
+ * 배고픔(초기 70) 기준: DECAY_PER_HOUR.hunger(-7) × DECAY_SCALE(3) = 21/h
+ * → 70/21 ≈ 3.33시간에 배고픔 0. 약간 여유를 줘 4시간으로 설정.
+ */
+export const NEGLECT_DEATH_MS = 4 * 60 * 60 * 1000; // 현실 4시간 (배고픔 0 기준)
 
 /** 시험이 발생하는 학업 단계 */
 export const EDU_STAGES: LifeStage[] = [
