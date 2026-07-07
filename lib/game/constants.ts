@@ -16,8 +16,8 @@ export const GAME_YEAR_MS: number = (() => {
   return Number.isFinite(fromEnv) && fromEnv > 0 ? fromEnv : 9 * 60 * 1000;
 })();
 
-/** 연간 생활비(만원) — 저축 = 연봉 - 생활비 */
-export const LIVING_COST = 2000;
+/** 연간 생활비(만원) — 저축 = 연봉 - 생활비. 하위 직종도 의미있는 저축이 가능하도록 조정 */
+export const LIVING_COST = 1200;
 
 /** 자연사 한계 나이(이 나이엔 사망 확률 100%). 60세 = 9분/년 × 60 = 약 9시간 한 판 */
 export const MAX_AGE = 60;
@@ -41,13 +41,13 @@ export const WEIGHT_MAX = 120;
 // ---------------------------------------------------------------------------
 
 export const DECAY_PER_HOUR = {
-  hunger: -7,
+  hunger: -10,
   energy: -4,
   mood: -3,
   focus: -5,
   cleanliness: -4,
   sleepQuality: -3,
-  stress: +2,
+  stress: +1,
   // 자신감도 서서히 줄어 칭찬/성취로 관리하는 스탯이 되게 한다(다른 감소보다 완만)
   confidence: -0.8,
 } as const;
@@ -324,8 +324,12 @@ export const YEARLY_TARGETS = {
 /** 오프라인 다년 방치 시 페널티 적용 상한 연수 */
 export const MAX_NEGLECT_YEARS_APPLIED = 3;
 
-/** 이 시간(ms) 이상 앱을 열지 않으면 방치 사망 처리 */
-export const NEGLECT_DEATH_MS = 8 * 60 * 60 * 1000; // 현실 8시간
+/**
+ * 이 시간(ms) 이상 앱을 열지 않으면 방치 사망 처리.
+ * 배고픔(초기 70) 기준: DECAY_PER_HOUR.hunger(-7) × DECAY_SCALE(3) = 21/h
+ * → 70/21 ≈ 3.33시간에 배고픔 0. 약간 여유를 줘 4시간으로 설정.
+ */
+export const NEGLECT_DEATH_MS = 4 * 60 * 60 * 1000; // 현실 4시간 (배고픔 0 기준)
 
 /** 시험이 발생하는 학업 단계 */
 export const EDU_STAGES: LifeStage[] = [

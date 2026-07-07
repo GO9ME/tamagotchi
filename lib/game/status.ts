@@ -3,6 +3,7 @@ import { clamp, clampStatus, round2 } from "./clamp";
 import {
   DECAY_PER_HOUR,
   DECAY_SCALE,
+  HEALTHY_WEIGHT,
   MAX_AGE,
   NO_EXERCISE_THRESHOLD_MS,
   WEIGHT_CATCHUP_RATE_PER_HOUR,
@@ -87,6 +88,23 @@ export function applyDecay(c: Character, now: number): Character {
 
     next.status = clampStatus(s);
     next.lastTickAt = now;
+  }
+
+  // 나이/단계 갱신 (시간 경과와 무관하게 항상 최신화)
+  // employee 이상은 취업(job 보유) 했을 때만 진입 — 미취업이면 jobseeker 로 캡
+  // 자연사 한계(60세)를 넘는 오프라인 점프에서도 나이는 60에 캡 → 수명·엔딩 표기 일관성
+  const age = Math.min(ageFromBornAt(c.bornAt, now), MAX_AGE);
+  next.ageYears = age;
+  next.lifeStage = cappedStageForAge(age, c.job != null);
+
+  // 성장기 자연 체중 증가: 단계 최솟값 미만이면 성장 속도 5kg/h로 보정.
+  // 나이와 무관하게 키는 자동 성장하는데 체중은 먹기로만 오르는 불균형 해소.
+  // (전 단계 60게임년 × 9분/년 = 9h, 5kg/h → 아기 10kg→성인 55kg 자연 도달)
+  if (hours > 0) {
+    const [wMin] = HEALTHY_WEIGHT[next.lifeStage];
+    if (next.status.weight < wMin) {
+      next.status.weight = round2(Math.min(wMin, next.status.weight + 5.0 * hours));
+    }
   }
 
   return next;
