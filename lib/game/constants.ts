@@ -41,7 +41,7 @@ export const WEIGHT_MAX = 120;
 // ---------------------------------------------------------------------------
 
 export const DECAY_PER_HOUR = {
-  hunger: -7,
+  hunger: -10,
   energy: -4,
   mood: -3,
   focus: -5,

@@ -102,7 +102,8 @@ export function employmentChance(
       heightFitMod(c, family) +
       degreeHiringMod(c) +
       universityHiringMod(c) +
-      COMPANY_TYPES[company].chanceMod,
+      COMPANY_TYPES[company].chanceMod +
+      (family ? JOB_FAMILIES[family].hireMod : 0),
     15,
     92,
   );
