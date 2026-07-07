@@ -47,7 +47,7 @@ export const DECAY_PER_HOUR = {
   focus: -5,
   cleanliness: -4,
   sleepQuality: -3,
-  stress: +2,
+  stress: +1,
   // 자신감도 서서히 줄어 칭찬/성취로 관리하는 스탯이 되게 한다(다른 감소보다 완만)
   confidence: -0.8,
 } as const;

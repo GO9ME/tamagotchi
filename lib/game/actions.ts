@@ -209,7 +209,7 @@ export const ACTIONS: ActionDef[] = [
     cooldownMs: 8 * HOUR,
     category: "rest",
     effect: () => ({
-      status: { energy: 60, sleepQuality: 45, stress: -12, health: 3, focus: 10 },
+      status: { energy: 60, sleepQuality: 45, stress: -18, health: 3, focus: 10 },
       exp: 4,
       message: "푹 잤어요. 컨디션 최상!",
     }),
@@ -372,7 +372,7 @@ export const ACTIONS: ActionDef[] = [
     category: "rest",
     minStage: "employee",
     effect: () => ({
-      status: { energy: 18, stress: -12, burnout: -10, mood: 4 },
+      status: { energy: 18, stress: -20, burnout: -10, mood: 4 },
       exp: 2,
       message: "잠시 쉬며 한숨 돌렸어요.",
     }),
